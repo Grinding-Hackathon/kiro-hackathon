@@ -67,7 +67,7 @@
 
 ## Mobile App Development Tasks (iOS/Swift)
 
-- [ ] 9. Set up iOS project structure and dependencies
+- [x] 9. Set up iOS project structure and dependencies
   - Create new iOS project with Swift and UIKit/SwiftUI
   - Configure CocoaPods/SPM for dependencies (Web3Swift, CryptoKit, CoreBluetooth)
   - Set up project architecture with MVVM pattern
