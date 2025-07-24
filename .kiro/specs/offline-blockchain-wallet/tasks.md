@@ -123,7 +123,7 @@
   - Implement error handling for failed or interrupted transactions
   - _Requirements: 4.1, 4.2, 4.5, 6.1, 6.2, 6.4, 6.5, 9.1, 9.2_
 
-- [ ] 16. Build user interface components
+- [x] 16. Build user interface components
   - Create main wallet view with balance display (OT and blockchain balances)
   - Implement transaction history view with online/offline indicators
   - Build send/receive transaction flows with QR code integration
