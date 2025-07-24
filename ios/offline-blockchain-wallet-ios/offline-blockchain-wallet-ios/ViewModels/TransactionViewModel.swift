@@ -12,9 +12,11 @@ import Combine
 @MainActor
 class TransactionViewModel: ObservableObject {
     @Published var transactions: [Transaction] = []
+    @Published var queuedTransactions: [Transaction] = []
     @Published var isLoading: Bool = false
     @Published var errorMessage: String?
     @Published var selectedTransaction: Transaction?
+    @Published var isProcessingTransaction: Bool = false
     
     // Transaction creation properties
     @Published var recipientId: String = ""
@@ -24,17 +26,40 @@ class TransactionViewModel: ObservableObject {
     private var cancellables = Set<AnyCancellable>()
     
     // Injected services
+    private let transactionService: TransactionServiceProtocol
     private let storageService: StorageServiceProtocol
     private let bluetoothService: BluetoothServiceProtocol
     private let cryptographyService: CryptographyServiceProtocol
     
-    init(storageService: StorageServiceProtocol,
+    init(transactionService: TransactionServiceProtocol,
+         storageService: StorageServiceProtocol,
          bluetoothService: BluetoothServiceProtocol,
          cryptographyService: CryptographyServiceProtocol) {
+        self.transactionService = transactionService
         self.storageService = storageService
         self.bluetoothService = bluetoothService
         self.cryptographyService = cryptographyService
+        
+        setupSubscriptions()
         loadTransactions()
+    }
+    
+    private func setupSubscriptions() {
+        // Subscribe to transaction updates
+        transactionService.transactionUpdates
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] updatedTransaction in
+                self?.handleTransactionUpdate(updatedTransaction)
+            }
+            .store(in: &cancellables)
+        
+        // Subscribe to queue updates
+        transactionService.queueUpdates
+            .receive(on: DispatchQueue.main)
+            .sink { [weak self] queuedTransactions in
+                self?.queuedTransactions = queuedTransactions
+            }
+            .store(in: &cancellables)
     }
     
     func loadTransactions() {
@@ -48,40 +73,13 @@ class TransactionViewModel: ObservableObject {
         errorMessage = nil
         
         do {
-            // Implementation will be added when storage service is available
-            // For now, load mock data
-            await loadMockTransactions()
+            transactions = try await storageService.loadTransactions()
+            queuedTransactions = try await transactionService.getQueuedTransactions()
         } catch {
             errorMessage = error.localizedDescription
         }
         
         isLoading = false
-    }
-    
-    private func loadMockTransactions() async {
-        // Mock data for development
-        transactions = [
-            Transaction(
-                type: .offlineTransfer,
-                senderId: "user1",
-                receiverId: "user2",
-                amount: 25.50,
-                status: .completed,
-                tokenIds: ["token1"],
-                metadata: TransactionMetadata(
-                    connectionType: "bluetooth",
-                    deviceInfo: "iPhone 15 Pro"
-                )
-            ),
-            Transaction(
-                type: .tokenPurchase,
-                senderId: "user1",
-                receiverId: "otm",
-                amount: 100.00,
-                status: .completed,
-                tokenIds: ["token2", "token3"]
-            )
-        ]
     }
     
     func initiateTransaction() async {
@@ -95,20 +93,21 @@ class TransactionViewModel: ObservableObject {
             return
         }
         
-        isLoading = true
+        isProcessingTransaction = true
         errorMessage = nil
         
         do {
-            let transaction = Transaction(
-                type: transactionType,
-                senderId: "current_user", // Will be replaced with actual user ID
-                receiverId: recipientId,
+            let transaction = try await transactionService.initiateTransaction(
+                recipientId: recipientId,
                 amount: amountValue,
-                tokenIds: [] // Will be populated by transaction service
+                type: transactionType
             )
             
-            // Implementation will be added when transaction service is available
-            print("Initiating transaction: \(transaction)")
+            // Sign the transaction if it's an offline transfer
+            if transactionType == .offlineTransfer {
+                let privateKey = try await getUserPrivateKey()
+                _ = try await transactionService.signTransaction(transaction, with: privateKey)
+            }
             
             // Clear form
             clearForm()
@@ -120,7 +119,7 @@ class TransactionViewModel: ObservableObject {
             errorMessage = error.localizedDescription
         }
         
-        isLoading = false
+        isProcessingTransaction = false
     }
     
     func clearForm() {
@@ -145,11 +144,136 @@ class TransactionViewModel: ObservableObject {
     func getCompletedTransactions() -> [Transaction] {
         return transactions.filter { $0.status == .completed }
     }
-}
-
-// MARK: - Service Protocol
-protocol TransactionServiceProtocol {
-    func initiateTransaction(recipientId: String, amount: Double) async throws -> Transaction
-    func processIncomingTransaction(transaction: Transaction) async throws -> Bool
-    func syncWithBlockchain() async throws
+    
+    // MARK: - Transaction Processing
+    
+    func processIncomingTransaction(_ transaction: Transaction) async {
+        isProcessingTransaction = true
+        errorMessage = nil
+        
+        do {
+            let success = try await transactionService.processIncomingTransaction(transaction)
+            if success {
+                try await transactionService.finalizeTransaction(transaction)
+                await refreshTransactions()
+            } else {
+                errorMessage = "Failed to process incoming transaction"
+            }
+        } catch {
+            errorMessage = error.localizedDescription
+            try? await transactionService.handleFailedTransaction(transaction, error: error)
+        }
+        
+        isProcessingTransaction = false
+    }
+    
+    func retryTransaction(_ transaction: Transaction) async {
+        isProcessingTransaction = true
+        errorMessage = nil
+        
+        do {
+            let retriedTransaction = try await transactionService.retryFailedTransaction(transaction)
+            
+            // Process the retried transaction based on its type
+            if retriedTransaction.type == .offlineTransfer {
+                let success = try await transactionService.processOutgoingTransaction(retriedTransaction)
+                if success {
+                    try await transactionService.finalizeTransaction(retriedTransaction)
+                }
+            }
+            
+            await refreshTransactions()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+        
+        isProcessingTransaction = false
+    }
+    
+    func cancelTransaction(_ transaction: Transaction) async {
+        do {
+            try await transactionService.cancelTransaction(transaction)
+            await refreshTransactions()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+    
+    func syncQueuedTransactions() async {
+        isLoading = true
+        errorMessage = nil
+        
+        do {
+            try await transactionService.processQueuedTransactions()
+            await refreshTransactions()
+        } catch {
+            errorMessage = "Failed to sync transactions: \(error.localizedDescription)"
+        }
+        
+        isLoading = false
+    }
+    
+    // MARK: - Transaction Verification
+    
+    func verifyTransaction(_ transaction: Transaction) async -> Bool {
+        do {
+            return try await transactionService.verifyTransaction(transaction)
+        } catch {
+            errorMessage = error.localizedDescription
+            return false
+        }
+    }
+    
+    // MARK: - Helper Methods
+    
+    private func handleTransactionUpdate(_ transaction: Transaction) {
+        // Update the transaction in the local array
+        if let index = transactions.firstIndex(where: { $0.id == transaction.id }) {
+            transactions[index] = transaction
+        } else {
+            transactions.append(transaction)
+        }
+        
+        // Sort transactions by timestamp (newest first)
+        transactions.sort { $0.timestamp > $1.timestamp }
+    }
+    
+    private func getUserPrivateKey() async throws -> String {
+        // This would retrieve the user's private key from secure storage
+        // For now, return a placeholder
+        guard let privateKey = try cryptographyService.retrievePrivateKey(for: "user_signing_key") else {
+            throw TransactionError.walletNotInitialized
+        }
+        return privateKey
+    }
+    
+    // MARK: - Transaction State Queries
+    
+    func getTransactionsByType(_ type: TransactionType) -> [Transaction] {
+        return transactions.filter { $0.type == type }
+    }
+    
+    func getTransactionsByStatus(_ status: TransactionStatus) -> [Transaction] {
+        return transactions.filter { $0.status == status }
+    }
+    
+    func getOfflineTransactions() -> [Transaction] {
+        return transactions.filter { $0.type == .offlineTransfer }
+    }
+    
+    func getOnlineTransactions() -> [Transaction] {
+        return transactions.filter { $0.type == .onlineTransfer || $0.type == .tokenPurchase || $0.type == .tokenRedemption }
+    }
+    
+    func hasFailedTransactions() -> Bool {
+        return transactions.contains { $0.status == .failed }
+    }
+    
+    func hasPendingTransactions() -> Bool {
+        return transactions.contains { $0.status == .pending }
+    }
+    
+    func getFailedTransactions() -> [Transaction] {
+        return transactions.filter { $0.status == .failed }
+    }
 }

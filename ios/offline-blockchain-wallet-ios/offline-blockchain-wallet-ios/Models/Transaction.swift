@@ -18,7 +18,7 @@ struct Transaction: Codable, Identifiable {
     let tokenIds: [String]
     var senderSignature: String?
     var receiverSignature: String?
-    let metadata: TransactionMetadata?
+    var metadata: TransactionMetadata?
     
     init(id: String = UUID().uuidString,
          type: TransactionType,

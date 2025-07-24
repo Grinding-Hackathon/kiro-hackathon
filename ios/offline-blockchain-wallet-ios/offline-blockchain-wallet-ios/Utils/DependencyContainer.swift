@@ -77,9 +77,18 @@ class DependencyContainer {
     
     @MainActor func createTransactionViewModel() -> TransactionViewModel {
         return TransactionViewModel(
+            transactionService: createTransactionService(),
             storageService: storageService,
             bluetoothService: bluetoothService,
             cryptographyService: cryptographyService
+        )
+    }
+    
+    func createTransactionService() -> TransactionService {
+        return TransactionService(
+            storageService: storageService,
+            cryptographyService: cryptographyService,
+            offlineTokenService: offlineTokenService
         )
     }
 }
