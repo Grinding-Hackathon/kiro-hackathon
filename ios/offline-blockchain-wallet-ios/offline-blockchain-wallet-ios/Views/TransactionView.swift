@@ -1415,6 +1415,47 @@ struct EmptyTransactionsView: View {
     }
 }
 
+// MARK: - Helper Functions
+
+func colorForTransactionType(_ type: TransactionType) -> Color {
+    switch type {
+    case .offlineTransfer:
+        return .blue
+    case .onlineTransfer:
+        return .green
+    case .tokenPurchase:
+        return .purple
+    case .tokenRedemption:
+        return .orange
+    }
+}
+
+func iconForTransactionType(_ type: TransactionType) -> String {
+    switch type {
+    case .offlineTransfer:
+        return "wifi.slash"
+    case .onlineTransfer:
+        return "arrow.up.arrow.down.circle.fill"
+    case .tokenPurchase:
+        return "plus.circle.fill"
+    case .tokenRedemption:
+        return "minus.circle.fill"
+    }
+}
+
+func titleForTransactionType(_ type: TransactionType) -> String {
+    switch type {
+    case .offlineTransfer:
+        return "Offline Transfer"
+    case .onlineTransfer:
+        return "Online Transfer"
+    case .tokenPurchase:
+        return "Token Purchase"
+    case .tokenRedemption:
+        return "Token Redemption"
+    }
+}
+
 #Preview {
     TransactionView(viewModel: DependencyContainer.shared.createTransactionViewModel())
 }

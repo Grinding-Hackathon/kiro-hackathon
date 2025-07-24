@@ -533,7 +533,7 @@ struct ActionRow: View {
         .disabled(isLoading)
     }
 }
-//
-//#Preview {
-//    SettingsView(walletViewModel: WalletViewModel())
-//}
+
+#Preview {
+    SettingsView(walletViewModel: DependencyContainer.shared.createWalletViewModel())
+}
