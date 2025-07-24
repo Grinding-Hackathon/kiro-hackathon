@@ -4,7 +4,8 @@ import PackageDescription
 let package = Package(
     name: "OfflineBlockchainWallet",
     platforms: [
-        .iOS(.v16)
+        .iOS(.v16),
+        .macOS(.v12)
     ],
     products: [
         .library(
@@ -41,11 +42,13 @@ let package = Package(
                 .product(name: "CodeScanner", package: "CodeScanner"),
                 .product(name: "CryptoSwift", package: "CryptoSwift"),
                 .product(name: "Alamofire", package: "Alamofire")
-            ]
+            ],
+            path: "offline-blockchain-wallet-ios"
         ),
         .testTarget(
             name: "OfflineBlockchainWalletTests",
-            dependencies: ["OfflineBlockchainWallet"]
+            dependencies: ["OfflineBlockchainWallet"],
+            path: "Tests/OfflineBlockchainWalletTests"
         ),
     ]
 )

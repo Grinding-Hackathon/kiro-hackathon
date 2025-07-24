@@ -63,7 +63,7 @@ struct QRCodeView: View {
                     Text(scannedCode)
                         .font(.caption)
                         .padding()
-                        .background(Color(.systemGray6))
+                        .background(Color.gray.opacity(0.1))
                         .cornerRadius(8)
                 }
                 
@@ -81,9 +81,14 @@ struct QRCodeView: View {
             .padding()
             .navigationTitle("QR Scanner")
             .sheet(isPresented: $showingScanner) {
-                QRScannerView { code in
-                    scannedCode = code
-                }
+                QRScannerView(
+                    onScanComplete: { paymentRequest in
+                        scannedCode = paymentRequest.walletId
+                    },
+                    onError: { error in
+                        print("QR scan error: \(error.localizedDescription)")
+                    }
+                )
             }
         }
     }

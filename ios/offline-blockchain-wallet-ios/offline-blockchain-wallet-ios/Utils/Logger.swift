@@ -26,7 +26,16 @@ enum LogLevel: String, CaseIterable {
     }
 }
 
-class Logger {
+protocol LoggerProtocol {
+    func log(_ message: String, level: LogLevel)
+    func debug(_ message: String, file: String, function: String, line: Int)
+    func info(_ message: String, file: String, function: String, line: Int)
+    func warning(_ message: String, file: String, function: String, line: Int)
+    func error(_ message: String, error: Error?, file: String, function: String, line: Int)
+    func critical(_ message: String, error: Error?, file: String, function: String, line: Int)
+}
+
+class Logger: LoggerProtocol {
     static let shared = Logger()
     
     private let osLog: OSLog
@@ -39,6 +48,10 @@ class Logger {
     }
     
     // MARK: - Public Logging Methods
+    func log(_ message: String, level: LogLevel) {
+        log(level: level, message: message, file: "", function: "", line: 0)
+    }
+    
     func debug(_ message: String, file: String = #file, function: String = #function, line: Int = #line) {
         log(level: .debug, message: message, file: file, function: function, line: line)
     }

@@ -11,10 +11,20 @@ class DependencyContainer {
     static let shared = DependencyContainer()
     
     // Services
+    lazy var logger: LoggerProtocol = Logger.shared
     private lazy var cryptographyService: CryptographyServiceProtocol = CryptographyService()
     private lazy var networkService: NetworkServiceProtocol = NetworkService()
     private lazy var storageService: StorageServiceProtocol = StorageService()
     private lazy var bluetoothService: BluetoothServiceProtocol = BluetoothService()
+    lazy var qrCodeService: QRCodeServiceProtocol = QRCodeService(
+        cryptographyService: cryptographyService,
+        logger: logger
+    )
+    private lazy var qrBluetoothIntegrationService: QRBluetoothIntegrationServiceProtocol = QRBluetoothIntegrationService(
+        bluetoothService: bluetoothService,
+        qrCodeService: qrCodeService,
+        logger: logger
+    )
     private lazy var offlineTokenService: OfflineTokenServiceProtocol = OfflineTokenService(
         cryptographyService: cryptographyService,
         networkService: networkService,
@@ -38,6 +48,18 @@ class DependencyContainer {
     
     func getBluetoothService() -> BluetoothServiceProtocol {
         return bluetoothService
+    }
+    
+    func getQRCodeService() -> QRCodeServiceProtocol {
+        return qrCodeService
+    }
+    
+    func getQRBluetoothIntegrationService() -> QRBluetoothIntegrationServiceProtocol {
+        return qrBluetoothIntegrationService
+    }
+    
+    func getLogger() -> LoggerProtocol {
+        return logger
     }
     
     func getOfflineTokenService() -> OfflineTokenServiceProtocol {

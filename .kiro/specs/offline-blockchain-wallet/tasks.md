@@ -75,7 +75,7 @@
   - Create basic app structure with storyboards and view controllers
   - _Requirements: 3.1, 4.1, 10.1_
 
-- [ ] 10. Implement cryptographic services and key management
+- [x] 10. Implement cryptographic services and key management
   - Create key pair generation using iOS CryptoKit framework
   - Implement secure key storage using iOS Keychain Services
   - Add digital signature creation and verification methods
@@ -83,7 +83,7 @@
   - Write unit tests for all cryptographic operations
   - _Requirements: 6.1, 6.2, 8.1, 8.2, 9.4_
 
-- [ ] 11. Build local storage layer for offline data management
+- [x] 11. Build local storage layer for offline data management
   - Implement Core Data model for offline tokens and transactions
   - Create data access layer with CRUD operations
   - Add data synchronization logic for online/offline states
@@ -91,7 +91,7 @@
   - Create data migration and backup functionality
   - _Requirements: 1.3, 4.4, 8.4, 9.4, 10.2_
 
-- [ ] 12. Implement QR code generation and scanning functionality
+- [x] 12. Implement QR code generation and scanning functionality
   - Create QR code generation for payment requests with transaction details
   - Implement QR code scanning using AVFoundation camera
   - Add QR code validation and error handling
