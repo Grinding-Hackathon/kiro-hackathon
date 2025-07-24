@@ -2353,6 +2353,10 @@
         },
         {
           "kind" : "file",
+          "name" : "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/offline-blockchain-wallet-ios/Models/WalletState.swift"
+        },
+        {
+          "kind" : "file",
           "name" : "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/offline-blockchain-wallet-ios/Services/BackupService.swift"
         },
         {
@@ -2479,6 +2483,7 @@
         "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/OfflineBlockchainWallet.build/QRCodeData.swift.o",
         "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/OfflineBlockchainWallet.build/TokenDivision.swift.o",
         "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/OfflineBlockchainWallet.build/Transaction.swift.o",
+        "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/OfflineBlockchainWallet.build/WalletState.swift.o",
         "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/OfflineBlockchainWallet.build/BackupService.swift.o",
         "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/OfflineBlockchainWallet.build/BluetoothService.swift.o",
         "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/OfflineBlockchainWallet.build/CryptographyService.swift.o",
@@ -2582,6 +2587,10 @@
         },
         {
           "kind" : "file",
+          "name" : "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/OfflineBlockchainWallet.build/WalletState.swift.o"
+        },
+        {
+          "kind" : "file",
           "name" : "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/OfflineBlockchainWallet.build/BackupService.swift.o"
         },
         {
@@ -2678,6 +2687,7 @@
         "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/offline-blockchain-wallet-ios/Models/QRCodeData.swift",
         "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/offline-blockchain-wallet-ios/Models/TokenDivision.swift",
         "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/offline-blockchain-wallet-ios/Models/Transaction.swift",
+        "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/offline-blockchain-wallet-ios/Models/WalletState.swift",
         "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/offline-blockchain-wallet-ios/Services/BackupService.swift",
         "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/offline-blockchain-wallet-ios/Services/BluetoothService.swift",
         "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/offline-blockchain-wallet-ios/Services/CryptographyService.swift",
@@ -2811,6 +2821,10 @@
         },
         {
           "kind" : "file",
+          "name" : "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/Tests/OfflineBlockchainWalletTests/OfflineTokenServiceTests.swift"
+        },
+        {
+          "kind" : "file",
           "name" : "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/Tests/OfflineBlockchainWalletTests/QRCodeServiceTests.swift"
         },
         {
@@ -2840,6 +2854,7 @@
       "objects" : [
         "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/OfflineBlockchainWalletTests.build/BluetoothServiceTests.swift.o",
         "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/OfflineBlockchainWalletTests.build/CryptographyServiceTests.swift.o",
+        "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/OfflineBlockchainWalletTests.build/OfflineTokenServiceTests.swift.o",
         "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/OfflineBlockchainWalletTests.build/QRCodeServiceTests.swift.o",
         "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/OfflineBlockchainWalletTests.build/StorageServiceTests.swift.o",
         "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/OfflineBlockchainWalletTests.build/WalletViewModelTests.swift.o"
@@ -2902,6 +2917,10 @@
         },
         {
           "kind" : "file",
+          "name" : "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/OfflineBlockchainWalletTests.build/OfflineTokenServiceTests.swift.o"
+        },
+        {
+          "kind" : "file",
           "name" : "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/OfflineBlockchainWalletTests.build/QRCodeServiceTests.swift.o"
         },
         {
@@ -2921,6 +2940,7 @@
       "sources" : [
         "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/Tests/OfflineBlockchainWalletTests/BluetoothServiceTests.swift",
         "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/Tests/OfflineBlockchainWalletTests/CryptographyServiceTests.swift",
+        "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/Tests/OfflineBlockchainWalletTests/OfflineTokenServiceTests.swift",
         "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/Tests/OfflineBlockchainWalletTests/QRCodeServiceTests.swift",
         "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/Tests/OfflineBlockchainWalletTests/StorageServiceTests.swift",
         "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/Tests/OfflineBlockchainWalletTests/WalletViewModelTests.swift"
@@ -7280,6 +7300,7 @@
       "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/offline-blockchain-wallet-ios/Models/QRCodeData.swift",
       "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/offline-blockchain-wallet-ios/Models/TokenDivision.swift",
       "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/offline-blockchain-wallet-ios/Models/Transaction.swift",
+      "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/offline-blockchain-wallet-ios/Models/WalletState.swift",
       "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/offline-blockchain-wallet-ios/Services/BackupService.swift",
       "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/offline-blockchain-wallet-ios/Services/BluetoothService.swift",
       "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/offline-blockchain-wallet-ios/Services/CryptographyService.swift",
@@ -7418,6 +7439,7 @@
       "-c",
       "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/Tests/OfflineBlockchainWalletTests/BluetoothServiceTests.swift",
       "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/Tests/OfflineBlockchainWalletTests/CryptographyServiceTests.swift",
+      "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/Tests/OfflineBlockchainWalletTests/OfflineTokenServiceTests.swift",
       "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/Tests/OfflineBlockchainWalletTests/QRCodeServiceTests.swift",
       "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/Tests/OfflineBlockchainWalletTests/StorageServiceTests.swift",
       "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/Tests/OfflineBlockchainWalletTests/WalletViewModelTests.swift",
@@ -9354,6 +9376,10 @@
         },
         {
           "kind" : "file",
+          "name" : "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/offline-blockchain-wallet-ios/Models/WalletState.swift"
+        },
+        {
+          "kind" : "file",
           "name" : "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/offline-blockchain-wallet-ios/Services/BackupService.swift"
         },
         {
@@ -10294,6 +10320,10 @@
         },
         {
           "kind" : "file",
+          "name" : "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/OfflineBlockchainWallet.build/WalletState.swift.o"
+        },
+        {
+          "kind" : "file",
           "name" : "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/OfflineBlockchainWallet.build/WalletView.swift.o"
         },
         {
@@ -10315,6 +10345,10 @@
         {
           "kind" : "file",
           "name" : "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/OfflineBlockchainWalletTests.build/CryptographyServiceTests.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/OfflineBlockchainWalletTests.build/OfflineTokenServiceTests.swift.o"
         },
         {
           "kind" : "file",
@@ -11541,6 +11575,10 @@
         {
           "kind" : "file",
           "name" : "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/Tests/OfflineBlockchainWalletTests/CryptographyServiceTests.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/Tests/OfflineBlockchainWalletTests/OfflineTokenServiceTests.swift"
         },
         {
           "kind" : "file",

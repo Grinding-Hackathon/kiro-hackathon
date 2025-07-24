@@ -5,6 +5,7 @@
 /Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/offline-blockchain-wallet-ios/Models/QRCodeData.swift
 /Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/offline-blockchain-wallet-ios/Models/TokenDivision.swift
 /Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/offline-blockchain-wallet-ios/Models/Transaction.swift
+/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/offline-blockchain-wallet-ios/Models/WalletState.swift
 /Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/offline-blockchain-wallet-ios/Services/BackupService.swift
 /Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/offline-blockchain-wallet-ios/Services/BluetoothService.swift
 /Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/offline-blockchain-wallet-ios/Services/CryptographyService.swift

@@ -778,28 +778,6 @@ extension StorageService {
 
 // MARK: - Supporting Types
 
-struct WalletState: Codable {
-    let walletId: String
-    let publicKey: String
-    let offlineBalance: Double
-    let blockchainBalance: Double
-    let lastSyncTimestamp: Date?
-    let autoRechargeEnabled: Bool
-    let autoRechargeThreshold: Double
-    let autoRechargeAmount: Double
-    
-    init(walletId: String, publicKey: String, offlineBalance: Double, blockchainBalance: Double, lastSyncTimestamp: Date?, autoRechargeEnabled: Bool, autoRechargeThreshold: Double, autoRechargeAmount: Double) {
-        self.walletId = walletId
-        self.publicKey = publicKey
-        self.offlineBalance = offlineBalance
-        self.blockchainBalance = blockchainBalance
-        self.lastSyncTimestamp = lastSyncTimestamp
-        self.autoRechargeEnabled = autoRechargeEnabled
-        self.autoRechargeThreshold = autoRechargeThreshold
-        self.autoRechargeAmount = autoRechargeAmount
-    }
-}
-
 struct StorageExportData: Codable {
     let tokens: [OfflineToken]
     let transactions: [Transaction]

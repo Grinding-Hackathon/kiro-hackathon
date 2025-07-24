@@ -107,7 +107,7 @@
   - Add connection management and error recovery mechanisms
   - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.6_
 
-- [ ] 14. Build offline token management services
+- [x] 14. Build offline token management services
   - Implement token purchase requests to backend API
   - Create token validation using OTM public key verification
   - Add token division logic for exact payments and change calculation

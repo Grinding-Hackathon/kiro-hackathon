@@ -44,6 +44,12 @@
     "swiftmodule": "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/OfflineBlockchainWallet.build/Transaction~partial.swiftmodule",
     "swift-dependencies": "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/OfflineBlockchainWallet.build/Transaction.swiftdeps"
   },
+  "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/offline-blockchain-wallet-ios/Models/WalletState.swift": {
+    "dependencies": "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/OfflineBlockchainWallet.build/WalletState.d",
+    "object": "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/OfflineBlockchainWallet.build/WalletState.swift.o",
+    "swiftmodule": "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/OfflineBlockchainWallet.build/WalletState~partial.swiftmodule",
+    "swift-dependencies": "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/OfflineBlockchainWallet.build/WalletState.swiftdeps"
+  },
   "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/offline-blockchain-wallet-ios/Services/BackupService.swift": {
     "dependencies": "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/OfflineBlockchainWallet.build/BackupService.d",
     "object": "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/OfflineBlockchainWallet.build/BackupService.swift.o",

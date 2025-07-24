@@ -16,6 +16,8 @@ protocol NetworkServiceProtocol {
     func getBlockchainBalance(address: String) async throws -> Double
     func fetchPublicKeys() async throws -> PublicKeyDatabase
     func authenticateUser(credentials: UserCredentials) async throws -> AuthToken
+    func purchaseOfflineTokens(request: TokenPurchaseRequest) async throws -> TokenPurchaseResponse
+    func redeemOfflineTokens(request: TokenRedemptionRequest) async throws -> TokenRedemptionResponse
 }
 
 class NetworkService: NetworkServiceProtocol {
@@ -57,6 +59,37 @@ class NetworkService: NetworkServiceProtocol {
         // Implementation placeholder - will be completed in later tasks
         throw NetworkError.notImplemented
     }
+    
+    func purchaseOfflineTokens(request: TokenPurchaseRequest) async throws -> TokenPurchaseResponse {
+        let url = "\(baseURL)/api/tokens/purchase"
+        
+        let parameters: [String: Any] = [
+            "amount": request.amount,
+            "walletId": request.walletId,
+            "timestamp": request.timestamp.timeIntervalSince1970
+        ]
+        
+        let response = try await session.request(url, method: .post, parameters: parameters)
+            .validate()
+            .serializingDecodable(TokenPurchaseResponse.self)
+            .value
+        
+        return response
+    }
+    
+    func redeemOfflineTokens(request: TokenRedemptionRequest) async throws -> TokenRedemptionResponse {
+        let url = "\(baseURL)/api/tokens/redeem"
+        
+        let encoder = JSONEncoder()
+        let requestData = try encoder.encode(request)
+        
+        let response = try await session.upload(requestData, to: url, method: .post)
+            .validate()
+            .serializingDecodable(TokenRedemptionResponse.self)
+            .value
+        
+        return response
+    }
 }
 
 // MARK: - Supporting Types
@@ -84,6 +117,28 @@ struct UserCredentials {
 struct AuthToken {
     let token: String
     let expiresAt: Date
+}
+
+struct TokenPurchaseRequest: Codable {
+    let amount: Double
+    let walletId: String
+    let timestamp: Date
+}
+
+struct TokenPurchaseResponse: Codable {
+    let tokens: [OfflineToken]
+    let transactionId: String
+}
+
+struct TokenRedemptionRequest: Codable {
+    let tokens: [OfflineToken]
+    let walletId: String
+    let timestamp: Date
+}
+
+struct TokenRedemptionResponse: Codable {
+    let transactionHash: String
+    let blockchainBalance: Double
 }
 
 enum NetworkError: Error {
