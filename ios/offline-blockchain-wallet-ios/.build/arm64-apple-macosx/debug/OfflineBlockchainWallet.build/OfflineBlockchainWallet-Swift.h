@@ -308,17 +308,19 @@ SWIFT_CLASS("_TtC23OfflineBlockchainWallet16BluetoothService")
 - (nonnull instancetype)init OBJC_DESIGNATED_INITIALIZER;
 @end
 
-@class CBPeripheralManager;
+@class CBPeripheral;
 @class CBService;
+@class CBCharacteristic;
 
-@interface BluetoothService (SWIFT_EXTENSION(OfflineBlockchainWallet)) <CBPeripheralManagerDelegate>
-- (void)peripheralManagerDidUpdateState:(CBPeripheralManager * _Nonnull)peripheral;
-- (void)peripheralManager:(CBPeripheralManager * _Nonnull)peripheral didAddService:(CBService * _Nonnull)service error:(NSError * _Nullable)error;
-- (void)peripheralManagerDidStartAdvertising:(CBPeripheralManager * _Nonnull)peripheral error:(NSError * _Nullable)error;
+@interface BluetoothService (SWIFT_EXTENSION(OfflineBlockchainWallet)) <CBPeripheralDelegate>
+- (void)peripheral:(CBPeripheral * _Nonnull)peripheral didDiscoverServices:(NSError * _Nullable)error;
+- (void)peripheral:(CBPeripheral * _Nonnull)peripheral didDiscoverCharacteristicsForService:(CBService * _Nonnull)service error:(NSError * _Nullable)error;
+- (void)peripheral:(CBPeripheral * _Nonnull)peripheral didUpdateValueForCharacteristic:(CBCharacteristic * _Nonnull)characteristic error:(NSError * _Nullable)error;
+- (void)peripheral:(CBPeripheral * _Nonnull)peripheral didWriteValueForCharacteristic:(CBCharacteristic * _Nonnull)characteristic error:(NSError * _Nullable)error;
+- (void)peripheral:(CBPeripheral * _Nonnull)peripheral didUpdateNotificationStateForCharacteristic:(CBCharacteristic * _Nonnull)characteristic error:(NSError * _Nullable)error;
 @end
 
 @class CBCentralManager;
-@class CBPeripheral;
 @class NSString;
 @class NSNumber;
 
@@ -327,7 +329,23 @@ SWIFT_CLASS("_TtC23OfflineBlockchainWallet16BluetoothService")
 - (void)centralManager:(CBCentralManager * _Nonnull)central didDiscoverPeripheral:(CBPeripheral * _Nonnull)peripheral advertisementData:(NSDictionary<NSString *, id> * _Nonnull)advertisementData RSSI:(NSNumber * _Nonnull)RSSI;
 - (void)centralManager:(CBCentralManager * _Nonnull)central didConnectPeripheral:(CBPeripheral * _Nonnull)peripheral;
 - (void)centralManager:(CBCentralManager * _Nonnull)central didFailToConnectPeripheral:(CBPeripheral * _Nonnull)peripheral error:(NSError * _Nullable)error;
+- (void)centralManager:(CBCentralManager * _Nonnull)central didDisconnectPeripheral:(CBPeripheral * _Nonnull)peripheral error:(NSError * _Nullable)error;
 @end
+
+@class CBPeripheralManager;
+@class CBCentral;
+@class CBATTRequest;
+
+@interface BluetoothService (SWIFT_EXTENSION(OfflineBlockchainWallet)) <CBPeripheralManagerDelegate>
+- (void)peripheralManagerDidUpdateState:(CBPeripheralManager * _Nonnull)peripheral;
+- (void)peripheralManager:(CBPeripheralManager * _Nonnull)peripheral didAddService:(CBService * _Nonnull)service error:(NSError * _Nullable)error;
+- (void)peripheralManagerDidStartAdvertising:(CBPeripheralManager * _Nonnull)peripheral error:(NSError * _Nullable)error;
+- (void)peripheralManager:(CBPeripheralManager * _Nonnull)peripheral central:(CBCentral * _Nonnull)central didSubscribeToCharacteristic:(CBCharacteristic * _Nonnull)characteristic;
+- (void)peripheralManager:(CBPeripheralManager * _Nonnull)peripheral central:(CBCentral * _Nonnull)central didUnsubscribeFromCharacteristic:(CBCharacteristic * _Nonnull)characteristic;
+- (void)peripheralManager:(CBPeripheralManager * _Nonnull)peripheral didReceiveReadRequest:(CBATTRequest * _Nonnull)request;
+- (void)peripheralManager:(CBPeripheralManager * _Nonnull)peripheral didReceiveWriteRequests:(NSArray<CBATTRequest *> * _Nonnull)requests;
+@end
+
 
 #endif
 #if __has_attribute(external_source_symbol)

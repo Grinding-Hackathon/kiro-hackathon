@@ -148,8 +148,7 @@ class QRBluetoothIntegrationService: QRBluetoothIntegrationServiceProtocol {
         return BluetoothDevice(
             id: paymentRequest.bluetoothInfo.deviceIdentifier ?? paymentRequest.walletId,
             name: paymentRequest.deviceName,
-            rssi: 0, // Will be updated during scanning
-            walletInfo: walletInfo
+            rssi: 0 // Will be updated during scanning
         )
     }
     

@@ -99,7 +99,7 @@
   - Integrate QR code data with Bluetooth connection initiation
   - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5_
 
-- [ ] 13. Develop Bluetooth communication layer
+- [x] 13. Develop Bluetooth communication layer
   - Implement Core Bluetooth framework for device discovery and pairing
   - Create secure Bluetooth Personal Area Network (PAN) connections
   - Add device verification to ensure peer is legitimate wallet app
