@@ -18,6 +18,7 @@ protocol OfflineTokenServiceProtocol {
     func redeemTokens(_ tokens: [OfflineToken]) async throws -> String
     func startAutomaticTokenManagement()
     func stopAutomaticTokenManagement()
+    var isAutomaticManagementActive: Bool { get }
 }
 
 class OfflineTokenService: OfflineTokenServiceProtocol {
@@ -28,6 +29,10 @@ class OfflineTokenService: OfflineTokenServiceProtocol {
     
     private var automaticManagementTimer: Timer?
     internal var otmPublicKey: String?
+    
+    var isAutomaticManagementActive: Bool {
+        return automaticManagementTimer != nil
+    }
     
     init(cryptographyService: CryptographyServiceProtocol,
          networkService: NetworkServiceProtocol,
@@ -347,7 +352,7 @@ class OfflineTokenService: OfflineTokenServiceProtocol {
     private func loadOTMPublicKey() async {
         do {
             let publicKeyDatabase = try await networkService.fetchPublicKeys()
-            otmPublicKey = publicKeyDatabase.keys["otm"]
+            otmPublicKey = publicKeyDatabase.publicKeys["otm"]?.publicKey
             logger.info("Loaded OTM public key successfully")
         } catch {
             logger.error("Failed to load OTM public key: \(error)")

@@ -70,7 +70,7 @@ struct QRCodeDisplayView: View {
                                     .foregroundColor(.secondary)
                             }
                             .frame(width: 250, height: 250)
-                            .background(Color.gray.opacity(0.1))
+                            .background(Color.adaptiveSecondaryBackground)
                             .cornerRadius(12)
                         } else {
                             VStack(spacing: 16) {
@@ -88,7 +88,7 @@ struct QRCodeDisplayView: View {
                                 .buttonStyle(.bordered)
                             }
                             .frame(width: 250, height: 250)
-                            .background(Color.gray.opacity(0.1))
+                            .background(Color.adaptiveSecondaryBackground)
                             .cornerRadius(12)
                         }
                         

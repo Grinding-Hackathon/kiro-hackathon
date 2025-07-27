@@ -11,6 +11,7 @@ struct SettingsView: View {
     @ObservedObject var walletViewModel: WalletViewModel
     @Environment(\.dismiss) private var dismiss
     @State private var showingResetConfirmation = false
+    @StateObject private var localThemeManager = ThemeManager()
     
     var body: some View {
         NavigationView {
@@ -241,6 +242,39 @@ struct SettingsView: View {
                     Text("Balances are updated when you refresh or perform transactions. Offline balance is available without internet connection.")
                 }
                 
+                // Appearance Settings
+                Section {
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            Text("Appearance")
+                                .font(.subheadline)
+                                .fontWeight(.medium)
+                            
+                            Spacer()
+                            
+                            Image(systemName: localThemeManager.currentAppearanceMode.systemImage)
+                                .foregroundColor(.blue)
+                                .font(.caption)
+                        }
+                        
+                        Picker("Appearance", selection: $localThemeManager.currentAppearanceMode) {
+                            ForEach(AppearanceMode.allCases, id: \.self) { mode in
+                                HStack {
+                                    Image(systemName: mode.systemImage)
+                                    Text(mode.displayName)
+                                }
+                                .tag(mode)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+                    }
+                    .padding(.vertical, 4)
+                } header: {
+                    Text("Display")
+                } footer: {
+                    Text("Choose how the app appears. System will follow your device's appearance setting.")
+                }
+                
                 // Actions
                 Section("Actions") {
                     ActionRow(
@@ -304,6 +338,8 @@ struct SettingsView: View {
                 Text(walletViewModel.errorMessage ?? "")
             }
         }
+        .environmentObject(localThemeManager)
+        .themed()
     }
 }
 
@@ -500,7 +536,7 @@ struct AutoRechargePreview: View {
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 12)
-                .fill(Color(.systemGray6))
+                .fill(Color.adaptiveSecondaryBackground)
         )
     }
 }

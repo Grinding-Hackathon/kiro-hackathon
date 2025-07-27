@@ -19,6 +19,8 @@ struct Transaction: Codable, Identifiable {
     var senderSignature: String?
     var receiverSignature: String?
     var metadata: TransactionMetadata?
+    var isOffline: Bool
+    var blockchainTxHash: String?
     
     init(id: String = UUID().uuidString,
          type: TransactionType,
@@ -30,7 +32,9 @@ struct Transaction: Codable, Identifiable {
          tokenIds: [String],
          senderSignature: String? = nil,
          receiverSignature: String? = nil,
-         metadata: TransactionMetadata? = nil) {
+         metadata: TransactionMetadata? = nil,
+         isOffline: Bool = false,
+         blockchainTxHash: String? = nil) {
         self.id = id
         self.type = type
         self.senderId = senderId
@@ -42,6 +46,8 @@ struct Transaction: Codable, Identifiable {
         self.senderSignature = senderSignature
         self.receiverSignature = receiverSignature
         self.metadata = metadata
+        self.isOffline = isOffline
+        self.blockchainTxHash = blockchainTxHash
     }
 }
 

@@ -9,6 +9,7 @@ import SwiftUI
 
 struct ContentView: View {
     @State private var selectedTab = 0
+    @StateObject private var themeManager = ThemeManager()
     private let dependencyContainer = DependencyContainer.shared
     
     var body: some View {
@@ -42,6 +43,8 @@ struct ContentView: View {
                 .tag(3)
         }
         .accentColor(.blue)
+        .environmentObject(themeManager)
+        .themed()
     }
 }
 
@@ -131,7 +134,7 @@ struct QRCodeView: View {
                         }
                         .font(.subheadline)
                         .padding()
-                        .background(Color.gray.opacity(0.1))
+                        .background(Color.adaptiveSecondaryBackground)
                         .cornerRadius(8)
                         
                         Button("Send Payment") {

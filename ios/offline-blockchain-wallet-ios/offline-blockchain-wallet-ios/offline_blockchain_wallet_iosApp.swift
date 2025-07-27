@@ -7,15 +7,26 @@
 
 import SwiftUI
 import CoreData
+import BackgroundTasks
+import UserNotifications
 
 @main
 struct offline_blockchain_wallet_iosApp: App {
     // Initialize dependency container
     let dependencyContainer = DependencyContainer.shared
     
+    // Background service coordinator
+    private var backgroundServiceCoordinator: BackgroundServiceCoordinatorProtocol {
+        return dependencyContainer.getBackgroundServiceCoordinator()
+    }
+    
     init() {
         // Configure app on launch
         configureApp()
+        
+        // Register background tasks immediately during app initialization
+        // This must happen before the app finishes launching
+        setupBackgroundTasks()
     }
     
     var body: some Scene {
@@ -23,7 +34,19 @@ struct offline_blockchain_wallet_iosApp: App {
             ContentView()
                 .environmentObject(dependencyContainer.createWalletViewModel())
                 .onAppear {
-                    setupApp()
+                    // Request notification permissions after app appears
+                    Task {
+                        await requestNotificationPermissions()
+                    }
+                }
+                .onReceive(NotificationCenter.default.publisher(for: UIApplication.willEnterForegroundNotification)) { _ in
+                    backgroundServiceCoordinator.handleAppWillEnterForeground()
+                }
+                .onReceive(NotificationCenter.default.publisher(for: UIApplication.didEnterBackgroundNotification)) { _ in
+                    backgroundServiceCoordinator.handleAppDidEnterBackground()
+                }
+                .onReceive(NotificationCenter.default.publisher(for: UIApplication.willTerminateNotification)) { _ in
+                    backgroundServiceCoordinator.handleAppWillTerminate()
                 }
                 .handleWalletErrors()
         }
@@ -37,10 +60,7 @@ struct offline_blockchain_wallet_iosApp: App {
         Logger.shared.info("App launched successfully")
     }
     
-    private func setupApp() {
-        // Initialize background tasks
-        setupBackgroundTasks()
-    }
+
     
     private func configureAppearance() {
         // Configure navigation bar appearance
@@ -63,8 +83,23 @@ struct offline_blockchain_wallet_iosApp: App {
         UITabBar.appearance().scrollEdgeAppearance = tabBarAppearance
     }
     
+
     private func setupBackgroundTasks() {
-        // Background task setup will be implemented in later tasks
-        // This includes token expiration monitoring and auto-purchase
+        // Initialize all background services
+        backgroundServiceCoordinator.initializeBackgroundServices()
+        
+        // Start background services
+        backgroundServiceCoordinator.startAllBackgroundServices()
+        
+        Logger.shared.info("Background services configured successfully")
+    }
+    
+    private func requestNotificationPermissions() async {
+        let granted = await dependencyContainer.getBackgroundTaskManager().requestNotificationPermissions()
+        if granted {
+            Logger.shared.info("Notification permissions granted")
+        } else {
+            Logger.shared.warning("Notification permissions denied")
+        }
     }
 }

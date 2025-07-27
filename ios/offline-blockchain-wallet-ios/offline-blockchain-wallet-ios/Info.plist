@@ -7,6 +7,17 @@
 		<string>bluetooth-peripheral</string>
 		<string>bluetooth-central</string>
 		<string>fetch</string>
+		<string>background-processing</string>
+		<string>background-refresh</string>
 	</array>
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>com.offlineblockchainwallet.backgroundrefresh</string>
+		<string>com.offlineblockchainwallet.tokenexpiration</string>
+		<string>com.offlineblockchainwallet.periodicsync</string>
+		<string>com.offlineblockchainwallet.bluetooth</string>
+	</array>
+	<key>NSUserNotificationsUsageDescription</key>
+	<string>This app needs notification permissions to alert you about token expiration, transaction status updates, and automatic token purchases.</string>
 </dict>
 </plist>

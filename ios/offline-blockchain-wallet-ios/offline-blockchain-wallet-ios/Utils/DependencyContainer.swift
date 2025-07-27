@@ -30,6 +30,29 @@ class DependencyContainer {
         networkService: networkService,
         storageService: storageService
     )
+    private lazy var pushNotificationService: PushNotificationServiceProtocol = PushNotificationService()
+    private lazy var backgroundBluetoothService: BackgroundBluetoothServiceProtocol = BackgroundBluetoothService(
+        bluetoothService: bluetoothService,
+        storageService: storageService,
+        pushNotificationService: pushNotificationService
+    )
+    private lazy var backgroundTaskManager: BackgroundTaskManagerProtocol = BackgroundTaskManager(
+        offlineTokenService: offlineTokenService,
+        networkService: networkService,
+        bluetoothService: bluetoothService,
+        storageService: storageService,
+        pushNotificationService: pushNotificationService,
+        backgroundBluetoothService: backgroundBluetoothService
+    )
+    private lazy var backgroundServiceCoordinator: BackgroundServiceCoordinatorProtocol = BackgroundServiceCoordinator(
+        backgroundTaskManager: backgroundTaskManager,
+        offlineTokenService: offlineTokenService,
+        networkService: networkService,
+        bluetoothService: bluetoothService,
+        pushNotificationService: pushNotificationService,
+        backgroundBluetoothService: backgroundBluetoothService,
+        storageService: storageService
+    )
     
     private init() {}
     
@@ -64,6 +87,22 @@ class DependencyContainer {
     
     func getOfflineTokenService() -> OfflineTokenServiceProtocol {
         return offlineTokenService
+    }
+    
+    func getBackgroundTaskManager() -> BackgroundTaskManagerProtocol {
+        return backgroundTaskManager
+    }
+    
+    func getPushNotificationService() -> PushNotificationServiceProtocol {
+        return pushNotificationService
+    }
+    
+    func getBackgroundBluetoothService() -> BackgroundBluetoothServiceProtocol {
+        return backgroundBluetoothService
+    }
+    
+    func getBackgroundServiceCoordinator() -> BackgroundServiceCoordinatorProtocol {
+        return backgroundServiceCoordinator
     }
     
     // MARK: - ViewModel Factory

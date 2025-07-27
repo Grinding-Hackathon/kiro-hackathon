@@ -264,7 +264,7 @@ struct WalletView: View {
                     .padding()
             }
             .frame(maxWidth: .infinity)
-            .background(Color.gray.opacity(0.1))
+            .background(Color.adaptiveSecondaryBackground)
             .cornerRadius(12)
             .padding(.horizontal)
         }
@@ -358,9 +358,9 @@ struct BalanceCard: View {
         }
         .padding()
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Color.white)
+        .background(Color.adaptiveCardBackground)
         .cornerRadius(12)
-        .shadow(color: .black.opacity(0.1), radius: 4, x: 0, y: 2)
+        .shadow(color: Color.black.opacity(0.1), radius: 4, x: 0, y: 2)
     }
 }
 
@@ -399,7 +399,7 @@ struct ActionButton: View {
             }
             .frame(maxWidth: .infinity)
             .padding()
-            .background(Color.gray.opacity(0.1))
+            .background(Color.adaptiveSecondaryBackground)
             .cornerRadius(12)
             .opacity(isLoading ? 0.6 : 1.0)
         }
@@ -423,7 +423,7 @@ struct LoadingView: View {
                 .foregroundColor(.secondary)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color.white)
+        .background(Color.adaptiveBackground)
     }
 }
 
@@ -572,8 +572,8 @@ struct EnhancedBalanceCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(Color.white)
-                .shadow(color: .black.opacity(0.08), radius: 8, x: 0, y: 4)
+                .fill(Color.adaptiveCardBackground)
+                .shadow(color: Color.black.opacity(0.08), radius: 8, x: 0, y: 4)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 16)

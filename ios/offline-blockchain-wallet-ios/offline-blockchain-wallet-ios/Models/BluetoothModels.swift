@@ -59,6 +59,10 @@ class BluetoothConnection: ObservableObject {
     @Published var connectionState: BluetoothConnectionState = .disconnected
     @Published var lastActivity: Date = Date()
     
+    // Additional properties for background service compatibility
+    var deviceId: String { return id }
+    var deviceName: String { return device.name }
+    
     private let connectionTimeout: TimeInterval
     private var timeoutTimer: Timer?
     
@@ -156,7 +160,9 @@ struct WalletInfo {
     let publicKey: String
     let deviceName: String
     let version: String
-    let capabilities: [WalletCapability]
+    let capabilities: [String]
+    let offlineBalance: Double?
+    let lastSyncTimestamp: Date?
     
     init(walletId: String, publicKey: String, deviceName: String = {
         #if canImport(UIKit)
@@ -164,12 +170,14 @@ struct WalletInfo {
         #else
         return "Unknown Device"
         #endif
-    }(), version: String = "1.0.0") {
+    }(), version: String = "1.0.0", capabilities: [String] = ["offline_tokens", "qr_payments", "bluetooth_transfers"], offlineBalance: Double? = nil, lastSyncTimestamp: Date? = nil) {
         self.walletId = walletId
         self.publicKey = publicKey
         self.deviceName = deviceName
         self.version = version
-        self.capabilities = [.offlineTokens, .qrCodePayments, .bluetoothTransfers]
+        self.capabilities = capabilities
+        self.offlineBalance = offlineBalance
+        self.lastSyncTimestamp = lastSyncTimestamp
     }
 }
 
@@ -392,5 +400,100 @@ enum ConnectionHealthStatus: String, CaseIterable {
         case .poor:
             return "Poor connection quality"
         }
+    }
+}
+
+// MARK: - Storage Models
+
+/// Represents the type of Bluetooth connection
+enum BluetoothConnectionType: String, Codable {
+    case incoming = "incoming"
+    case outgoing = "outgoing"
+}
+
+/// Represents a Bluetooth connection record for storage
+struct BluetoothConnectionRecord: Codable {
+    let deviceId: String
+    let deviceName: String
+    let connectedAt: Date
+    let connectionType: BluetoothConnectionType?
+    var disconnectedAt: Date?
+    var status: BackgroundBluetoothConnectionStatus
+    let lastActivity: Date
+    
+    init(deviceId: String, deviceName: String, connectedAt: Date, connectionType: BluetoothConnectionType? = nil, disconnectedAt: Date? = nil, status: BackgroundBluetoothConnectionStatus, lastActivity: Date = Date()) {
+        self.deviceId = deviceId
+        self.deviceName = deviceName
+        self.connectedAt = connectedAt
+        self.connectionType = connectionType
+        self.disconnectedAt = disconnectedAt
+        self.status = status
+        self.lastActivity = lastActivity
+    }
+    
+    // Manual Codable implementation for backward compatibility
+    enum CodingKeys: String, CodingKey {
+        case deviceId, deviceName, connectedAt, connectionType, disconnectedAt, status, lastActivity
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        deviceId = try container.decode(String.self, forKey: .deviceId)
+        deviceName = try container.decode(String.self, forKey: .deviceName)
+        connectedAt = try container.decode(Date.self, forKey: .connectedAt)
+        connectionType = try container.decodeIfPresent(BluetoothConnectionType.self, forKey: .connectionType)
+        disconnectedAt = try container.decodeIfPresent(Date.self, forKey: .disconnectedAt)
+        status = try container.decode(BackgroundBluetoothConnectionStatus.self, forKey: .status)
+        lastActivity = try container.decodeIfPresent(Date.self, forKey: .lastActivity) ?? Date()
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(deviceId, forKey: .deviceId)
+        try container.encode(deviceName, forKey: .deviceName)
+        try container.encode(connectedAt, forKey: .connectedAt)
+        try container.encodeIfPresent(connectionType, forKey: .connectionType)
+        try container.encodeIfPresent(disconnectedAt, forKey: .disconnectedAt)
+        try container.encode(status, forKey: .status)
+        try container.encode(lastActivity, forKey: .lastActivity)
+    }
+}
+
+/// Represents the status of a background Bluetooth connection
+enum BackgroundBluetoothConnectionStatus: String, Codable, CaseIterable {
+    case connected = "connected"
+    case disconnected = "disconnected"
+    case connecting = "connecting"
+    case failed = "failed"
+    case timeout = "timeout"
+}
+
+/// Represents a public key database for peer verification
+struct PublicKeyDatabase: Codable {
+    let version: String
+    let lastUpdated: Date
+    let publicKeys: [String: PublicKeyEntry]
+    
+    init(version: String = "1.0.0", lastUpdated: Date = Date(), publicKeys: [String: PublicKeyEntry] = [:]) {
+        self.version = version
+        self.lastUpdated = lastUpdated
+        self.publicKeys = publicKeys
+    }
+}
+
+/// Represents a public key entry in the database
+struct PublicKeyEntry: Codable {
+    let walletId: String
+    let publicKey: String
+    let addedAt: Date
+    let isVerified: Bool
+    let deviceName: String?
+    
+    init(walletId: String, publicKey: String, addedAt: Date = Date(), isVerified: Bool = false, deviceName: String? = nil) {
+        self.walletId = walletId
+        self.publicKey = publicKey
+        self.addedAt = addedAt
+        self.isVerified = isVerified
+        self.deviceName = deviceName
     }
 }

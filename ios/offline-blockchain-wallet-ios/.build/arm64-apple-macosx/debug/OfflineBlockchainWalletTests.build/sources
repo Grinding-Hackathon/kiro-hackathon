@@ -1,5 +1,6 @@
 /Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/Tests/OfflineBlockchainWalletTests/BluetoothServiceTests.swift
 /Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/Tests/OfflineBlockchainWalletTests/CryptographyServiceTests.swift
+/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/Tests/OfflineBlockchainWalletTests/NetworkServiceTests.swift
 /Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/Tests/OfflineBlockchainWalletTests/OfflineTokenServiceTests.swift
 /Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/Tests/OfflineBlockchainWalletTests/QRCodeServiceTests.swift
 /Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/Tests/OfflineBlockchainWalletTests/StorageServiceTests.swift

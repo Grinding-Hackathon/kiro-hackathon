@@ -131,7 +131,7 @@
   - Add loading states, error messages, and user feedback
   - _Requirements: 10.1, 10.2, 10.3, 10.5, 2.3, 2.6_
 
-- [ ] 17. Implement network layer for API communication
+- [x] 17. Implement network layer for API communication
   - Create HTTP client for backend API communication
   - Implement authentication and JWT token management
   - Add network error handling and retry mechanisms
@@ -139,7 +139,7 @@
   - Implement offline queue for pending API requests
   - _Requirements: 1.4, 7.3, 7.5, 8.3, 8.4_
 
-- [ ] 18. Add background services and automation
+- [x] 18. Add background services and automation
   - Implement background app refresh for token expiration monitoring
   - Create automatic token purchase based on balance thresholds
   - Add push notifications for transaction status updates
@@ -147,7 +147,7 @@
   - Create periodic sync with blockchain for balance updates
   - _Requirements: 2.1, 2.2, 2.5, 2.6, 4.6, 7.4_
 
-- [ ] 19. Create comprehensive testing suite for mobile app
+- [x] 19. Create comprehensive testing suite for mobile app
   - Write unit tests for all business logic and utility methods
   - Implement UI tests for critical user flows
   - Create integration tests for Bluetooth communication

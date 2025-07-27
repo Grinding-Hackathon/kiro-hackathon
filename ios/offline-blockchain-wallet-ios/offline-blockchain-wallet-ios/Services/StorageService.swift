@@ -43,6 +43,21 @@ protocol StorageServiceProtocol {
     func exportData() async throws -> Data
     func importData(_ data: Data) async throws
     func performDataMigration() async throws
+    
+    // Additional methods for BackgroundTaskManager
+    func getAllOfflineTokens() async throws -> [OfflineToken]
+    func getPendingTransactions() async throws -> [Transaction]
+    func getPendingTransactionsCount() async throws -> Int
+    
+    // Bluetooth connection management
+    func saveBluetoothConnection(_ connection: BluetoothConnectionRecord) async throws
+    func updateBluetoothConnectionStatus(deviceId: String, status: BackgroundBluetoothConnectionStatus, disconnectedAt: Date?) async throws
+    func getBluetoothConnections() async throws -> [BluetoothConnectionRecord]
+    func deleteOldBluetoothConnections(olderThan: Date) async throws
+    
+    // Public key database management
+    func savePublicKeyDatabase(_ database: PublicKeyDatabase) async throws
+    func loadPublicKeyDatabase() async throws -> PublicKeyDatabase?
 }
 
 class StorageService: StorageServiceProtocol {
@@ -614,6 +629,138 @@ class StorageService: StorageServiceProtocol {
         // This would be expanded based on specific migration needs
         
         logger.info("Data migration completed successfully")
+    }
+    
+    // MARK: - Additional Methods for BackgroundTaskManager
+    
+    func getAllOfflineTokens() async throws -> [OfflineToken] {
+        return try await loadOfflineTokens()
+    }
+    
+    func getPendingTransactions() async throws -> [Transaction] {
+        return try await getTransactionsByStatus(.pending)
+    }
+    
+    func getPendingTransactionsCount() async throws -> Int {
+        let pendingTransactions = try await getTransactionsByStatus(.pending)
+        return pendingTransactions.count
+    }
+    
+    func saveBluetoothConnection(_ connection: BluetoothConnectionRecord) async throws {
+        // For now, we'll store Bluetooth connections in UserDefaults as they're temporary
+        // In a production app, you might want to add a Core Data entity for this
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        
+        do {
+            let data = try encoder.encode(connection)
+            let key = "bluetooth_connection_\(connection.deviceId)"
+            UserDefaults.standard.set(data, forKey: key)
+            logger.info("Saved Bluetooth connection record: \(connection.deviceId)")
+        } catch {
+            logger.error("Failed to save Bluetooth connection: \(error)")
+            throw StorageError.encodingError(error)
+        }
+    }
+    
+    func updateBluetoothConnectionStatus(deviceId: String, status: BackgroundBluetoothConnectionStatus, disconnectedAt: Date?) async throws {
+        let key = "bluetooth_connection_\(deviceId)"
+        
+        guard let data = UserDefaults.standard.data(forKey: key) else {
+            logger.warning("No Bluetooth connection record found for device: \(deviceId)")
+            return
+        }
+        
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        
+        do {
+            var connection = try decoder.decode(BluetoothConnectionRecord.self, from: data)
+            connection.status = status
+            connection.disconnectedAt = disconnectedAt
+            
+            let encoder = JSONEncoder()
+            encoder.dateEncodingStrategy = .iso8601
+            let updatedData = try encoder.encode(connection)
+            
+            UserDefaults.standard.set(updatedData, forKey: key)
+            logger.info("Updated Bluetooth connection status: \(deviceId) -> \(status)")
+        } catch {
+            logger.error("Failed to update Bluetooth connection status: \(error)")
+            throw StorageError.decodingError(error)
+        }
+    }
+    
+    func getBluetoothConnections() async throws -> [BluetoothConnectionRecord] {
+        let defaults = UserDefaults.standard
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        
+        var connections: [BluetoothConnectionRecord] = []
+        
+        for key in defaults.dictionaryRepresentation().keys {
+            if key.hasPrefix("bluetooth_connection_") {
+                if let data = defaults.data(forKey: key) {
+                    do {
+                        let connection = try decoder.decode(BluetoothConnectionRecord.self, from: data)
+                        connections.append(connection)
+                    } catch {
+                        logger.warning("Failed to decode Bluetooth connection for key \(key): \(error)")
+                    }
+                }
+            }
+        }
+        
+        return connections.sorted { $0.connectedAt > $1.connectedAt }
+    }
+    
+    func deleteOldBluetoothConnections(olderThan: Date) async throws {
+        let connections = try await getBluetoothConnections()
+        
+        for connection in connections {
+            if connection.connectedAt < olderThan {
+                let key = "bluetooth_connection_\(connection.deviceId)"
+                UserDefaults.standard.removeObject(forKey: key)
+                logger.info("Deleted old Bluetooth connection: \(connection.deviceId)")
+            }
+        }
+    }
+    
+    // MARK: - Public Key Database Management
+    
+    func savePublicKeyDatabase(_ database: PublicKeyDatabase) async throws {
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        
+        do {
+            let data = try encoder.encode(database)
+            let encryptedData = try encryptData(data)
+            UserDefaults.standard.set(encryptedData, forKey: "public_key_database")
+            logger.info("Saved public key database with \(database.publicKeys.count) entries")
+        } catch {
+            logger.error("Failed to save public key database: \(error)")
+            throw StorageError.encodingError(error)
+        }
+    }
+    
+    func loadPublicKeyDatabase() async throws -> PublicKeyDatabase? {
+        guard let encryptedData = UserDefaults.standard.data(forKey: "public_key_database") else {
+            logger.info("No public key database found")
+            return nil
+        }
+        
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        
+        do {
+            let data = try decryptData(encryptedData)
+            let database = try decoder.decode(PublicKeyDatabase.self, from: data)
+            logger.info("Loaded public key database with \(database.publicKeys.count) entries")
+            return database
+        } catch {
+            logger.error("Failed to load public key database: \(error)")
+            throw StorageError.decodingError(error)
+        }
     }
 }
 

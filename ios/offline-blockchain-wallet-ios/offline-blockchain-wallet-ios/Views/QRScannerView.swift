@@ -48,7 +48,7 @@ struct QRScannerView: View {
                     .padding()
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Color.black.opacity(0.1))
+                .background(Color.adaptiveSecondaryBackground)
                 
                 // Overlay for processing state
                 if isProcessing {

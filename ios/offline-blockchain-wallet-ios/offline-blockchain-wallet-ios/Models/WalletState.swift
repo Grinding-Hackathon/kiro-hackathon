@@ -10,12 +10,13 @@ import Foundation
 struct WalletState: Codable {
     let walletId: String
     let publicKey: String
-    let offlineBalance: Double
-    let blockchainBalance: Double
-    let lastSyncTimestamp: Date?
-    let autoRechargeEnabled: Bool
-    let autoRechargeThreshold: Double
-    let autoRechargeAmount: Double
+    var offlineBalance: Double
+    var blockchainBalance: Double
+    var lastSyncTimestamp: Date?
+    var autoRechargeEnabled: Bool
+    var autoRechargeThreshold: Double
+    var autoRechargeAmount: Double
+    var lastKnownOfflineBalance: Double?
     
     init(walletId: String,
          publicKey: String,
@@ -24,7 +25,8 @@ struct WalletState: Codable {
          lastSyncTimestamp: Date? = nil,
          autoRechargeEnabled: Bool = true,
          autoRechargeThreshold: Double = Constants.Token.autoRechargeThreshold,
-         autoRechargeAmount: Double = Constants.Token.autoRechargeAmount) {
+         autoRechargeAmount: Double = Constants.Token.autoRechargeAmount,
+         lastKnownOfflineBalance: Double? = nil) {
         self.walletId = walletId
         self.publicKey = publicKey
         self.offlineBalance = offlineBalance
@@ -33,5 +35,6 @@ struct WalletState: Codable {
         self.autoRechargeEnabled = autoRechargeEnabled
         self.autoRechargeThreshold = autoRechargeThreshold
         self.autoRechargeAmount = autoRechargeAmount
+        self.lastKnownOfflineBalance = lastKnownOfflineBalance
     }
 }
