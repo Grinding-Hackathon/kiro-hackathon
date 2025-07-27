@@ -11,6 +11,7 @@ struct TransactionView: View {
     @StateObject private var transactionViewModel: TransactionViewModel
     @Environment(\.dismiss) private var dismiss
     @State private var selectedTab = 0
+    @State private var selectedFilter: TransactionFilter = .all
     
     init(viewModel: TransactionViewModel) {
         self._transactionViewModel = StateObject(wrappedValue: viewModel)
@@ -519,48 +520,17 @@ struct TransactionView: View {
             // Enhanced filter tabs with counts
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
-                    EnhancedFilterTab(
-                        title: "All",
-                        count: transactionViewModel.transactions.count,
-                        isSelected: true
-                    ) {
-                        // Filter all transactions
-                    }
-                    
-                    EnhancedFilterTab(
-                        title: "Offline",
-                        count: transactionViewModel.getOfflineTransactions().count,
-                        isSelected: false,
-                        color: .blue
-                    ) {
-                        // Filter offline transactions
-                    }
-                    
-                    EnhancedFilterTab(
-                        title: "Online",
-                        count: transactionViewModel.getOnlineTransactions().count,
-                        isSelected: false,
-                        color: .green
-                    ) {
-                        // Filter online transactions
-                    }
-                    
-                    EnhancedFilterTab(
-                        title: "Pending",
-                        count: transactionViewModel.getPendingTransactions().count,
-                        isSelected: false,
-                        color: .orange
-                    ) {
-                        // Filter pending transactions
-                    }
-                    
-                    EnhancedFilterTab(
-                        title: "Failed",
-                        count: transactionViewModel.getFailedTransactions().count,
-                        isSelected: false,
-                        color: .red
-                    ) {
-                        // Filter failed transactions
+                    ForEach(TransactionFilter.allCases, id: \.self) { filter in
+                        EnhancedFilterTab(
+                            title: filter.title,
+                            count: getTransactionCount(for: filter),
+                            isSelected: selectedFilter == filter,
+                            color: filter.color
+                        ) {
+                            withAnimation(.easeInOut(duration: 0.2)) {
+                                selectedFilter = filter
+                            }
+                        }
                     }
                 }
                 .padding(.horizontal)
@@ -573,35 +543,34 @@ struct TransactionView: View {
             } else if transactionViewModel.transactions.isEmpty {
                 EnhancedEmptyTransactionsView()
             } else {
-                List {
-                    // Pending transactions section with enhanced display
-                    if !transactionViewModel.getPendingTransactions().isEmpty {
-                        Section {
-                            ForEach(transactionViewModel.getPendingTransactions()) { transaction in
-                                EnhancedTransactionRow(transaction: transaction)
-                                    .onTapGesture {
-                                        transactionViewModel.selectTransaction(transaction)
-                                    }
-                            }
-                        } header: {
-                            SectionHeader(
-                                title: "Pending",
-                                count: transactionViewModel.getPendingTransactions().count,
-                                color: .orange,
-                                icon: "clock"
-                            )
-                        }
+                let filteredTransactions = getFilteredTransactions()
+                
+                if filteredTransactions.isEmpty {
+                    VStack(spacing: 16) {
+                        Image(systemName: "tray")
+                            .font(.system(size: 48))
+                            .foregroundColor(.secondary)
+                        
+                        Text("No \(selectedFilter.title.lowercased()) transactions")
+                            .font(.headline)
+                            .foregroundColor(.secondary)
+                        
+                        Text("Transactions matching your filter will appear here")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                            .multilineTextAlignment(.center)
                     }
-                    
-                    // Failed transactions section with retry actions
-                    if !transactionViewModel.getFailedTransactions().isEmpty {
-                        Section {
-                            ForEach(transactionViewModel.getFailedTransactions()) { transaction in
-                                EnhancedTransactionRow(transaction: transaction)
-                                    .onTapGesture {
-                                        transactionViewModel.selectTransaction(transaction)
-                                    }
-                                    .swipeActions(edge: .trailing) {
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .background(Color.adaptiveBackground)
+                } else {
+                    List {
+                        ForEach(filteredTransactions) { transaction in
+                            EnhancedTransactionRow(transaction: transaction)
+                                .onTapGesture {
+                                    transactionViewModel.selectTransaction(transaction)
+                                }
+                                .swipeActions(edge: .trailing) {
+                                    if transaction.status == .failed {
                                         Button("Retry") {
                                             Task {
                                                 await transactionViewModel.retryTransaction(transaction)
@@ -616,40 +585,14 @@ struct TransactionView: View {
                                         }
                                         .tint(.red)
                                     }
-                            }
-                        } header: {
-                            SectionHeader(
-                                title: "Failed",
-                                count: transactionViewModel.getFailedTransactions().count,
-                                color: .red,
-                                icon: "exclamationmark.triangle"
-                            )
+                                }
                         }
                     }
-                    
-                    // Completed transactions section
-                    if !transactionViewModel.getCompletedTransactions().isEmpty {
-                        Section {
-                            ForEach(transactionViewModel.getCompletedTransactions()) { transaction in
-                                EnhancedTransactionRow(transaction: transaction)
-                                    .onTapGesture {
-                                        transactionViewModel.selectTransaction(transaction)
-                                    }
-                            }
-                        } header: {
-                            SectionHeader(
-                                title: "Completed",
-                                count: transactionViewModel.getCompletedTransactions().count,
-                                color: .green,
-                                icon: "checkmark.circle"
-                            )
-                        }
+                    .refreshable {
+                        await transactionViewModel.refreshTransactions()
                     }
+                    .listStyle(InsetGroupedListStyle())
                 }
-                .refreshable {
-                    await transactionViewModel.refreshTransactions()
-                }
-                .listStyle(InsetGroupedListStyle())
             }
         }
     }
@@ -1071,6 +1014,11 @@ struct EnhancedFilterTab: View {
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
+            .background(
+                RoundedRectangle(cornerRadius: 8)
+                    .fill(isSelected ? color.opacity(0.1) : Color.clear)
+                    .animation(.easeInOut(duration: 0.2), value: isSelected)
+            )
         }
         .buttonStyle(PlainButtonStyle())
     }
@@ -1453,6 +1401,64 @@ func titleForTransactionType(_ type: TransactionType) -> String {
         return "Token Purchase"
     case .tokenRedemption:
         return "Token Redemption"
+    }
+}
+
+// MARK: - Transaction Filtering Extensions
+
+extension TransactionView {
+    private func getTransactionCount(for filter: TransactionFilter) -> Int {
+        switch filter {
+        case .all:
+            return transactionViewModel.transactions.count
+        case .offline:
+            return transactionViewModel.getOfflineTransactions().count
+        case .online:
+            return transactionViewModel.getOnlineTransactions().count
+        case .pending:
+            return transactionViewModel.getPendingTransactions().count
+        case .failed:
+            return transactionViewModel.getFailedTransactions().count
+        }
+    }
+    
+    private func getFilteredTransactions() -> [Transaction] {
+        switch selectedFilter {
+        case .all:
+            return transactionViewModel.transactions
+        case .offline:
+            return transactionViewModel.getOfflineTransactions()
+        case .online:
+            return transactionViewModel.getOnlineTransactions()
+        case .pending:
+            return transactionViewModel.getPendingTransactions()
+        case .failed:
+            return transactionViewModel.getFailedTransactions()
+        }
+    }
+}
+
+enum TransactionFilter: CaseIterable {
+    case all, offline, online, pending, failed
+    
+    var title: String {
+        switch self {
+        case .all: return "All"
+        case .offline: return "Offline"
+        case .online: return "Online"
+        case .pending: return "Pending"
+        case .failed: return "Failed"
+        }
+    }
+    
+    var color: Color {
+        switch self {
+        case .all: return .primary
+        case .offline: return .blue
+        case .online: return .green
+        case .pending: return .orange
+        case .failed: return .red
+        }
     }
 }
 
