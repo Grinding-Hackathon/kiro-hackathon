@@ -1,6 +1,40 @@
 import { ethers } from 'ethers';
+
+// Check if integration tests should run before importing services
+const testRpcUrl = process.env['TEST_RPC_URL'];
+const testPrivateKey = process.env['TEST_PRIVATE_KEY'];
+
+// Set up valid test configuration before importing services
+if (testRpcUrl) {
+  process.env['PRIVATE_KEY'] = testPrivateKey || '0x' + '1'.repeat(64);
+  process.env['ETHEREUM_RPC_URL'] = testRpcUrl;
+}
+
 import { BlockchainService } from '../services/blockchainService';
 import { config } from '../config/config';
+import { it } from 'node:test';
+import { describe } from 'node:test';
+import { it } from 'node:test';
+import { beforeEach } from 'node:test';
+import { describe } from 'node:test';
+import { it } from 'node:test';
+import { it } from 'node:test';
+import { describe } from 'node:test';
+import { it } from 'node:test';
+import { it } from 'node:test';
+import { beforeEach } from 'node:test';
+import { describe } from 'node:test';
+import { it } from 'node:test';
+import { beforeEach } from 'node:test';
+import { describe } from 'node:test';
+import { it } from 'node:test';
+import { it } from 'node:test';
+import { it } from 'node:test';
+import { describe } from 'node:test';
+import { afterEach } from 'node:test';
+import { beforeEach } from 'node:test';
+import { describe } from 'node:test';
+import { describe } from 'node:test';
 
 // Mock the logger
 jest.mock('../utils/logger', () => ({
@@ -36,27 +70,19 @@ jest.mock('../../artifacts/contracts/OfflineWalletToken.sol/OfflineWalletToken.j
   bytecode: "0x608060405234801561001057600080fd5b50"
 }));
 
-describe('BlockchainService Integration Tests', () => {
+// Skip integration tests if TEST_RPC_URL is not provided
+const describeOrSkip = testRpcUrl ? describe : describe.skip;
+
+describeOrSkip('BlockchainService Integration Tests', () => {
   let blockchainService: BlockchainService;
-  const testRpcUrl = process.env['TEST_RPC_URL'];
-  const testPrivateKey = process.env['TEST_PRIVATE_KEY'];
 
   beforeAll(async () => {
-    // Skip integration tests if no test RPC URL is provided
-    if (!testRpcUrl) {
-      console.log('Skipping integration tests - TEST_RPC_URL not provided');
-      return;
-    }
-
+    console.log('Running integration tests with TEST_RPC_URL:', testRpcUrl);
     // Set up test environment
     process.env['NODE_ENV'] = 'test';
   });
 
   beforeEach(() => {
-    if (!testRpcUrl) {
-      return;
-    }
-    
     blockchainService = new BlockchainService();
   });
 
@@ -68,14 +94,9 @@ describe('BlockchainService Integration Tests', () => {
 
   describe('Web3 Connection Management', () => {
     it('should establish connection to test network', async () => {
-      if (!testRpcUrl) {
-        pending('TEST_RPC_URL not provided');
-        return;
-      }
-
       // Mock the config for this test
       const originalConfig = { ...config.blockchain };
-      config.blockchain.rpcUrl = testRpcUrl;
+      config.blockchain.rpcUrl = testRpcUrl!;
       config.blockchain.privateKey = testPrivateKey || '0x' + '1'.repeat(64);
 
       try {
@@ -94,11 +115,6 @@ describe('BlockchainService Integration Tests', () => {
     });
 
     it('should handle connection failures gracefully', async () => {
-      if (!testRpcUrl) {
-        pending('TEST_RPC_URL not provided');
-        return;
-      }
-
       // Mock the config with invalid RPC URL
       const originalConfig = { ...config.blockchain };
       config.blockchain.rpcUrl = 'http://invalid-url:8545';
@@ -116,16 +132,11 @@ describe('BlockchainService Integration Tests', () => {
     });
 
     it('should report correct connection status', async () => {
-      if (!testRpcUrl) {
-        pending('TEST_RPC_URL not provided');
-        return;
-      }
-
       const initialStatus = blockchainService.getConnectionStatus();
       expect(initialStatus.isConnected).toBe(false);
       expect(initialStatus.reconnectAttempts).toBe(0);
 
-      config.blockchain.rpcUrl = testRpcUrl;
+      config.blockchain.rpcUrl = testRpcUrl!;
       config.blockchain.privateKey = testPrivateKey || '0x' + '1'.repeat(64);
       
       await blockchainService.initialize();
@@ -137,23 +148,14 @@ describe('BlockchainService Integration Tests', () => {
 
   describe('Contract Deployment', () => {
     beforeEach(async () => {
-      if (!testRpcUrl) {
-        return;
-      }
-
       // Mock the config for contract tests
-      config.blockchain.rpcUrl = testRpcUrl;
+      config.blockchain.rpcUrl = testRpcUrl!;
       config.blockchain.privateKey = testPrivateKey || '0x' + '1'.repeat(64);
       
       await blockchainService.initialize();
     });
 
     it('should validate contract addresses', async () => {
-      if (!testRpcUrl) {
-        pending('TEST_RPC_URL not provided');
-        return;
-      }
-
       const invalidAddress = 'invalid-address';
       const initialSupply = ethers.parseEther('1000000');
 
@@ -165,33 +167,19 @@ describe('BlockchainService Integration Tests', () => {
 
   describe('Transaction Broadcasting', () => {
     beforeEach(async () => {
-      if (!testRpcUrl) {
-        return;
-      }
-
-      config.blockchain.rpcUrl = testRpcUrl;
+      config.blockchain.rpcUrl = testRpcUrl!;
       config.blockchain.privateKey = testPrivateKey || '0x' + '1'.repeat(64);
       
       await blockchainService.initialize();
     });
 
     it('should get wallet balance', async () => {
-      if (!testRpcUrl) {
-        pending('TEST_RPC_URL not provided');
-        return;
-      }
-
       const balance = await blockchainService.getWalletBalance();
       expect(typeof balance).toBe('string');
       expect(parseFloat(balance)).toBeGreaterThanOrEqual(0);
     });
 
     it('should get transaction details for non-existent transaction', async () => {
-      if (!testRpcUrl) {
-        pending('TEST_RPC_URL not provided');
-        return;
-      }
-
       // Test with a non-existent transaction
       const nonExistentTxHash = '0x' + '0'.repeat(64);
       
@@ -202,11 +190,6 @@ describe('BlockchainService Integration Tests', () => {
 
   describe('Error Handling and Recovery', () => {
     it('should handle network timeouts', async () => {
-      if (!testRpcUrl) {
-        pending('TEST_RPC_URL not provided');
-        return;
-      }
-
       // Test timeout handling by using a very short timeout
       const shortTimeoutService = new BlockchainService();
       
@@ -221,12 +204,7 @@ describe('BlockchainService Integration Tests', () => {
     });
 
     it('should validate transaction hashes', async () => {
-      if (!testRpcUrl) {
-        pending('TEST_RPC_URL not provided');
-        return;
-      }
-
-      config.blockchain.rpcUrl = testRpcUrl;
+      config.blockchain.rpcUrl = testRpcUrl!;
       config.blockchain.privateKey = testPrivateKey || '0x' + '1'.repeat(64);
       
       await blockchainService.initialize();
@@ -240,22 +218,13 @@ describe('BlockchainService Integration Tests', () => {
 
   describe('Event Monitoring', () => {
     beforeEach(async () => {
-      if (!testRpcUrl) {
-        return;
-      }
-
-      config.blockchain.rpcUrl = testRpcUrl;
+      config.blockchain.rpcUrl = testRpcUrl!;
       config.blockchain.privateKey = testPrivateKey || '0x' + '1'.repeat(64);
       
       await blockchainService.initialize();
     });
 
     it('should setup event listeners without errors', async () => {
-      if (!testRpcUrl) {
-        pending('TEST_RPC_URL not provided');
-        return;
-      }
-
       // This test verifies that event listener setup doesn't throw errors
       // Even without a deployed contract, the setup should not fail
       expect(() => {
@@ -266,12 +235,7 @@ describe('BlockchainService Integration Tests', () => {
 
   describe('Cleanup', () => {
     it('should cleanup resources properly', async () => {
-      if (!testRpcUrl) {
-        pending('TEST_RPC_URL not provided');
-        return;
-      }
-
-      config.blockchain.rpcUrl = testRpcUrl;
+      config.blockchain.rpcUrl = testRpcUrl!;
       config.blockchain.privateKey = testPrivateKey || '0x' + '1'.repeat(64);
       
       await blockchainService.initialize();
@@ -286,3 +250,8 @@ describe('BlockchainService Integration Tests', () => {
     });
   });
 });
+
+// If no TEST_RPC_URL is provided, show a message
+if (!testRpcUrl) {
+  console.log('Integration tests skipped - set TEST_RPC_URL environment variable to run them');
+}

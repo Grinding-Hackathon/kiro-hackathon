@@ -25,7 +25,7 @@
   - Write integration tests for blockchain operations
   - _Requirements: 1.1, 1.2, 8.3, 8.4_
 
-- [ ] 4. Implement Offline Token Manager (OTM) core functionality
+- [x] 4. Implement Offline Token Manager (OTM) core functionality
   - Generate and manage OTM private/public key pair for token signing
   - Implement token issuance with cryptographic signatures
   - Create token validation and signature verification methods
