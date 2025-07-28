@@ -9,6 +9,7 @@ import { config } from '@/config/config';
 import { logger } from '@/utils/logger';
 import { errorHandler } from '@/middleware/errorHandler';
 import { rateLimiter } from '@/middleware/rateLimiter';
+import { initializeDatabase, closeDatabase } from '@/database/init';
 // import { authMiddleware } from '@/middleware/auth'; // Will be used in future tasks
 
 // Load environment variables
@@ -60,28 +61,45 @@ app.use('/api/v1', (_req, res, _next) => {
 // Error handling middleware
 app.use(errorHandler);
 
-// Start server
-const PORT = config.port;
-const HOST = config.host;
+// Initialize database and start server
+async function startServer() {
+  try {
+    // Initialize database
+    await initializeDatabase();
+    logger.info('✅ Database initialized successfully');
 
-server.listen(PORT, HOST, () => {
-  logger.info(`🚀 Server running on http://${HOST}:${PORT}`);
-  logger.info(`📊 Environment: ${config.env}`);
-  logger.info(`🔒 CORS enabled for: ${config.cors.origin}`);
-});
+    // Start server
+    const PORT = config.port;
+    const HOST = config.host;
+
+    server.listen(PORT, HOST, () => {
+      logger.info(`🚀 Server running on http://${HOST}:${PORT}`);
+      logger.info(`📊 Environment: ${config.env}`);
+      logger.info(`🔒 CORS enabled for: ${config.cors.origin}`);
+      logger.info(`💾 Database connected to: ${config.database.name}`);
+    });
+  } catch (error) {
+    logger.error('❌ Failed to start server:', error);
+    process.exit(1);
+  }
+}
+
+startServer();
 
 // Graceful shutdown
-process.on('SIGTERM', () => {
+process.on('SIGTERM', async () => {
   logger.info('SIGTERM received, shutting down gracefully');
-  server.close(() => {
+  server.close(async () => {
+    await closeDatabase();
     logger.info('Process terminated');
     process.exit(0);
   });
 });
 
-process.on('SIGINT', () => {
+process.on('SIGINT', async () => {
   logger.info('SIGINT received, shutting down gracefully');
-  server.close(() => {
+  server.close(async () => {
+    await closeDatabase();
     logger.info('Process terminated');
     process.exit(0);
   });

@@ -33,7 +33,7 @@
   - Add token expiration handling and automatic refund processing
   - _Requirements: 1.2, 1.3, 2.1, 2.4, 8.2, 8.5_
 
-- [ ] 5. Set up database schema and data access layer
+- [x] 5. Set up database schema and data access layer
   - Design and create PostgreSQL database schema for users, tokens, and transactions
   - Implement database connection pooling and migration system
   - Create data access objects (DAOs) for all entities
