@@ -4,13 +4,15 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
 import { createServer } from 'http';
+import swaggerUi from 'swagger-ui-express';
 
 import { config } from '@/config/config';
 import { logger } from '@/utils/logger';
 import { errorHandler } from '@/middleware/errorHandler';
 import { rateLimiter } from '@/middleware/rateLimiter';
 import { initializeDatabase, closeDatabase } from '@/database/init';
-// import { authMiddleware } from '@/middleware/auth'; // Will be used in future tasks
+import { swaggerSpec, swaggerOptions } from '@/config/swagger';
+import apiRoutes from '@/routes';
 
 // Load environment variables
 dotenv.config();
@@ -50,11 +52,19 @@ app.get('/health', (_req, res) => {
   });
 });
 
-// API routes will be added here
-app.use('/api/v1', (_req, res, _next) => {
+// API Documentation
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerOptions));
+
+// API routes
+app.use('/api/v1', apiRoutes);
+
+// Catch-all for undefined API routes
+app.use('/api/*', (_req, res) => {
   res.status(404).json({
-    error: 'API endpoint not implemented yet',
-    message: 'This endpoint will be implemented in subsequent tasks',
+    success: false,
+    error: 'API endpoint not found',
+    message: 'The requested API endpoint does not exist',
+    timestamp: new Date().toISOString(),
   });
 });
 

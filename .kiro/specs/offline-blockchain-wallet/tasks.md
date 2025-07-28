@@ -41,7 +41,7 @@
   - Add database indexing for performance optimization
   - _Requirements: 1.5, 8.4, 10.1, 11.1_
 
-- [ ] 6. Build RESTful API endpoints for wallet operations
+- [x] 6. Build RESTful API endpoints for wallet operations
   - Implement user authentication and JWT token management
   - Create endpoints for token purchase, redemption, and balance queries
   - Add public key distribution endpoint for mobile clients

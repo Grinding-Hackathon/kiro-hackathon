@@ -9,11 +9,13 @@ export interface AppError extends Error {
 export class CustomError extends Error implements AppError {
   public statusCode: number;
   public isOperational: boolean;
+  public details?: any;
 
-  constructor(message: string, statusCode: number = 500, isOperational: boolean = true) {
+  constructor(message: string, statusCode: number = 500, details?: any, isOperational: boolean = true) {
     super(message);
     this.statusCode = statusCode;
     this.isOperational = isOperational;
+    this.details = details;
     
     Error.captureStackTrace(this, this.constructor);
   }
@@ -24,12 +26,12 @@ export const createError = (message: string, statusCode: number = 500): CustomEr
 };
 
 export const errorHandler = (
-  error: AppError,
+  error: AppError & { details?: any },
   req: Request,
   res: Response,
   _next: NextFunction,
 ): void => {
-  const { statusCode = 500, message, stack } = error;
+  const { statusCode = 500, message, stack, details } = error;
   
   // Log error details
   logger.error(`Error ${statusCode}: ${message}`, {
@@ -38,17 +40,20 @@ export const errorHandler = (
     ip: req.ip,
     userAgent: req.get('User-Agent'),
     stack: stack,
+    details,
   });
 
-  // Don't expose stack trace in production
+  // Format API response
   const response = {
-    error: {
-      message,
-      ...(process.env['NODE_ENV'] === 'development' && { stack }),
-    },
+    success: false,
+    error: message,
+    ...(details && { details }),
     timestamp: new Date().toISOString(),
-    path: req.url,
-    method: req.method,
+    ...(process.env['NODE_ENV'] === 'development' && { 
+      stack,
+      path: req.url,
+      method: req.method,
+    }),
   };
 
   res.status(statusCode).json(response);
