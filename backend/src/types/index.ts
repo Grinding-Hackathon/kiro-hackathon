@@ -89,6 +89,43 @@ export interface SmartContractEvent {
   blockNumber: number;
 }
 
+// Blockchain service types
+export interface ContractDeploymentResult {
+  contractAddress: string;
+  transactionHash: string;
+  blockNumber: number;
+  gasUsed: bigint;
+}
+
+export interface TransactionOptions {
+  gasLimit?: bigint;
+  gasPrice?: bigint;
+  value?: bigint;
+  nonce?: number;
+}
+
+export interface ContractCallResult<T = any> {
+  result: T;
+  gasUsed?: bigint;
+  blockNumber?: number;
+}
+
+export interface TransactionConfirmationOptions {
+  confirmations?: number;
+  timeout?: number;
+}
+
+export interface NetworkInfo {
+  name: string;
+  chainId: bigint;
+  blockNumber: number;
+}
+
+export interface ConnectionStatus {
+  isConnected: boolean;
+  reconnectAttempts: number;
+}
+
 // OTM (Offline Token Manager) types
 export interface OTMKeyPair {
   privateKey: string;

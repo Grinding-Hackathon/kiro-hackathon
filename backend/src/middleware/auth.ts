@@ -22,7 +22,7 @@ export interface JWTPayload {
 
 export const authMiddleware = (
   req: AuthenticatedRequest,
-  res: Response,
+  _res: Response,
   next: NextFunction,
 ): void => {
   try {
@@ -79,7 +79,7 @@ export const authMiddleware = (
 
 export const optionalAuthMiddleware = (
   req: AuthenticatedRequest,
-  res: Response,
+  _res: Response,
   next: NextFunction,
 ): void => {
   try {
@@ -119,5 +119,5 @@ export const optionalAuthMiddleware = (
 export const generateToken = (payload: Omit<JWTPayload, 'iat' | 'exp'>): string => {
   return jwt.sign(payload, config.jwt.secret, {
     expiresIn: config.jwt.expiresIn,
-  });
+  } as jwt.SignOptions);
 };

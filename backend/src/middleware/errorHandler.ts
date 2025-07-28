@@ -27,7 +27,7 @@ export const errorHandler = (
   error: AppError,
   req: Request,
   res: Response,
-  next: NextFunction,
+  _next: NextFunction,
 ): void => {
   const { statusCode = 500, message, stack } = error;
   
@@ -44,7 +44,7 @@ export const errorHandler = (
   const response = {
     error: {
       message,
-      ...(process.env.NODE_ENV === 'development' && { stack }),
+      ...(process.env['NODE_ENV'] === 'development' && { stack }),
     },
     timestamp: new Date().toISOString(),
     path: req.url,
@@ -62,7 +62,7 @@ export const asyncHandler = (
   };
 };
 
-export const notFoundHandler = (req: Request, res: Response, next: NextFunction): void => {
+export const notFoundHandler = (req: Request, _res: Response, next: NextFunction): void => {
   const error = new CustomError(`Route ${req.originalUrl} not found`, 404);
   next(error);
 };

@@ -1,7 +1,5 @@
-import { config } from '@/config/config';
-
 // Set test environment
-process.env.NODE_ENV = 'test';
+process.env['NODE_ENV'] = 'test';
 
 // Mock logger to prevent console output during tests
 jest.mock('@/utils/logger', () => ({

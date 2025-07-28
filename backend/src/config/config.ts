@@ -18,7 +18,7 @@ interface Config {
     network: string;
     rpcUrl: string;
     privateKey: string;
-    contractAddress?: string;
+    contractAddress?: string | undefined;
   };
   jwt: {
     secret: string;
@@ -64,56 +64,56 @@ for (const envVar of requiredEnvVars) {
 }
 
 export const config: Config = {
-  env: process.env.NODE_ENV || 'development',
-  port: parseInt(process.env.PORT || '3000', 10),
-  host: process.env.HOST || 'localhost',
+  env: process.env['NODE_ENV'] || 'development',
+  port: parseInt(process.env['PORT'] || '3000', 10),
+  host: process.env['HOST'] || 'localhost',
   
   database: {
-    host: process.env.DB_HOST || 'localhost',
-    port: parseInt(process.env.DB_PORT || '5432', 10),
-    name: process.env.DB_NAME || 'offline_wallet_db',
-    user: process.env.DB_USER || 'postgres',
-    password: process.env.DB_PASSWORD!,
-    ssl: process.env.DB_SSL === 'true',
+    host: process.env['DB_HOST'] || 'localhost',
+    port: parseInt(process.env['DB_PORT'] || '5432', 10),
+    name: process.env['DB_NAME'] || 'offline_wallet_db',
+    user: process.env['DB_USER'] || 'postgres',
+    password: process.env['DB_PASSWORD']!,
+    ssl: process.env['DB_SSL'] === 'true',
   },
   
   blockchain: {
-    network: process.env.ETHEREUM_NETWORK || 'goerli',
-    rpcUrl: process.env.ETHEREUM_RPC_URL!,
-    privateKey: process.env.PRIVATE_KEY || '',
-    contractAddress: process.env.CONTRACT_ADDRESS,
+    network: process.env['ETHEREUM_NETWORK'] || 'goerli',
+    rpcUrl: process.env['ETHEREUM_RPC_URL']!,
+    privateKey: process.env['PRIVATE_KEY'] || '',
+    contractAddress: process.env['CONTRACT_ADDRESS'] || undefined,
   },
   
   jwt: {
-    secret: process.env.JWT_SECRET!,
-    expiresIn: process.env.JWT_EXPIRES_IN || '24h',
+    secret: process.env['JWT_SECRET']!,
+    expiresIn: process.env['JWT_EXPIRES_IN'] || '24h',
   },
   
   otm: {
-    privateKey: process.env.OTM_PRIVATE_KEY!,
-    publicKey: process.env.OTM_PUBLIC_KEY!,
-    tokenExpirationDays: parseInt(process.env.TOKEN_EXPIRATION_DAYS || '30', 10),
+    privateKey: process.env['OTM_PRIVATE_KEY']!,
+    publicKey: process.env['OTM_PUBLIC_KEY']!,
+    tokenExpirationDays: parseInt(process.env['TOKEN_EXPIRATION_DAYS'] || '30', 10),
   },
   
   rateLimit: {
-    windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000', 10), // 15 minutes
-    maxRequests: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100', 10),
+    windowMs: parseInt(process.env['RATE_LIMIT_WINDOW_MS'] || '900000', 10), // 15 minutes
+    maxRequests: parseInt(process.env['RATE_LIMIT_MAX_REQUESTS'] || '100', 10),
   },
   
   logging: {
-    level: process.env.LOG_LEVEL || 'info',
-    file: process.env.LOG_FILE || 'logs/app.log',
+    level: process.env['LOG_LEVEL'] || 'info',
+    file: process.env['LOG_FILE'] || 'logs/app.log',
   },
   
   security: {
-    bcryptRounds: parseInt(process.env.BCRYPT_ROUNDS || '12', 10),
+    bcryptRounds: parseInt(process.env['BCRYPT_ROUNDS'] || '12', 10),
   },
   
   cors: {
-    origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+    origin: process.env['CORS_ORIGIN'] || 'http://localhost:3000',
   },
   
   monitoring: {
-    healthCheckInterval: parseInt(process.env.HEALTH_CHECK_INTERVAL || '30000', 10),
+    healthCheckInterval: parseInt(process.env['HEALTH_CHECK_INTERVAL'] || '30000', 10),
   },
 };

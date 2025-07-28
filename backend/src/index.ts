@@ -9,7 +9,7 @@ import { config } from '@/config/config';
 import { logger } from '@/utils/logger';
 import { errorHandler } from '@/middleware/errorHandler';
 import { rateLimiter } from '@/middleware/rateLimiter';
-import { authMiddleware } from '@/middleware/auth';
+// import { authMiddleware } from '@/middleware/auth'; // Will be used in future tasks
 
 // Load environment variables
 dotenv.config();
@@ -40,7 +40,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(rateLimiter);
 
 // Health check endpoint
-app.get('/health', (req, res) => {
+app.get('/health', (_req, res) => {
   res.status(200).json({
     status: 'OK',
     timestamp: new Date().toISOString(),
@@ -50,7 +50,7 @@ app.get('/health', (req, res) => {
 });
 
 // API routes will be added here
-app.use('/api/v1', (req, res, next) => {
+app.use('/api/v1', (_req, res, _next) => {
   res.status(404).json({
     error: 'API endpoint not implemented yet',
     message: 'This endpoint will be implemented in subsequent tasks',
