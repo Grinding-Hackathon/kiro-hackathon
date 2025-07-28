@@ -1,0 +1,1491 @@
+//
+//  BackgroundTaskManager.swift
+//  offline-blockchain-wallet-ios
+//
+//  Created by Kiro on 7/21/25.
+//
+
+import Foundation
+import BackgroundTasks
+import UserNotifications
+import Combine
+#if canImport(UIKit)
+import UIKit
+#endif
+
+protocol BackgroundTaskManagerProtocol {
+    func registerBackgroundTasks()
+    func scheduleBackgroundAppRefresh()
+    func scheduleTokenExpirationMonitoring()
+    func schedulePeriodicSync()
+    func scheduleAllBackgroundTasks()
+    func cancelAllBackgroundTasks()
+    func handleBackgroundAppRefresh()
+    func handleTokenExpirationCheck()
+    func handlePeriodicSync()
+    func handleAppWillEnterBackground()
+    func handleAppDidBecomeActive()
+    func handleAppWillTerminate()
+    func requestNotificationPermissions() async -> Bool
+    func sendNotification(title: String, body: String, identifier: String)
+}
+
+class BackgroundTaskManager: BackgroundTaskManagerProtocol {
+    private let offlineTokenService: OfflineTokenServiceProtocol
+    private let networkService: NetworkServiceProtocol
+    private let bluetoothService: BluetoothServiceProtocol
+    private let storageService: StorageServiceProtocol
+    private let pushNotificationService: PushNotificationServiceProtocol
+    private let backgroundBluetoothService: BackgroundBluetoothServiceProtocol
+    private let logger = Logger.shared
+    
+    // Background task identifiers
+    private let backgroundAppRefreshIdentifier = "com.offlineblockchainwallet.backgroundrefresh"
+    private let tokenExpirationIdentifier = "com.offlineblockchainwallet.tokenexpiration"
+    private let periodicSyncIdentifier = "com.offlineblockchainwallet.periodicsync"
+    private let backgroundBluetoothIdentifier = "com.offlineblockchainwallet.bluetooth"
+    
+    // Notification identifiers
+    private let tokenExpirationNotificationId = "token_expiration"
+    private let lowBalanceNotificationId = "low_balance"
+    private let transactionStatusNotificationId = "transaction_status"
+    private let syncCompleteNotificationId = "sync_complete"
+    
+    private var cancellables = Set<AnyCancellable>()
+    
+    init(offlineTokenService: OfflineTokenServiceProtocol,
+         networkService: NetworkServiceProtocol,
+         bluetoothService: BluetoothServiceProtocol,
+         storageService: StorageServiceProtocol,
+         pushNotificationService: PushNotificationServiceProtocol = PushNotificationService(),
+         backgroundBluetoothService: BackgroundBluetoothServiceProtocol? = nil) {
+        self.offlineTokenService = offlineTokenService
+        self.networkService = networkService
+        self.bluetoothService = bluetoothService
+        self.storageService = storageService
+        self.pushNotificationService = pushNotificationService
+        
+        // Initialize background Bluetooth service
+        self.backgroundBluetoothService = backgroundBluetoothService ?? BackgroundBluetoothService(
+            bluetoothService: bluetoothService,
+            storageService: storageService,
+            pushNotificationService: pushNotificationService
+        )
+        
+        setupNotificationCenter()
+    }
+    
+    // MARK: - Background Task Registration
+    
+    func registerBackgroundTasks() {
+        logger.info("Registering background tasks")
+        
+        // Register background app refresh
+        BGTaskScheduler.shared.register(
+            forTaskWithIdentifier: backgroundAppRefreshIdentifier,
+            using: nil
+        ) { [weak self] task in
+            self?.handleBackgroundAppRefresh(task: task as! BGAppRefreshTask)
+        }
+        
+        // Register token expiration monitoring
+        BGTaskScheduler.shared.register(
+            forTaskWithIdentifier: tokenExpirationIdentifier,
+            using: nil
+        ) { [weak self] task in
+            self?.handleTokenExpirationCheck(task: task as! BGProcessingTask)
+        }
+        
+        // Register periodic sync
+        BGTaskScheduler.shared.register(
+            forTaskWithIdentifier: periodicSyncIdentifier,
+            using: nil
+        ) { [weak self] task in
+            self?.handlePeriodicSync(task: task as! BGProcessingTask)
+        }
+        
+        // Register background Bluetooth
+        BGTaskScheduler.shared.register(
+            forTaskWithIdentifier: backgroundBluetoothIdentifier,
+            using: nil
+        ) { [weak self] task in
+            self?.backgroundBluetoothService.handleBackgroundBluetoothTask(task as! BGProcessingTask)
+        }
+        
+        logger.info("Background tasks registered successfully")
+    }
+    
+    // MARK: - Background Task Scheduling
+    
+    func scheduleBackgroundAppRefresh() {
+        let request = BGAppRefreshTaskRequest(identifier: backgroundAppRefreshIdentifier)
+        request.earliestBeginDate = Date(timeIntervalSinceNow: 15 * 60) // 15 minutes
+        
+        do {
+            try BGTaskScheduler.shared.submit(request)
+            logger.info("Background app refresh scheduled")
+        } catch {
+            logger.error("Failed to schedule background app refresh: \(error)")
+        }
+    }
+    
+    func scheduleTokenExpirationMonitoring() {
+        let request = BGProcessingTaskRequest(identifier: tokenExpirationIdentifier)
+        request.requiresNetworkConnectivity = true
+        request.requiresExternalPower = false
+        request.earliestBeginDate = Date(timeIntervalSinceNow: 5 * 60) // 5 minutes
+        
+        do {
+            try BGTaskScheduler.shared.submit(request)
+            logger.info("Token expiration monitoring scheduled")
+        } catch {
+            logger.error("Failed to schedule token expiration monitoring: \(error)")
+        }
+    }
+    
+    func schedulePeriodicSync() {
+        let request = BGProcessingTaskRequest(identifier: periodicSyncIdentifier)
+        request.requiresNetworkConnectivity = true
+        request.requiresExternalPower = false
+        request.earliestBeginDate = Date(timeIntervalSinceNow: 30 * 60) // 30 minutes
+        
+        do {
+            try BGTaskScheduler.shared.submit(request)
+            logger.info("Periodic sync scheduled")
+        } catch {
+            logger.error("Failed to schedule periodic sync: \(error)")
+        }
+    }
+    
+    // MARK: - Background Task Handlers
+    
+    private func handleBackgroundAppRefresh(task: BGAppRefreshTask) {
+        logger.info("Handling background app refresh")
+        
+        // Schedule next background refresh
+        scheduleBackgroundAppRefresh()
+        
+        task.expirationHandler = {
+            self.logger.warning("Background app refresh expired")
+            task.setTaskCompleted(success: false)
+        }
+        
+        Task {
+            await performBackgroundRefresh()
+            task.setTaskCompleted(success: true)
+        }
+    }
+    
+    func handleBackgroundAppRefresh() {
+        // Public method for manual triggering
+        Task {
+            await performBackgroundRefresh()
+        }
+    }
+    
+    private func handleTokenExpirationCheck(task: BGProcessingTask) {
+        logger.info("Handling token expiration check")
+        
+        // Schedule next token expiration check
+        scheduleTokenExpirationMonitoring()
+        
+        task.expirationHandler = {
+            self.logger.warning("Token expiration check expired")
+            task.setTaskCompleted(success: false)
+        }
+        
+        Task {
+            await performTokenExpirationCheck()
+            task.setTaskCompleted(success: true)
+        }
+    }
+    
+    func handleTokenExpirationCheck() {
+        // Public method for manual triggering
+        Task {
+            await performTokenExpirationCheck()
+        }
+    }
+    
+    private func handlePeriodicSync(task: BGProcessingTask) {
+        logger.info("Handling periodic sync")
+        
+        // Schedule next periodic sync
+        schedulePeriodicSync()
+        
+        task.expirationHandler = {
+            self.logger.warning("Periodic sync expired")
+            task.setTaskCompleted(success: false)
+        }
+        
+        Task {
+            await performPeriodicSync()
+            task.setTaskCompleted(success: true)
+        }
+    }
+    
+    func handlePeriodicSync() {
+        // Public method for manual triggering
+        Task {
+            await performPeriodicSync()
+        }
+    }
+    
+    // MARK: - Background Task Implementation
+    
+    private func performBackgroundRefresh() async {
+        logger.info("Performing background refresh")
+        
+        var refreshResults = BackgroundRefreshResults()
+        
+        do {
+            // Check for expired tokens
+            try await offlineTokenService.handleExpiredTokens()
+            refreshResults.expiredTokensHandled = true
+            
+            // Check if auto-purchase is needed
+            await checkAndPerformAutoPurchase(urgentReason: "background refresh")
+            refreshResults.autoPurchaseChecked = true
+            
+            // Check for offline balance changes and notify
+            await checkOfflineBalanceChanges()
+            refreshResults.balanceChecked = true
+            
+            // Sync with blockchain if online
+            if networkService.isOnline() {
+                await performLightweightSync()
+                refreshResults.lightweightSyncPerformed = true
+                
+                // Check for pending offline transactions to sync
+                let pendingCount = try await storageService.getPendingTransactionsCount()
+                if pendingCount > 0 {
+                    logger.info("Found \(pendingCount) pending transactions to sync")
+                    await networkService.processOfflineQueue()
+                    refreshResults.offlineQueueProcessed = true
+                }
+            } else {
+                logger.info("Device offline, skipping network operations")
+                refreshResults.networkUnavailable = true
+            }
+            
+            // Update Bluetooth advertising with current wallet state
+            await updateBluetoothAdvertising()
+            refreshResults.bluetoothAdvertisingUpdated = true
+            
+            // Update app badge with current status
+            await updateAppBadge()
+            refreshResults.appBadgeUpdated = true
+            
+            // Store last refresh timestamp
+            UserDefaults.standard.set(Date(), forKey: "lastBackgroundRefresh")
+            
+            logger.info("Background refresh completed successfully: \(refreshResults)")
+            
+            // Send completion notification
+            pushNotificationService.sendBackgroundTaskCompletionNotification(
+                taskType: "Background Refresh",
+                success: true,
+                details: refreshResults.summary
+            )
+            
+            // Post internal notification
+            NotificationCenter.default.post(
+                name: .backgroundRefreshCompleted,
+                object: nil,
+                userInfo: ["results": refreshResults]
+            )
+            
+        } catch {
+            logger.error("Background refresh failed: \(error)")
+            
+            // Send failure notification
+            pushNotificationService.sendBackgroundTaskCompletionNotification(
+                taskType: "Background Refresh",
+                success: false,
+                details: "Error: \(error.localizedDescription)"
+            )
+        }
+    }
+    
+    private func updateAppBadge() async {
+        do {
+            // Get pending transactions count for badge
+            let pendingCount = try await storageService.getPendingTransactionsCount()
+            
+            // Get tokens expiring within 24 hours
+            let expiringTokens = try await getTokensExpiringSoon(hours: 24)
+            
+            // Badge shows pending transactions + expiring tokens
+            let badgeCount = pendingCount + expiringTokens.count
+            
+            #if canImport(UIKit)
+            await MainActor.run {
+                UIApplication.shared.applicationIconBadgeNumber = badgeCount
+            }
+            #endif
+            
+            logger.info("App badge updated: \(badgeCount) (pending: \(pendingCount), expiring: \(expiringTokens.count))")
+            
+        } catch {
+            logger.error("Failed to update app badge: \(error)")
+        }
+    }
+    
+    private func performTokenExpirationCheck() async {
+        logger.info("Performing token expiration check")
+        
+        do {
+            // Get tokens expiring at different intervals
+            let tokensExpiring24h = try await getTokensExpiringSoon(hours: 24)
+            let tokensExpiring1h = try await getTokensExpiringSoon(hours: 1)
+            let alreadyExpiredTokens = try await getExpiredTokens()
+            
+            // Handle tokens expiring within 1 hour - urgent notification
+            if !tokensExpiring1h.isEmpty {
+                logger.warning("Found \(tokensExpiring1h.count) tokens expiring within 1 hour")
+                
+                let timeUntilExpiration = tokensExpiring1h.map { $0.expirationDate.timeIntervalSinceNow }.min() ?? 0
+                pushNotificationService.sendTokenExpirationDetectedNotification(
+                    tokenCount: tokensExpiring1h.count,
+                    timeUntilExpiration: timeUntilExpiration
+                )
+                
+                // Attempt immediate auto-purchase if enabled
+                await checkAndPerformAutoPurchase(urgentReason: "tokens expiring within 1 hour")
+                
+            } else if !tokensExpiring24h.isEmpty {
+                // Handle tokens expiring within 24 hours - advance warning
+                logger.info("Found \(tokensExpiring24h.count) tokens expiring within 24 hours")
+                
+                let timeUntilExpiration = tokensExpiring24h.map { $0.expirationDate.timeIntervalSinceNow }.min() ?? 0
+                
+                // Only send notification if we haven't sent one recently for this batch
+                let lastNotificationKey = "last_expiration_notification_\(tokensExpiring24h.count)"
+                let lastNotificationTime = UserDefaults.standard.object(forKey: lastNotificationKey) as? Date
+                
+                if lastNotificationTime == nil || Date().timeIntervalSince(lastNotificationTime!) > 3600 { // 1 hour
+                    pushNotificationService.sendTokenExpirationNotification(
+                        expiringCount: tokensExpiring24h.count,
+                        timeUntilExpiration: timeUntilExpiration
+                    )
+                    UserDefaults.standard.set(Date(), forKey: lastNotificationKey)
+                }
+                
+                // Schedule reminder notifications for tokens expiring soon
+                pushNotificationService.scheduleTokenExpirationReminder(for: tokensExpiring24h)
+                
+                // Check if auto-purchase should be triggered
+                await checkAndPerformAutoPurchase(urgentReason: "tokens expiring within 24 hours")
+            }
+            
+            // Handle already expired tokens
+            if !alreadyExpiredTokens.isEmpty {
+                logger.info("Processing \(alreadyExpiredTokens.count) expired tokens")
+                
+                let expiredValue = alreadyExpiredTokens.reduce(0) { $0 + $1.amount }
+                
+                try await offlineTokenService.handleExpiredTokens()
+                
+                // Send notification about expired tokens being processed
+                sendNotification(
+                    title: "Expired Tokens Refunded",
+                    body: "Refunded \(String(format: "%.2f", expiredValue)) tokens to your blockchain balance",
+                    identifier: "expired_tokens_refunded"
+                )
+            }
+            
+            // Check overall token health and send low balance warning if needed
+            let currentBalance = await offlineTokenService.getAvailableBalance()
+            if let walletState = try await storageService.loadWalletState(),
+               currentBalance < walletState.autoRechargeThreshold {
+                pushNotificationService.sendLowBalanceNotification(
+                    currentBalance: currentBalance,
+                    threshold: walletState.autoRechargeThreshold
+                )
+                
+                // Trigger auto-purchase if enabled
+                await checkAndPerformAutoPurchase(urgentReason: "balance below threshold")
+            
+            logger.info("Token expiration check completed - 24h: \(tokensExpiring24h.count), 1h: \(tokensExpiring1h.count), expired: \(alreadyExpiredTokens.count)")
+            
+        } catch {
+            logger.error("Token expiration check failed: \(error)")
+        }
+    }
+    
+    private func performPeriodicSync() async {
+        logger.info("Performing periodic sync")
+        
+        guard networkService.isOnline() else {
+            logger.info("Device offline, skipping periodic sync")
+            pushNotificationService.sendBackgroundSyncFailureNotification(error: "No internet connection")
+            return
+        }
+        
+        do {
+            var syncResults = SyncResults()
+            
+            // Process offline queue first
+            await networkService.processOfflineQueue()
+            syncResults.offlineQueueProcessed = true
+            
+            // Sync transactions and check for status updates
+            let transactions = try await networkService.syncTransactions()
+            syncResults.transactionsSynced = transactions.count
+            logger.info("Synced \(transactions.count) transactions")
+            
+            // Check for transaction status changes and send notifications
+            let pendingTransactions = try await storageService.getPendingTransactions()
+            for transaction in pendingTransactions {
+                if let transactionId = transaction.id {
+                    let statusResponse = try await networkService.getTransactionStatus(transactionId: transactionId)
+                    
+                    if statusResponse.status != transaction.status {
+                        // Update transaction status
+                        var updatedTransaction = transaction
+                        updatedTransaction.status = statusResponse.status
+                        try await storageService.updateTransaction(updatedTransaction)
+                        
+                        // Send notification about status change
+                        pushNotificationService.sendTransactionStatusNotification(
+                            transaction: updatedTransaction,
+                            newStatus: statusResponse.status
+                        )
+                        
+                        syncResults.transactionStatusUpdates += 1
+                    }
+                }
+            }
+            
+            // Update blockchain balance and check for changes
+            if let walletState = try await storageService.loadWalletState() {
+                let balanceResponse = try await networkService.getWalletBalance(walletId: walletState.walletId)
+                
+                // Check for significant balance changes (more than 1 cent)
+                let balanceChanged = abs(walletState.blockchainBalance - balanceResponse.blockchainBalance) > 0.01
+                let balanceIncrease = balanceResponse.blockchainBalance > walletState.blockchainBalance
+                
+                // Update wallet state with new blockchain balance
+                let updatedState = WalletState(
+                    walletId: walletState.walletId,
+                    publicKey: walletState.publicKey,
+                    offlineBalance: walletState.offlineBalance,
+                    blockchainBalance: balanceResponse.blockchainBalance,
+                    lastSyncTimestamp: Date(),
+                    autoRechargeEnabled: walletState.autoRechargeEnabled,
+                    autoRechargeThreshold: walletState.autoRechargeThreshold,
+                    autoRechargeAmount: walletState.autoRechargeAmount
+                )
+                
+                try await storageService.saveWalletState(updatedState)
+                syncResults.balanceUpdated = balanceChanged
+                
+                // Notify about significant balance changes
+                if balanceChanged {
+                    pushNotificationService.sendBalanceUpdatedNotification(
+                        oldBalance: walletState.blockchainBalance,
+                        newBalance: balanceResponse.blockchainBalance,
+                        balanceType: "blockchain"
+                    )
+                    
+                    // Log balance change details
+                    let changeAmount = balanceResponse.blockchainBalance - walletState.blockchainBalance
+                    logger.info("Blockchain balance \(balanceIncrease ? "increased" : "decreased") by \(String(format: "%.4f", abs(changeAmount))) tokens")
+                }
+                
+                // Check if auto-purchase is needed after balance update
+                await checkAndPerformAutoPurchase(urgentReason: "balance updated during sync")
+                
+                // If balance increased significantly, consider it might be from token redemption
+                if balanceIncrease && abs(balanceResponse.blockchainBalance - walletState.blockchainBalance) > 1.0 {
+                    logger.info("Significant balance increase detected - may be from token redemption")
+                    
+                    // Send notification about potential redemption completion
+                    pushNotificationService.sendBackgroundTaskCompletionNotification(
+                        taskType: "Token Redemption",
+                        success: true,
+                        details: "Blockchain balance increased by \(String(format: "%.4f", balanceResponse.blockchainBalance - walletState.blockchainBalance)) tokens"
+                    )
+                }
+            }
+            
+            // Handle expired tokens and process refunds
+            let expiredTokens = try await getTokensExpiringSoon()
+            if !expiredTokens.isEmpty {
+                try await offlineTokenService.handleExpiredTokens()
+                syncResults.expiredTokensHandled = true
+                
+                // Send notification about expired tokens being processed
+                if expiredTokens.count > 0 {
+                    sendNotification(
+                        title: "Expired Tokens Processed",
+                        body: "\(expiredTokens.count) expired tokens have been refunded to your blockchain balance",
+                        identifier: "expired_tokens_processed"
+                    )
+                }
+            }
+            
+            // Update Bluetooth advertising with fresh wallet data
+            await updateBluetoothAdvertising()
+            syncResults.bluetoothAdvertisingUpdated = true
+            
+            // Sync public key database for signature verification
+            do {
+                let publicKeyDB = try await networkService.fetchPublicKeys()
+                try await storageService.savePublicKeyDatabase(publicKeyDB)
+                syncResults.publicKeysSynced = true
+            } catch {
+                logger.warning("Failed to sync public keys: \(error)")
+            }
+            
+            // Send comprehensive sync completion notification only if significant changes occurred
+            if syncResults.transactionsSynced > 0 || syncResults.balanceUpdated || syncResults.expiredTokensHandled {
+                pushNotificationService.sendSyncCompleteNotification(transactionCount: syncResults.transactionsSynced)
+            }
+            
+            logger.info("Periodic sync completed successfully: \(syncResults)")
+            
+        } catch {
+            logger.error("Periodic sync failed: \(error)")
+            pushNotificationService.sendBackgroundSyncFailureNotification(error: error.localizedDescription)
+        }
+    }
+    
+    // MARK: - Helper Methods
+    
+    private func checkOfflineBalanceChanges() async {
+        do {
+            guard let walletState = try await storageService.loadWalletState() else { return }
+            
+            let currentOfflineBalance = await offlineTokenService.getAvailableBalance()
+            let lastKnownBalance = walletState.offlineBalance
+            
+            // Check for significant changes (more than 1 cent)
+            if abs(currentOfflineBalance - lastKnownBalance) > 0.01 {
+                pushNotificationService.sendBalanceUpdatedNotification(
+                    oldBalance: lastKnownBalance,
+                    newBalance: currentOfflineBalance,
+                    balanceType: "offline"
+                )
+                
+                logger.info("Offline balance changed from \(lastKnownBalance) to \(currentOfflineBalance)")
+            }
+        } catch {
+            logger.error("Failed to check offline balance changes: \(error)")
+        }
+    }
+    
+    private func checkAndPerformAutoPurchase(urgentReason: String? = nil) async {
+        do {
+            guard let walletState = try await storageService.loadWalletState(),
+                  walletState.autoRechargeEnabled else {
+                logger.info("Auto-purchase skipped: not enabled or no wallet state")
+                return
+            }
+            
+            let currentBalance = await offlineTokenService.getAvailableBalance()
+            
+            if currentBalance < walletState.autoRechargeThreshold {
+                let reason = urgentReason ?? "balance below threshold"
+                logger.info("Auto-purchase triggered: balance \(currentBalance) < threshold \(walletState.autoRechargeThreshold), reason: \(reason)")
+                
+                // Send notification about auto-purchase initiation
+                pushNotificationService.sendAutoPurchaseTriggeredNotification(
+                    amount: walletState.autoRechargeAmount,
+                    reason: reason
+                )
+                
+                // Check if we have sufficient blockchain balance for purchase
+                guard networkService.isOnline() else {
+                    logger.warning("Auto-purchase skipped: device offline")
+                    pushNotificationService.sendLowBalanceNotification(
+                        currentBalance: currentBalance,
+                        threshold: walletState.autoRechargeThreshold
+                    )
+                    
+                    // Schedule retry when network becomes available
+                    scheduleAutoPurchaseRetry()
+                    return
+                }
+                
+                // Get current blockchain balance to verify sufficient funds
+                let balanceResponse = try await networkService.getWalletBalance(walletId: walletState.walletId)
+                
+                guard balanceResponse.blockchainBalance >= walletState.autoRechargeAmount else {
+                    logger.warning("Auto-purchase failed: insufficient blockchain balance (\(balanceResponse.blockchainBalance) < \(walletState.autoRechargeAmount))")
+                    pushNotificationService.sendAutoPurchaseNotification(
+                        success: false,
+                        tokenCount: nil,
+                        error: "Insufficient blockchain balance for auto-purchase. Current: \(String(format: "%.4f", balanceResponse.blockchainBalance)), Required: \(String(format: "%.4f", walletState.autoRechargeAmount))"
+                    )
+                    return
+                }
+                
+                // Attempt to purchase tokens with retry logic
+                let tokens = try await purchaseTokensWithRetry(amount: walletState.autoRechargeAmount)
+                
+                // Send notification about successful purchase
+                pushNotificationService.sendAutoPurchaseNotification(
+                    success: true,
+                    tokenCount: tokens.count,
+                    error: nil
+                )
+                
+                logger.info("Auto-purchase completed: \(tokens.count) tokens purchased for \(walletState.autoRechargeAmount)")
+                
+                // Update wallet state with new balances
+                let updatedState = WalletState(
+                    walletId: walletState.walletId,
+                    publicKey: walletState.publicKey,
+                    offlineBalance: currentBalance + walletState.autoRechargeAmount,
+                    blockchainBalance: balanceResponse.blockchainBalance - walletState.autoRechargeAmount,
+                    lastSyncTimestamp: Date(),
+                    autoRechargeEnabled: walletState.autoRechargeEnabled,
+                    autoRechargeThreshold: walletState.autoRechargeThreshold,
+                    autoRechargeAmount: walletState.autoRechargeAmount
+                )
+                
+                try await storageService.saveWalletState(updatedState)
+                
+                // Post notification for UI updates
+                NotificationCenter.default.post(name: .autoPurchaseCompleted, object: nil, userInfo: [
+                    "token_count": tokens.count,
+                    "amount": walletState.autoRechargeAmount,
+                    "new_balance": currentBalance + walletState.autoRechargeAmount
+                ])
+                
+            } else {
+                logger.info("Auto-purchase not needed: balance \(currentBalance) >= threshold \(walletState.autoRechargeThreshold)")
+            }
+            
+        } catch {
+            logger.error("Auto-purchase failed: \(error)")
+            
+            // Send notification about failed purchase
+            pushNotificationService.sendAutoPurchaseNotification(
+                success: false,
+                tokenCount: nil,
+                error: error.localizedDescription
+            )
+            
+            // Schedule retry for transient errors
+            scheduleAutoPurchaseRetry()
+        }
+    }
+    
+    private func scheduleAutoPurchaseRetry() {
+        // Schedule retry for auto-purchase after network failure
+        DispatchQueue.main.asyncAfter(deadline: .now() + 300) { // 5 minutes
+            Task {
+                await self.checkAndPerformAutoPurchase(urgentReason: "retry after failure")
+            }
+        }
+    }
+    
+    private func purchaseTokensWithRetry(amount: Double, maxRetries: Int = 3) async throws -> [OfflineToken] {
+        var lastError: Error?
+        
+        for attempt in 1...maxRetries {
+            do {
+                let tokens = try await offlineTokenService.purchaseTokens(amount: amount)
+                logger.info("Token purchase successful on attempt \(attempt)")
+                return tokens
+            } catch {
+                lastError = error
+                logger.warning("Token purchase attempt \(attempt) failed: \(error)")
+                
+                if attempt < maxRetries {
+                    // Wait before retry with exponential backoff
+                    let delay = TimeInterval(attempt * attempt) // 1s, 4s, 9s
+                    try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
+                }
+            }
+        }
+        
+        throw lastError ?? OfflineTokenError.purchaseFailed(NSError(domain: "RetryFailed", code: -1))
+    }
+    
+    private func getTokensExpiringSoon(hours: Int = 24) async throws -> [OfflineToken] {
+        let allTokens = try await storageService.getAllOfflineTokens()
+        let cutoffDate = Date().addingTimeInterval(TimeInterval(hours * 3600))
+        
+        return allTokens.filter { token in
+            !token.isSpent && !token.isExpired && token.expirationDate <= cutoffDate
+        }
+    }
+    
+    private func getExpiredTokens() async throws -> [OfflineToken] {
+        let allTokens = try await storageService.getAllOfflineTokens()
+        let now = Date()
+        
+        return allTokens.filter { token in
+            !token.isSpent && token.expirationDate <= now
+        }
+    }
+    
+    private func performLightweightSync() async {
+        do {
+            // Perform minimal sync operations
+            logger.info("Performing lightweight sync")
+            
+            // Check for critical transaction updates only
+            let pendingTransactions = try await storageService.getPendingTransactions()
+            if !pendingTransactions.isEmpty {
+                logger.info("Found \(pendingTransactions.count) pending transactions to check")
+                
+                // Check status of most recent transactions only
+                let recentTransactions = Array(pendingTransactions.prefix(5))
+                for transaction in recentTransactions {
+                    if let transactionId = transaction.id {
+                        do {
+                            let statusResponse = try await networkService.getTransactionStatus(transactionId: transactionId)
+                            if statusResponse.status != transaction.status {
+                                var updatedTransaction = transaction
+                                updatedTransaction.status = statusResponse.status
+                                try await storageService.updateTransaction(updatedTransaction)
+                                logger.info("Updated transaction \(transactionId) status to \(statusResponse.status)")
+                            }
+                        } catch {
+                            logger.warning("Failed to check status for transaction \(transactionId): \(error)")
+                        }
+                    }
+                }
+            }
+            
+        } catch {
+            logger.error("Lightweight sync failed: \(error)")
+        }
+    }
+    
+    private func updateBluetoothAdvertising() async {
+        do {
+            guard let walletState = try await storageService.loadWalletState() else {
+                logger.warning("No wallet state available for Bluetooth advertising")
+                return
+            }
+            
+            let currentBalance = await offlineTokenService.getAvailableBalance()
+            
+            let walletInfo = WalletInfo(
+                walletId: walletState.walletId,
+                publicKey: walletState.publicKey,
+                deviceName: {
+                    #if canImport(UIKit)
+                    return UIDevice.current.name
+                    #else
+                    return "Unknown Device"
+                    #endif
+                }(),
+                capabilities: ["offline_tokens", "bluetooth_transfer", "background_active"],
+                offlineBalance: currentBalance,
+                lastSyncTimestamp: walletState.lastSyncTimestamp
+            )
+            
+            try bluetoothService.startAdvertising(walletInfo: walletInfo)
+            logger.info("Bluetooth advertising updated with current balance: \(currentBalance)")
+            
+        } catch {
+            logger.error("Failed to update Bluetooth advertising: \(error)")
+        }
+    }
+    
+    // MARK: - App Lifecycle Management
+    
+    func scheduleAllBackgroundTasks() {
+        scheduleBackgroundAppRefresh()
+        scheduleTokenExpirationMonitoring()
+        schedulePeriodicSync()
+        backgroundBluetoothService.scheduleBackgroundBluetoothTask()
+    }
+    
+    func cancelAllBackgroundTasks() {
+        BGTaskScheduler.shared.cancelAllTaskRequests()
+        logger.info("All background tasks cancelled")
+    }
+    
+    func handleAppWillEnterBackground() {
+        logger.info("App will enter background - scheduling background tasks")
+        scheduleAllBackgroundTasks()
+    }
+    
+    func handleAppDidBecomeActive() {
+        logger.info("App became active - checking for immediate updates")
+        
+        Task {
+            await performBackgroundRefresh()
+        }
+    }
+    
+    func handleAppWillTerminate() {
+        logger.info("App will terminate - cleaning up background services")
+        cancelAllBackgroundTasks()
+    }
+    
+    // MARK: - Notification Management
+    
+    func requestNotificationPermissions() async -> Bool {
+        return await pushNotificationService.requestPermissions()
+    }
+    
+    func sendNotification(title: String, body: String, identifier: String) {
+        let content = UNMutableNotificationContent()
+        content.title = title
+        content.body = body
+        content.sound = .default
+        
+        let request = UNNotificationRequest(
+            identifier: identifier,
+            content: content,
+            trigger: nil
+        )
+        
+        UNUserNotificationCenter.current().add(request) { [weak self] error in
+            if let error = error {
+                self?.logger.error("Failed to send notification '\(identifier)': \(error)")
+            } else {
+                self?.logger.info("Notification sent: \(identifier)")
+            }
+        }
+    }
+    
+    // MARK: - Setup
+    
+    private func setupNotificationCenter() {
+        // Listen for app lifecycle notifications
+        #if canImport(UIKit)
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(appWillEnterBackground),
+            name: UIApplication.willResignActiveNotification,
+            object: nil
+        )
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(appDidBecomeActive),
+            name: UIApplication.didBecomeActiveNotification,
+            object: nil
+        )
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(appWillTerminate),
+            name: UIApplication.willTerminateNotification,
+            object: nil
+        )
+        #endif
+    }
+    
+    @objc private func appWillEnterBackground() {
+        handleAppWillEnterBackground()
+    }
+    
+    @objc private func appDidBecomeActive() {
+        handleAppDidBecomeActive()
+    }
+    
+    @objc private func appWillTerminate() {
+        handleAppWillTerminate()
+    }
+    
+    // MARK: - Core Background Operations
+    
+    private func performPeriodicSync() async {
+        logger.info("Performing periodic sync")
+        
+        do {
+            // Process offline queue first
+            let offlineTransactions = try await storageService.getPendingTransactions()
+            let offlineCount = offlineTransactions.filter { $0.isOffline }.count
+            
+            if offlineCount > 0 {
+                logger.info("Processing \(offlineCount) offline transactions")
+                for transaction in offlineTransactions.filter({ $0.isOffline }) {
+                    do {
+                        let submittedTransaction = try await networkService.sendTransaction(transaction)
+                        var updatedTransaction = transaction
+                        updatedTransaction.isOffline = false
+                        updatedTransaction.status = submittedTransaction.status
+                        updatedTransaction.blockchainTxHash = submittedTransaction.blockchainTxHash
+                        try await storageService.updateTransaction(updatedTransaction)
+                        logger.info("Successfully submitted offline transaction")
+                    } catch {
+                        logger.warning("Failed to submit offline transaction: \(error)")
+                    }
+                }
+            }
+            
+            // Check for transaction status updates
+            let pendingTransactions = try await storageService.getPendingTransactions()
+            for transaction in pendingTransactions.prefix(10) { // Limit to avoid rate limiting
+                if let transactionId = transaction.id {
+                    do {
+                        let statusResponse = try await networkService.getTransactionStatus(transactionId: transactionId)
+                        if statusResponse.status != transaction.status {
+                            var updatedTransaction = transaction
+                            updatedTransaction.status = statusResponse.status
+                            try await storageService.updateTransaction(updatedTransaction)
+                            logger.info("Updated transaction status")
+                        }
+                    } catch {
+                        logger.warning("Failed to check transaction status: \(error)")
+                    }
+                }
+            }
+            
+            // Sync wallet balance
+            if let walletState = try await storageService.loadWalletState() {
+                do {
+                    let balanceResponse = try await networkService.getWalletBalance(walletId: walletState.walletId)
+                    var updatedState = walletState
+                    updatedState.blockchainBalance = balanceResponse
+                    updatedState.lastSyncTimestamp = Date()
+                    try await storageService.saveWalletState(updatedState)
+                    logger.info("Wallet balance synced")
+                } catch {
+                    logger.warning("Failed to sync wallet balance: \(error)")
+                }
+            }
+            
+            // Handle expired tokens
+            try await offlineTokenService.handleExpiredTokens()
+            
+            // Update Bluetooth advertising
+            await updateBluetoothAdvertising()
+            
+        } catch {
+            logger.error("Periodic sync failed: \(error)")
+        }
+    }
+    
+    private func checkAndPerformAutoPurchase(urgentReason: String? = nil) async {
+        do {
+            guard let walletState = try await storageService.loadWalletState(),
+                  walletState.autoRechargeEnabled else {
+                return
+            }
+            
+            let currentBalance = await offlineTokenService.getAvailableBalance()
+            let threshold = walletState.autoRechargeThreshold
+            
+            if currentBalance <= threshold {
+                let amount = walletState.autoRechargeAmount
+                logger.info("Auto-purchase triggered: balance \(currentBalance) <= threshold \(threshold)")
+                
+                do {
+                    let newTokens = try await purchaseTokensWithRetry(amount: amount)
+                    logger.info("Auto-purchase successful: \(newTokens.count) tokens purchased")
+                    
+                    // Send notification
+                    let message = urgentReason != nil ? 
+                        "Emergency auto-purchase completed: \(newTokens.count) tokens added" :
+                        "Auto-purchase completed: \(newTokens.count) tokens added"
+                    
+                    sendNotification(
+                        title: "Tokens Auto-Purchased",
+                        body: message,
+                        identifier: "auto_purchase_\(UUID().uuidString)"
+                    )
+                    
+                } catch {
+                    logger.error("Auto-purchase failed: \(error)")
+                    
+                    if isTransientError(error) {
+                        scheduleAutoPurchaseRetry()
+                    }
+                    
+                    // Send failure notification
+                    sendNotification(
+                        title: "Auto-Purchase Failed",
+                        body: "Failed to automatically purchase tokens. Please check your account.",
+                        identifier: "auto_purchase_failed_\(UUID().uuidString)"
+                    )
+                }
+            }
+        } catch {
+            logger.error("Auto-purchase check failed: \(error)")
+        }
+    }
+    
+    private func checkOfflineBalanceChanges() async {
+        do {
+            guard let walletState = try await storageService.loadWalletState() else { return }
+            
+            let currentOfflineBalance = await offlineTokenService.getAvailableBalance()
+            let previousBalance = walletState.lastKnownOfflineBalance ?? currentOfflineBalance
+            
+            if abs(currentOfflineBalance - previousBalance) > 0.01 { // Threshold for significant change
+                logger.info("Offline balance changed: \(previousBalance) -> \(currentOfflineBalance)")
+                
+                // Update stored balance
+                var updatedState = walletState
+                updatedState.lastKnownOfflineBalance = currentOfflineBalance
+                try await storageService.saveWalletState(updatedState)
+                
+                // Check if auto-purchase is needed
+                await checkAndPerformAutoPurchase()
+            }
+        } catch {
+            logger.error("Failed to check offline balance changes: \(error)")
+        }
+    }
+    
+    private func updateBluetoothAdvertising() async {
+        do {
+            guard let walletState = try await storageService.loadWalletState() else {
+                logger.warning("No wallet state available for Bluetooth advertising")
+                return
+            }
+            
+            let currentBalance = await offlineTokenService.getAvailableBalance()
+            let walletInfo = WalletInfo(
+                walletId: walletState.walletId,
+                publicKey: walletState.publicKey,
+                deviceName: {
+                    #if canImport(UIKit)
+                    return UIDevice.current.name
+                    #else
+                    return "Unknown Device"
+                    #endif
+                }(),
+                capabilities: ["offline_tokens", "bluetooth_transfer", "background_active"],
+                offlineBalance: currentBalance,
+                lastSyncTimestamp: walletState.lastSyncTimestamp
+            )
+            
+            try bluetoothService.startAdvertising(walletInfo: walletInfo)
+            logger.info("Bluetooth advertising updated with current balance: \(currentBalance)")
+        } catch {
+            logger.error("Failed to update Bluetooth advertising: \(error)")
+        }
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
+        cancelAllBackgroundTasks()
+    }
+}
+
+// MARK: - Supporting Types
+
+struct BackgroundRefreshResults {
+    var expiredTokensHandled: Bool = false
+    var autoPurchaseChecked: Bool = false
+    var balanceChecked: Bool = false
+    var lightweightSyncPerformed: Bool = false
+    var offlineQueueProcessed: Bool = false
+    var networkUnavailable: Bool = false
+    var bluetoothAdvertisingUpdated: Bool = false
+    var appBadgeUpdated: Bool = false
+    
+    var summary: String {
+        var components: [String] = []
+        if expiredTokensHandled { components.append("expired tokens handled") }
+        if autoPurchaseChecked { components.append("auto-purchase checked") }
+        if balanceChecked { components.append("balance checked") }
+        if lightweightSyncPerformed { components.append("sync performed") }
+        if offlineQueueProcessed { components.append("offline queue processed") }
+        if bluetoothAdvertisingUpdated { components.append("bluetooth updated") }
+        if appBadgeUpdated { components.append("badge updated") }
+        if networkUnavailable { components.append("network unavailable") }
+        
+        return components.isEmpty ? "no operations performed" : components.joined(separator: ", ")
+    }
+}
+
+struct SyncResults {
+    var offlineQueueProcessed: Bool = false
+    var transactionsSynced: Int = 0
+    var transactionStatusUpdates: Int = 0
+    var balanceUpdated: Bool = false
+    var expiredTokensHandled: Bool = false
+    var bluetoothAdvertisingUpdated: Bool = false
+    var publicKeysSynced: Bool = false
+    
+    var summary: String {
+        var components: [String] = []
+        if offlineQueueProcessed { components.append("offline queue processed") }
+        if transactionsSynced > 0 { components.append("\(transactionsSynced) transactions synced") }
+        if transactionStatusUpdates > 0 { components.append("\(transactionStatusUpdates) status updates") }
+        if balanceUpdated { components.append("balance updated") }
+        if expiredTokensHandled { components.append("expired tokens handled") }
+        if bluetoothAdvertisingUpdated { components.append("bluetooth updated") }
+        if publicKeysSynced { components.append("public keys synced") }
+        
+        return components.isEmpty ? "no changes" : components.joined(separator: ", ")
+    }
+}
+
+// MARK: - BackgroundTaskManager Extension for Helper Methods
+extension BackgroundTaskManager {
+    
+    private func purchaseTokensWithRetry(amount: Double, maxRetries: Int = 3) async throws -> [OfflineToken] {
+        var lastError: Error?
+        
+        for attempt in 1...maxRetries {
+            do {
+                logger.info("Auto-purchase attempt \(attempt)/\(maxRetries)")
+                return try await offlineTokenService.purchaseTokens(amount: amount)
+            } catch {
+                lastError = error
+                logger.warning("Auto-purchase attempt \(attempt) failed: \(error)")
+                
+                if attempt < maxRetries {
+                    // Exponential backoff: 2^attempt seconds
+                    let delay = TimeInterval(pow(2.0, Double(attempt)))
+                    try await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
+                }
+            }
+        }
+        
+        throw lastError ?? OfflineTokenError.purchaseFailed(NSError(domain: "RetryFailed", code: -1))
+    }
+    
+    private func isTransientError(_ error: Error) -> Bool {
+        // Check if error is likely to be resolved by retrying
+        if let urlError = error as? URLError {
+            switch urlError.code {
+            case .timedOut, .cannotConnectToHost, .networkConnectionLost, .notConnectedToInternet:
+                return true
+            default:
+                return false
+            }
+        }
+        return false
+    }
+    
+    private func scheduleAutoPurchaseRetry() {
+        // Schedule a retry in 5 minutes
+        DispatchQueue.main.asyncAfter(deadline: .now() + 300) { [weak self] in
+            Task {
+                await self?.checkAndPerformAutoPurchase(urgentReason: "retry after failure")
+            }
+        }
+    }
+    
+    private func getTokensExpiringSoon(hours: Int = 24) async throws -> [OfflineToken] {
+        let allTokens = try await storageService.getAllOfflineTokens()
+        let cutoffDate = Date().addingTimeInterval(TimeInterval(hours * 3600))
+        return allTokens.filter { token in
+            !token.isSpent && !token.isExpired && token.expirationDate <= cutoffDate
+        }
+    }
+    
+    private func getExpiredTokens() async throws -> [OfflineToken] {
+        let allTokens = try await storageService.getAllOfflineTokens()
+        let now = Date()
+        return allTokens.filter { token in
+            !token.isSpent && token.expirationDate <= now
+        }
+    }
+    
+    private func performLightweightSync() async {
+        do {
+            // Quick sync without heavy operations
+            await networkService.processOfflineQueue()
+            
+            // Check for pending transaction updates
+            let pendingTransactions = try await storageService.getPendingTransactions()
+            for transaction in pendingTransactions {
+                if let transactionId = transaction.id {
+                    let status = try await networkService.getTransactionStatus(transactionId: transactionId)
+                    
+                    if status.status != transaction.status {
+                        // Update transaction status
+                        var updatedTransaction = transaction
+                        updatedTransaction.status = status.status
+                        try await storageService.updateTransaction(updatedTransaction)
+                        
+                        // Send notification about status change
+                        pushNotificationService.sendTransactionStatusNotification(
+                            transaction: updatedTransaction,
+                            newStatus: status.status
+                        )
+                    }
+                }
+            }
+            
+        } catch {
+            logger.error("Lightweight sync failed: \(error)")
+        }
+    }
+    
+    private func updateBluetoothAdvertising() async {
+        // Update Bluetooth advertising with current wallet info if needed
+        do {
+            guard let walletState = try await storageService.loadWalletState() else {
+                return
+            }
+            
+            let walletInfo = WalletInfo(
+                walletId: walletState.walletId,
+                publicKey: walletState.publicKey,
+                deviceName: {
+                    #if canImport(UIKit)
+                    return UIDevice.current.name
+                    #else
+                    return "Unknown Device"
+                    #endif
+                }(),
+                capabilities: ["offline_tokens", "bluetooth_transfer"],
+                offlineBalance: walletState.offlineBalance,
+                lastSyncTimestamp: walletState.lastSyncTimestamp
+            )
+            
+            // Restart advertising with updated info
+            try bluetoothService.startAdvertising(walletInfo: walletInfo)
+            logger.info("Bluetooth advertising updated with current wallet state")
+            
+        } catch {
+            logger.error("Failed to update Bluetooth advertising: \(error)")
+        }
+    }
+    
+    private func getTokensExpiringSoon(hours: Int = 24) async throws -> [OfflineToken] {
+        let allTokens = try await storageService.getAllOfflineTokens()
+        let expirationThreshold = Date().addingTimeInterval(TimeInterval(hours * 60 * 60))
+        
+        return allTokens.filter { token in
+            !token.isSpent && !token.isExpired && token.expirationDate <= expirationThreshold
+        }
+    }
+    
+    private func getExpiredTokens() async throws -> [OfflineToken] {
+        let allTokens = try await storageService.getAllOfflineTokens()
+        
+        return allTokens.filter { token in
+            !token.isSpent && token.isExpired
+        }
+    }
+    
+    // MARK: - Notification Setup and Management
+    
+    private func setupNotificationCenter() {
+        UNUserNotificationCenter.current().delegate = self
+        
+        // Setup notification observers for internal app communication
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleTokenExpirationDetected),
+            name: .tokenExpirationDetected,
+            object: nil
+        )
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleAutoPurchaseTriggered),
+            name: .autoPurchaseTriggered,
+            object: nil
+        )
+        
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleBalanceUpdated),
+            name: .balanceUpdated,
+            object: nil
+        )
+    }
+    
+    @objc private func handleTokenExpirationDetected(_ notification: Notification) {
+        logger.info("Token expiration detected notification received")
+        Task {
+            await performTokenExpirationCheck()
+        }
+    }
+    
+    @objc private func handleAutoPurchaseTriggered(_ notification: Notification) {
+        logger.info("Auto-purchase triggered notification received")
+        Task {
+            await checkAndPerformAutoPurchase()
+        }
+    }
+    
+    @objc private func handleBalanceUpdated(_ notification: Notification) {
+        logger.info("Balance updated notification received")
+        Task {
+            await updateBluetoothAdvertising()
+        }
+    }
+    
+    func requestNotificationPermissions() async -> Bool {
+        return await pushNotificationService.requestPermissions()
+    }
+    
+    func sendNotification(title: String, body: String, identifier: String) {
+        let content = UNMutableNotificationContent()
+        content.title = title
+        content.body = body
+        content.sound = .default
+        content.badge = 1
+        
+        // Add custom data for handling notification taps
+        content.userInfo = [
+            "identifier": identifier,
+            "timestamp": Date().timeIntervalSince1970
+        ]
+        
+        let request = UNNotificationRequest(
+            identifier: identifier,
+            content: content,
+            trigger: nil // Immediate delivery
+        )
+        
+        UNUserNotificationCenter.current().add(request) { [weak self] error in
+            if let error = error {
+                self?.logger.error("Failed to send notification: \(error)")
+            } else {
+                self?.logger.info("Notification sent: \(title)")
+            }
+        }
+    }
+    
+    // MARK: - App Lifecycle Management
+    
+    func handleAppWillEnterBackground() {
+        logger.info("App entering background, scheduling background tasks")
+        
+        scheduleBackgroundAppRefresh()
+        scheduleTokenExpirationMonitoring()
+        schedulePeriodicSync()
+        backgroundBluetoothService.scheduleBackgroundBluetoothTask()
+        backgroundBluetoothService.startBackgroundAdvertising()
+    }
+    
+    func handleAppDidBecomeActive() {
+        logger.info("App became active, performing immediate checks")
+        
+        // Stop background advertising when app becomes active
+        backgroundBluetoothService.stopBackgroundAdvertising()
+        
+        Task {
+            // Perform immediate token expiration check
+            await performTokenExpirationCheck()
+            
+            // Check for auto-purchase if needed
+            await checkAndPerformAutoPurchase()
+            
+            // Update Bluetooth advertising
+            await updateBluetoothAdvertising()
+        }
+    }
+    
+    func handleAppWillTerminate() {
+        logger.info("App will terminate, cleaning up background tasks")
+        
+        // Cancel all scheduled background tasks
+        BGTaskScheduler.shared.cancelAllTaskRequests()
+        
+        // Stop automatic token management
+        cancellables.removeAll()
+        
+        // Stop background Bluetooth advertising
+        backgroundBluetoothService.stopBackgroundAdvertising()
+        
+        // Clean up notification observers
+        NotificationCenter.default.removeObserver(self)
+        
+        logger.info("Background tasks cleanup completed")
+    }
+    
+    // MARK: - Enhanced Background Processing
+    
+    func scheduleAllBackgroundTasks() {
+        scheduleBackgroundAppRefresh()
+        scheduleTokenExpirationMonitoring()
+        schedulePeriodicSync()
+        backgroundBluetoothService.scheduleBackgroundBluetoothTask()
+        
+        logger.info("All background tasks scheduled")
+    }
+    
+    func cancelAllBackgroundTasks() {
+        BGTaskScheduler.shared.cancelAllTaskRequests()
+        logger.info("All background tasks cancelled")
+    }
+    
+    func getBackgroundTaskStatus() -> [String: Any] {
+        var status: [String: Any] = [
+            "bluetooth_advertising_active": backgroundBluetoothService.isBackgroundAdvertising,
+            "automatic_token_management_active": offlineTokenService.isAutomaticManagementActive
+        ]
+        
+        #if canImport(UIKit)
+        status["background_app_refresh_enabled"] = UIApplication.shared.backgroundRefreshStatus == .available
+        #endif
+        
+        // Note: notification permissions check would need to be async
+        status["notification_permissions_granted"] = false // Placeholder
+        
+        return status
+    }
+    
+    func cancelAllBackgroundTasks() {
+        BGTaskScheduler.shared.cancelAllTaskRequests()
+        logger.info("All background tasks cancelled")
+    }
+}
+
+// MARK: - UNUserNotificationCenterDelegate
+
+extension BackgroundTaskManager: UNUserNotificationCenterDelegate {
+    func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        willPresent notification: UNNotification,
+        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+    ) {
+        // Show notification even when app is in foreground
+        completionHandler([.alert, .badge, .sound])
+    }
+    
+    func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        didReceive response: UNNotificationResponse,
+        withCompletionHandler completionHandler: @escaping () -> Void
+    ) {
+        let identifier = response.notification.request.identifier
+        logger.info("User tapped notification: \(identifier)")
+        
+        // Handle notification tap based on identifier
+        handleNotificationTap(identifier: identifier)
+        
+        completionHandler()
+    }
+    
+    private func handleNotificationTap(identifier: String) {
+        switch identifier {
+        case tokenExpirationNotificationId:
+            // Navigate to token management screen
+            NotificationCenter.default.post(name: .navigateToTokenManagement, object: nil)
+            
+        case lowBalanceNotificationId:
+            // Navigate to purchase tokens screen
+            NotificationCenter.default.post(name: .navigateToPurchaseTokens, object: nil)
+            
+        case transactionStatusNotificationId:
+            // Navigate to transaction history
+            NotificationCenter.default.post(name: .navigateToTransactionHistory, object: nil)
+            
+        case syncCompleteNotificationId:
+            // Navigate to wallet main screen
+            NotificationCenter.default.post(name: .navigateToWallet, object: nil)
+            
+        default:
+            logger.info("Unknown notification identifier: \(identifier)")
+        }
+    }
+}
+
+// MARK: - Notification Names
+
+extension Notification.Name {
+    static let navigateToTokenManagement = Notification.Name("navigateToTokenManagement")
+    static let navigateToPurchaseTokens = Notification.Name("navigateToPurchaseTokens")
+    static let navigateToTransactionHistory = Notification.Name("navigateToTransactionHistory")
+    static let navigateToTransactionDetails = Notification.Name("navigateToTransactionDetails")
+    static let navigateToWallet = Notification.Name("navigateToWallet")
+    static let autoPurchaseCompleted = Notification.Name("autoPurchaseCompleted")
+    static let periodicSyncCompleted = Notification.Name("periodicSyncCompleted")
+    static let backgroundRefreshCompleted = Notification.Name("backgroundRefreshCompleted")
+}
+
+

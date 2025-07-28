@@ -1,0 +1,499 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		E11F32F22E2F2E46006A51DE /* CryptoSwift in Frameworks */ = {isa = PBXBuildFile; productRef = E11F32F12E2F2E46006A51DE /* CryptoSwift */; };
+		E11F32F52E2F2E67006A51DE /* KeychainAccess in Frameworks */ = {isa = PBXBuildFile; productRef = E11F32F42E2F2E67006A51DE /* KeychainAccess */; };
+		E11F32F82E2F2EFE006A51DE /* Alamofire in Frameworks */ = {isa = PBXBuildFile; productRef = E11F32F72E2F2EFE006A51DE /* Alamofire */; };
+		E11F32FA2E2F2EFE006A51DE /* AlamofireDynamic in Frameworks */ = {isa = PBXBuildFile; productRef = E11F32F92E2F2EFE006A51DE /* AlamofireDynamic */; };
+		E11F32FD2E2F2F3E006A51DE /* web3swift in Frameworks */ = {isa = PBXBuildFile; productRef = E11F32FC2E2F2F3E006A51DE /* web3swift */; };
+		E11F33002E2F2F5F006A51DE /* QRCode in Frameworks */ = {isa = PBXBuildFile; productRef = E11F32FF2E2F2F5F006A51DE /* QRCode */; };
+		E11F33022E2F2F5F006A51DE /* QRCodeDetector in Frameworks */ = {isa = PBXBuildFile; productRef = E11F33012E2F2F5F006A51DE /* QRCodeDetector */; };
+		E11F33042E2F2F5F006A51DE /* QRCodeDynamic in Frameworks */ = {isa = PBXBuildFile; productRef = E11F33032E2F2F5F006A51DE /* QRCodeDynamic */; };
+		E11F33062E2F2F5F006A51DE /* QRCodeStatic in Frameworks */ = {isa = PBXBuildFile; productRef = E11F33052E2F2F5F006A51DE /* QRCodeStatic */; };
+		E11F33092E2F2F6F006A51DE /* CodeScanner in Frameworks */ = {isa = PBXBuildFile; productRef = E11F33082E2F2F6F006A51DE /* CodeScanner */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		E11518ED2E2E216500A0B401 /* offline-blockchain-wallet-ios.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "offline-blockchain-wallet-ios.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		E11F32EF2E2E8A61006A51DE /* Exceptions for "offline-blockchain-wallet-ios" folder in "offline-blockchain-wallet-ios" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = E11518EC2E2E216500A0B401 /* offline-blockchain-wallet-ios */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		E11518EF2E2E216500A0B401 /* offline-blockchain-wallet-ios */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				E11F32EF2E2E8A61006A51DE /* Exceptions for "offline-blockchain-wallet-ios" folder in "offline-blockchain-wallet-ios" target */,
+			);
+			path = "offline-blockchain-wallet-ios";
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		E11518EA2E2E216500A0B401 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E11F33042E2F2F5F006A51DE /* QRCodeDynamic in Frameworks */,
+				E11F33062E2F2F5F006A51DE /* QRCodeStatic in Frameworks */,
+				E11F32F82E2F2EFE006A51DE /* Alamofire in Frameworks */,
+				E11F32FD2E2F2F3E006A51DE /* web3swift in Frameworks */,
+				E11F33092E2F2F6F006A51DE /* CodeScanner in Frameworks */,
+				E11F33022E2F2F5F006A51DE /* QRCodeDetector in Frameworks */,
+				E11F33002E2F2F5F006A51DE /* QRCode in Frameworks */,
+				E11F32FA2E2F2EFE006A51DE /* AlamofireDynamic in Frameworks */,
+				E11F32F52E2F2E67006A51DE /* KeychainAccess in Frameworks */,
+				E11F32F22E2F2E46006A51DE /* CryptoSwift in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		E11518E42E2E216500A0B401 = {
+			isa = PBXGroup;
+			children = (
+				E11518EF2E2E216500A0B401 /* offline-blockchain-wallet-ios */,
+				E11518EE2E2E216500A0B401 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		E11518EE2E2E216500A0B401 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				E11518ED2E2E216500A0B401 /* offline-blockchain-wallet-ios.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		E11518EC2E2E216500A0B401 /* offline-blockchain-wallet-ios */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = E11518FB2E2E216700A0B401 /* Build configuration list for PBXNativeTarget "offline-blockchain-wallet-ios" */;
+			buildPhases = (
+				E11518E92E2E216500A0B401 /* Sources */,
+				E11518EA2E2E216500A0B401 /* Frameworks */,
+				E11518EB2E2E216500A0B401 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				E11518EF2E2E216500A0B401 /* offline-blockchain-wallet-ios */,
+			);
+			name = "offline-blockchain-wallet-ios";
+			packageProductDependencies = (
+				E11F32F12E2F2E46006A51DE /* CryptoSwift */,
+				E11F32F42E2F2E67006A51DE /* KeychainAccess */,
+				E11F32F72E2F2EFE006A51DE /* Alamofire */,
+				E11F32F92E2F2EFE006A51DE /* AlamofireDynamic */,
+				E11F32FC2E2F2F3E006A51DE /* web3swift */,
+				E11F32FF2E2F2F5F006A51DE /* QRCode */,
+				E11F33012E2F2F5F006A51DE /* QRCodeDetector */,
+				E11F33032E2F2F5F006A51DE /* QRCodeDynamic */,
+				E11F33052E2F2F5F006A51DE /* QRCodeStatic */,
+				E11F33082E2F2F6F006A51DE /* CodeScanner */,
+			);
+			productName = "offline-blockchain-wallet-ios";
+			productReference = E11518ED2E2E216500A0B401 /* offline-blockchain-wallet-ios.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		E11518E52E2E216500A0B401 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1620;
+				LastUpgradeCheck = 1620;
+				TargetAttributes = {
+					E11518EC2E2E216500A0B401 = {
+						CreatedOnToolsVersion = 16.2;
+					};
+				};
+			};
+			buildConfigurationList = E11518E82E2E216500A0B401 /* Build configuration list for PBXProject "offline-blockchain-wallet-ios" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = E11518E42E2E216500A0B401;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				E11F32F02E2F2E46006A51DE /* XCRemoteSwiftPackageReference "CryptoSwift" */,
+				E11F32F32E2F2E67006A51DE /* XCRemoteSwiftPackageReference "KeychainAccess" */,
+				E11F32F62E2F2EFE006A51DE /* XCRemoteSwiftPackageReference "Alamofire" */,
+				E11F32FB2E2F2F3E006A51DE /* XCRemoteSwiftPackageReference "web3swift" */,
+				E11F32FE2E2F2F5F006A51DE /* XCRemoteSwiftPackageReference "QRCode" */,
+				E11F33072E2F2F6F006A51DE /* XCRemoteSwiftPackageReference "CodeScanner" */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = E11518EE2E2E216500A0B401 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				E11518EC2E2E216500A0B401 /* offline-blockchain-wallet-ios */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		E11518EB2E2E216500A0B401 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		E11518E92E2E216500A0B401 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		E11518F92E2E216700A0B401 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		E11518FA2E2E216700A0B401 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.2;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		E11518FC2E2E216700A0B401 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"offline-blockchain-wallet-ios/Preview Content\"";
+				DEVELOPMENT_TEAM = 9P78Q47KY2;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "offline-blockchain-wallet-ios/Info.plist";
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "This app uses Bluetooth to enable offline transactions between devices.";
+				INFOPLIST_KEY_NSBluetoothPeripheralUsageDescription = "This app uses Bluetooth to enable offline transactions between devices.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "This app needs camera access to scan QR codes for transactions.";
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "This app uses Face ID to secure access to your wallet and private keys.";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "This app needs local network access to communicate with blockchain services.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.dannysantoso.offline-blockchain-wallet-ios";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		E11518FD2E2E216700A0B401 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_ASSET_PATHS = "\"offline-blockchain-wallet-ios/Preview Content\"";
+				DEVELOPMENT_TEAM = 9P78Q47KY2;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "offline-blockchain-wallet-ios/Info.plist";
+				INFOPLIST_KEY_NSBluetoothAlwaysUsageDescription = "This app uses Bluetooth to enable offline transactions between devices.";
+				INFOPLIST_KEY_NSBluetoothPeripheralUsageDescription = "This app uses Bluetooth to enable offline transactions between devices.";
+				INFOPLIST_KEY_NSCameraUsageDescription = "This app needs camera access to scan QR codes for transactions.";
+				INFOPLIST_KEY_NSFaceIDUsageDescription = "This app uses Face ID to secure access to your wallet and private keys.";
+				INFOPLIST_KEY_NSLocalNetworkUsageDescription = "This app needs local network access to communicate with blockchain services.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.dannysantoso.offline-blockchain-wallet-ios";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		E11518E82E2E216500A0B401 /* Build configuration list for PBXProject "offline-blockchain-wallet-ios" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E11518F92E2E216700A0B401 /* Debug */,
+				E11518FA2E2E216700A0B401 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		E11518FB2E2E216700A0B401 /* Build configuration list for PBXNativeTarget "offline-blockchain-wallet-ios" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				E11518FC2E2E216700A0B401 /* Debug */,
+				E11518FD2E2E216700A0B401 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		E11F32F02E2F2E46006A51DE /* XCRemoteSwiftPackageReference "CryptoSwift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/krzyzanowskim/CryptoSwift.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.9.0;
+			};
+		};
+		E11F32F32E2F2E67006A51DE /* XCRemoteSwiftPackageReference "KeychainAccess" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/kishikawakatsumi/KeychainAccess.git";
+			requirement = {
+				branch = master;
+				kind = branch;
+			};
+		};
+		E11F32F62E2F2EFE006A51DE /* XCRemoteSwiftPackageReference "Alamofire" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Alamofire/Alamofire.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.10.2;
+			};
+		};
+		E11F32FB2E2F2F3E006A51DE /* XCRemoteSwiftPackageReference "web3swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/skywinder/web3swift.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 3.3.0;
+			};
+		};
+		E11F32FE2E2F2F5F006A51DE /* XCRemoteSwiftPackageReference "QRCode" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/dagronf/QRCode";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 26.10.0;
+			};
+		};
+		E11F33072E2F2F6F006A51DE /* XCRemoteSwiftPackageReference "CodeScanner" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/twostraws/CodeScanner.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.5.2;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		E11F32F12E2F2E46006A51DE /* CryptoSwift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E11F32F02E2F2E46006A51DE /* XCRemoteSwiftPackageReference "CryptoSwift" */;
+			productName = CryptoSwift;
+		};
+		E11F32F42E2F2E67006A51DE /* KeychainAccess */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E11F32F32E2F2E67006A51DE /* XCRemoteSwiftPackageReference "KeychainAccess" */;
+			productName = KeychainAccess;
+		};
+		E11F32F72E2F2EFE006A51DE /* Alamofire */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E11F32F62E2F2EFE006A51DE /* XCRemoteSwiftPackageReference "Alamofire" */;
+			productName = Alamofire;
+		};
+		E11F32F92E2F2EFE006A51DE /* AlamofireDynamic */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E11F32F62E2F2EFE006A51DE /* XCRemoteSwiftPackageReference "Alamofire" */;
+			productName = AlamofireDynamic;
+		};
+		E11F32FC2E2F2F3E006A51DE /* web3swift */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E11F32FB2E2F2F3E006A51DE /* XCRemoteSwiftPackageReference "web3swift" */;
+			productName = web3swift;
+		};
+		E11F32FF2E2F2F5F006A51DE /* QRCode */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E11F32FE2E2F2F5F006A51DE /* XCRemoteSwiftPackageReference "QRCode" */;
+			productName = QRCode;
+		};
+		E11F33012E2F2F5F006A51DE /* QRCodeDetector */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E11F32FE2E2F2F5F006A51DE /* XCRemoteSwiftPackageReference "QRCode" */;
+			productName = QRCodeDetector;
+		};
+		E11F33032E2F2F5F006A51DE /* QRCodeDynamic */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E11F32FE2E2F2F5F006A51DE /* XCRemoteSwiftPackageReference "QRCode" */;
+			productName = QRCodeDynamic;
+		};
+		E11F33052E2F2F5F006A51DE /* QRCodeStatic */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E11F32FE2E2F2F5F006A51DE /* XCRemoteSwiftPackageReference "QRCode" */;
+			productName = QRCodeStatic;
+		};
+		E11F33082E2F2F6F006A51DE /* CodeScanner */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = E11F33072E2F2F6F006A51DE /* XCRemoteSwiftPackageReference "CodeScanner" */;
+			productName = CodeScanner;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = E11518E52E2E216500A0B401 /* Project object */;
+}

@@ -1,0 +1,4 @@
+module zkp_bindings {
+    umbrella "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/checkouts/secp256k1.swift/Sources/zkp_bindings/include"
+    export *
+}

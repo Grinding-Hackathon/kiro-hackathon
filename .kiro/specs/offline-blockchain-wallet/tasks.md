@@ -67,7 +67,7 @@
 
 ## Mobile App Development Tasks (iOS/Swift)
 
-- [ ] 9. Set up iOS project structure and dependencies
+- [x] 9. Set up iOS project structure and dependencies
   - Create new iOS project with Swift and UIKit/SwiftUI
   - Configure CocoaPods/SPM for dependencies (Web3Swift, CryptoKit, CoreBluetooth)
   - Set up project architecture with MVVM pattern
@@ -75,7 +75,7 @@
   - Create basic app structure with storyboards and view controllers
   - _Requirements: 3.1, 4.1, 10.1_
 
-- [ ] 10. Implement cryptographic services and key management
+- [x] 10. Implement cryptographic services and key management
   - Create key pair generation using iOS CryptoKit framework
   - Implement secure key storage using iOS Keychain Services
   - Add digital signature creation and verification methods
@@ -83,7 +83,7 @@
   - Write unit tests for all cryptographic operations
   - _Requirements: 6.1, 6.2, 8.1, 8.2, 9.4_
 
-- [ ] 11. Build local storage layer for offline data management
+- [x] 11. Build local storage layer for offline data management
   - Implement Core Data model for offline tokens and transactions
   - Create data access layer with CRUD operations
   - Add data synchronization logic for online/offline states
@@ -91,7 +91,7 @@
   - Create data migration and backup functionality
   - _Requirements: 1.3, 4.4, 8.4, 9.4, 10.2_
 
-- [ ] 12. Implement QR code generation and scanning functionality
+- [x] 12. Implement QR code generation and scanning functionality
   - Create QR code generation for payment requests with transaction details
   - Implement QR code scanning using AVFoundation camera
   - Add QR code validation and error handling
@@ -99,7 +99,7 @@
   - Integrate QR code data with Bluetooth connection initiation
   - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5_
 
-- [ ] 13. Develop Bluetooth communication layer
+- [x] 13. Develop Bluetooth communication layer
   - Implement Core Bluetooth framework for device discovery and pairing
   - Create secure Bluetooth Personal Area Network (PAN) connections
   - Add device verification to ensure peer is legitimate wallet app
@@ -107,7 +107,7 @@
   - Add connection management and error recovery mechanisms
   - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.6_
 
-- [ ] 14. Build offline token management services
+- [x] 14. Build offline token management services
   - Implement token purchase requests to backend API
   - Create token validation using OTM public key verification
   - Add token division logic for exact payments and change calculation
@@ -115,7 +115,7 @@
   - Create token redemption functionality for online synchronization
   - _Requirements: 1.1, 1.5, 2.1, 2.2, 5.1, 5.2, 5.3, 7.1, 7.2_
 
-- [ ] 15. Implement transaction processing and validation
+- [x] 15. Implement transaction processing and validation
   - Create transaction initiation and signing using user private keys
   - Implement transaction verification and signature validation
   - Add double-spending prevention and transaction state management
@@ -123,7 +123,7 @@
   - Implement error handling for failed or interrupted transactions
   - _Requirements: 4.1, 4.2, 4.5, 6.1, 6.2, 6.4, 6.5, 9.1, 9.2_
 
-- [ ] 16. Build user interface components
+- [x] 16. Build user interface components
   - Create main wallet view with balance display (OT and blockchain balances)
   - Implement transaction history view with online/offline indicators
   - Build send/receive transaction flows with QR code integration
@@ -131,7 +131,7 @@
   - Add loading states, error messages, and user feedback
   - _Requirements: 10.1, 10.2, 10.3, 10.5, 2.3, 2.6_
 
-- [ ] 17. Implement network layer for API communication
+- [x] 17. Implement network layer for API communication
   - Create HTTP client for backend API communication
   - Implement authentication and JWT token management
   - Add network error handling and retry mechanisms
@@ -139,7 +139,7 @@
   - Implement offline queue for pending API requests
   - _Requirements: 1.4, 7.3, 7.5, 8.3, 8.4_
 
-- [ ] 18. Add background services and automation
+- [x] 18. Add background services and automation
   - Implement background app refresh for token expiration monitoring
   - Create automatic token purchase based on balance thresholds
   - Add push notifications for transaction status updates
@@ -147,7 +147,7 @@
   - Create periodic sync with blockchain for balance updates
   - _Requirements: 2.1, 2.2, 2.5, 2.6, 4.6, 7.4_
 
-- [ ] 19. Create comprehensive testing suite for mobile app
+- [x] 19. Create comprehensive testing suite for mobile app
   - Write unit tests for all business logic and utility methods
   - Implement UI tests for critical user flows
   - Create integration tests for Bluetooth communication
