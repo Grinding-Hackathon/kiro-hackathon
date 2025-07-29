@@ -1,0 +1,11 @@
+{
+  "network": "hardhat",
+  "chainId": "1337",
+  "contractAddress": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+  "deployerAddress": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+  "otmAddress": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266",
+  "initialSupply": "1000000.0",
+  "deploymentTime": "2025-07-27T19:07:11.144Z",
+  "transactionHash": "0x281c3802b8339b9815ce508c5ee22cac3c30706670bb857c61de25a78a5a5995",
+  "blockNumber": "1"
+}

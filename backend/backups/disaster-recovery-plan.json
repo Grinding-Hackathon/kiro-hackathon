@@ -1,0 +1,65 @@
+{
+  "id": "dr_plan_1753782483242",
+  "createdAt": "2025-07-29T09:48:03.242Z",
+  "systemInfo": {
+    "nodeVersion": "v24.4.1",
+    "platform": "darwin",
+    "environment": "test",
+    "databaseConfig": {
+      "host": "localhost",
+      "port": 5432,
+      "name": "offline_wallet_db"
+    }
+  },
+  "backupStrategy": {
+    "fullBackupFrequency": "24 hours",
+    "incrementalBackupFrequency": "6 hours",
+    "logsBackupFrequency": "12 hours",
+    "retentionPeriod": "30 days"
+  },
+  "recoveryProcedures": [
+    {
+      "scenario": "Database corruption",
+      "steps": [
+        "Stop application services",
+        "Identify latest valid full backup",
+        "Restore from full backup",
+        "Apply incremental backups in sequence",
+        "Verify data integrity",
+        "Restart services"
+      ]
+    },
+    {
+      "scenario": "Complete system failure",
+      "steps": [
+        "Provision new infrastructure",
+        "Install required dependencies",
+        "Restore from latest full backup",
+        "Configure environment variables",
+        "Deploy application code",
+        "Verify system functionality"
+      ]
+    },
+    {
+      "scenario": "Data breach",
+      "steps": [
+        "Isolate affected systems",
+        "Assess breach scope",
+        "Restore from clean backup",
+        "Update security measures",
+        "Monitor for suspicious activity",
+        "Notify relevant parties"
+      ]
+    }
+  ],
+  "contactInformation": {
+    "primaryAdmin": "system-admin@company.com",
+    "backupAdmin": "backup-admin@company.com",
+    "emergencyContact": "+1-555-EMERGENCY"
+  },
+  "testingSchedule": {
+    "backupVerification": "Daily",
+    "recoveryTesting": "Weekly",
+    "fullDrillTesting": "Monthly"
+  }
+}

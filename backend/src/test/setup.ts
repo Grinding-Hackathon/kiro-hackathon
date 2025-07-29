@@ -1,36 +1,280 @@
-import { config } from '@/config/config';
+import { ethers } from 'ethers';
 
-// Set test environment
-process.env.NODE_ENV = 'test';
+// Mock environment variables for testing
+process.env['NODE_ENV'] = 'test';
+process.env['PORT'] = '0'; // Use random available port for tests
+process.env['JWT_SECRET'] = 'test-jwt-secret-key-for-testing-purposes-only';
+process.env['DB_PASSWORD'] = 'test-password';
+process.env['ETHEREUM_RPC_URL'] = 'http://localhost:8545';
+process.env['HEALTH_CHECK_INTERVAL'] = '999999999'; // Disable health monitoring in tests
+process.env['RATE_LIMIT_WINDOW_MS'] = '999999999'; // Disable rate limiting in tests
+process.env['RATE_LIMIT_MAX_REQUESTS'] = '999999'; // Disable rate limiting in tests
 
-// Mock logger to prevent console output during tests
-jest.mock('@/utils/logger', () => ({
-  logger: {
-    info: jest.fn(),
-    error: jest.fn(),
-    warn: jest.fn(),
-    debug: jest.fn(),
-    http: jest.fn(),
-  },
-  morganStream: {
-    write: jest.fn(),
+// Generate valid test keys
+const testWallet = ethers.Wallet.createRandom();
+process.env['OTM_PRIVATE_KEY'] = testWallet.privateKey;
+process.env['OTM_PUBLIC_KEY'] = testWallet.signingKey.publicKey;
+
+// Mock database initialization
+jest.mock('../database/init', () => ({
+  initializeDatabase: jest.fn().mockResolvedValue(undefined),
+  closeDatabase: jest.fn().mockResolvedValue(undefined),
+}));
+
+// Mock database connection
+jest.mock('../database/connection', () => ({
+  db: {
+    raw: jest.fn().mockResolvedValue([]),
+    select: jest.fn().mockReturnThis(),
+    from: jest.fn().mockReturnThis(),
+    where: jest.fn().mockReturnThis(),
+    insert: jest.fn().mockResolvedValue([{ id: 1 }]),
+    update: jest.fn().mockResolvedValue(1),
+    delete: jest.fn().mockResolvedValue(1),
+    first: jest.fn().mockResolvedValue(null),
+    migrate: {
+      latest: jest.fn().mockResolvedValue([]),
+    },
+    client: {
+      pool: {
+        numUsed: jest.fn().mockReturnValue(0),
+        numFree: jest.fn().mockReturnValue(10),
+        numPendingAcquires: jest.fn().mockReturnValue(0),
+      },
+    },
   },
 }));
 
+// Mock auth middleware to be conditional in tests
+jest.mock('../middleware/auth', () => ({
+  authMiddleware: jest.fn((req: any, res: any, next: any) => {
+    const authHeader = req.get('Authorization');
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      req.user = { id: 'user-123', walletAddress: '0x742d35Cc6634C0532925a3b8D4C0C8b3C2e1e1e1', publicKey: '0x04' + '2'.repeat(128) };
+      next();
+    } else {
+      res.status(401).json({ success: false, error: 'Authorization header is required' });
+    }
+  }),
+  optionalAuthMiddleware: jest.fn((req: any, _res: any, next: any) => {
+    const authHeader = req.get('Authorization');
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      req.user = { id: 'user-123', walletAddress: '0x742d35Cc6634C0532925a3b8D4C0C8b3C2e1e1e1', publicKey: '0x04' + '2'.repeat(128) };
+    }
+    next();
+  }),
+}));
+
+// Mock all DAO classes
+jest.mock('../database/dao/UserDAO', () => ({
+  UserDAO: jest.fn().mockImplementation(() => ({
+    create: jest.fn().mockResolvedValue({ id: 'user-123', wallet_address: '0x742d35Cc6634C0532925a3b8D4C0C8b3C2e1e1e1', public_key: '0x04' + '2'.repeat(128), created_at: new Date() }),
+    findByWalletAddress: jest.fn().mockResolvedValue(null),
+    findByEmail: jest.fn().mockResolvedValue(null),
+    updateLastActivity: jest.fn().mockResolvedValue(1),
+    deactivateUser: jest.fn().mockResolvedValue(1),
+  })),
+}));
+
+jest.mock('../database/dao/AuditLogDAO', () => ({
+  AuditLogDAO: jest.fn().mockImplementation(() => ({
+    create: jest.fn().mockResolvedValue({ id: 'audit-123' }),
+    findAll: jest.fn().mockResolvedValue([]),
+  })),
+}));
+
+jest.mock('../database/dao/TransactionDAO', () => ({
+  TransactionDAO: jest.fn().mockImplementation(() => ({
+    create: jest.fn().mockResolvedValue({ id: 'tx-123' }),
+    findByUserId: jest.fn().mockResolvedValue([]),
+    findAll: jest.fn().mockResolvedValue([]),
+  })),
+}));
+
+jest.mock('../database/dao/OfflineTokenDAO', () => ({
+  OfflineTokenDAO: jest.fn().mockImplementation(() => ({
+    create: jest.fn().mockResolvedValue({ id: 'token-123' }),
+    findByUserId: jest.fn().mockResolvedValue([]),
+    findAll: jest.fn().mockResolvedValue([]),
+    getUserTokenBalance: jest.fn().mockResolvedValue('0'),
+    markAsRedeemed: jest.fn().mockResolvedValue(null),
+    findByTokenIds: jest.fn().mockResolvedValue([]),
+  })),
+}));
+
+jest.mock('../database/dao/PublicKeyDAO', () => ({
+  PublicKeyDAO: jest.fn().mockImplementation(() => ({
+    create: jest.fn().mockResolvedValue({ id: 'key-123' }),
+    findByUserId: jest.fn().mockResolvedValue(null),
+  })),
+}));
+
+// Mock blockchain service initialization
+jest.mock('../services/blockchainService', () => {
+  const mockBlockchainService = {
+    initialize: jest.fn().mockResolvedValue(undefined),
+    getTokenBalance: jest.fn().mockResolvedValue('0'),
+    sendContractTransaction: jest.fn().mockResolvedValue({ hash: '0x123' }),
+    waitForTransactionConfirmation: jest.fn().mockResolvedValue({ blockNumber: 1, gasUsed: BigInt(21000) }),
+    cleanup: jest.fn().mockResolvedValue(undefined),
+    getConnectionStatus: jest.fn().mockReturnValue({ isConnected: true, reconnectAttempts: 0 }),
+    getCurrentBlockNumber: jest.fn().mockResolvedValue(100),
+    getNetworkInfo: jest.fn().mockResolvedValue({ name: 'test', chainId: BigInt(1), blockNumber: 100 }),
+    deployContract: jest.fn().mockResolvedValue({ contractAddress: '0xContract', transactionHash: '0x123', blockNumber: 1, gasUsed: BigInt(21000) }),
+    getWalletBalance: jest.fn().mockResolvedValue('1.0'),
+    broadcastTransaction: jest.fn().mockResolvedValue({ hash: '0x123' }),
+    getTransaction: jest.fn().mockResolvedValue({ hash: '0x123', blockNumber: 1, gasUsed: BigInt(21000) }),
+    callContract: jest.fn().mockResolvedValue({ result: 'test' }),
+  };
+  
+  return {
+    blockchainService: mockBlockchainService,
+    BlockchainService: jest.fn().mockImplementation(() => mockBlockchainService),
+  };
+});
+
+// Mock offline token manager
+jest.mock('../services/offlineTokenManager', () => ({
+  offlineTokenManager: {
+    issueTokens: jest.fn(),
+    redeemTokens: jest.fn(),
+    getPublicKey: jest.fn().mockReturnValue('0x04' + 'f'.repeat(128)),
+    getWalletAddress: jest.fn().mockReturnValue('0x' + 'a'.repeat(40)),
+  },
+}));
+
+// Mock security services
+jest.mock('../services/healthMonitoringService', () => ({
+  healthMonitoringService: {
+    startMonitoring: jest.fn(),
+    stopMonitoring: jest.fn(),
+    forceHealthCheck: jest.fn().mockResolvedValue({ overall: 'healthy', checks: [], uptime: 0, timestamp: new Date() }),
+    getCurrentHealth: jest.fn().mockReturnValue({ overall: 'healthy', checks: [], uptime: 0, timestamp: new Date() }),
+    getActiveAlerts: jest.fn().mockReturnValue([]),
+  },
+}));
+
+jest.mock('../services/fraudDetectionService', () => ({
+  fraudDetectionService: {
+    analyzeTransaction: jest.fn().mockResolvedValue([]),
+    startPeriodicScans: jest.fn(),
+    runComprehensiveScan: jest.fn().mockResolvedValue([]),
+    getRecentAlerts: jest.fn().mockReturnValue([]),
+    getAlertsBySeverity: jest.fn().mockReturnValue([]),
+    clearOldAlerts: jest.fn(),
+  },
+}));
+
+jest.mock('../services/backupService', () => ({
+  backupService: {
+    scheduleAutomaticBackups: jest.fn(),
+    createFullBackup: jest.fn().mockResolvedValue({ id: 'backup-1', type: 'full', filename: 'backup.sql', size: 1000, checksum: 'abc123', timestamp: new Date(), status: 'completed' }),
+    createIncrementalBackup: jest.fn().mockResolvedValue({ id: 'backup-2', type: 'incremental', filename: 'backup.json', size: 500, checksum: 'def456', timestamp: new Date(), status: 'completed' }),
+    createLogsBackup: jest.fn().mockResolvedValue({ id: 'backup-3', type: 'logs', filename: 'logs.tar.gz', size: 200, checksum: 'ghi789', timestamp: new Date(), status: 'completed' }),
+    getBackupHistory: jest.fn().mockReturnValue([]),
+    getBackup: jest.fn().mockReturnValue(null),
+    verifyBackup: jest.fn().mockResolvedValue(true),
+    getDisasterRecoveryStatus: jest.fn().mockReturnValue({ status: 'READY', recommendations: [] }),
+    testRecoveryProcedures: jest.fn().mockResolvedValue({ testId: 'test-1', tests: [], summary: { totalTests: 0, passedTests: 0, failedTests: 0, successRate: '100%' } }),
+    createDisasterRecoveryPlan: jest.fn().mockResolvedValue({ id: 'plan-1', createdAt: new Date() }),
+  },
+}));
+
+// Mock rate limiter middleware to be pass-through in tests
+jest.mock('../middleware/rateLimiter', () => ({
+  rateLimiter: jest.fn((_req: any, _res: any, next: any) => next()),
+  authRateLimiter: jest.fn((_req: any, _res: any, next: any) => next()),
+  tokenRateLimiter: jest.fn((_req: any, _res: any, next: any) => next()),
+  progressiveDelay: jest.fn((_req: any, _res: any, next: any) => next()),
+  trackSuspiciousActivity: jest.fn((_req: any, _res: any, next: any) => next()),
+  ddosProtection: jest.fn((_req: any, _res: any, next: any) => next()),
+  getSecurityMetrics: jest.fn().mockReturnValue({ blockedIPs: [], suspiciousIPs: [], ddosPatterns: { rapidRequests: [], largePayloads: [], repeatedPaths: [] } }),
+}));
+
+// Mock error handler middleware to be pass-through in tests
+jest.mock('../middleware/errorHandler', () => ({
+  errorHandler: jest.fn((err: any, _req: any, res: any, _next: any) => {
+    res.status(err.statusCode || 500).json({ success: false, error: err.message });
+  }),
+  asyncHandler: jest.fn((fn: any) => fn),
+  fraudDetectionMiddleware: jest.fn((_req: any, _res: any, next: any) => next()),
+  notFoundHandler: jest.fn((_req: any, _res: any, next: any) => next()),
+  CustomError: class CustomError extends Error {
+    statusCode: number;
+    constructor(message: string, statusCode: number = 500) {
+      super(message);
+      this.statusCode = statusCode;
+    }
+  },
+  createError: jest.fn((message: string, _statusCode: number = 500) => new Error(message)),
+}));
+
+// Mock ethers globally
+jest.mock('ethers', () => {
+  const mockWallet = {
+    privateKey: '0x' + '1'.repeat(64),
+    signingKey: {
+      publicKey: '0x04' + '2'.repeat(128),
+    },
+    address: '0x' + '3'.repeat(40),
+    signMessage: jest.fn().mockResolvedValue('0x' + '4'.repeat(130)),
+  };
+
+  const mockProvider = {
+    getNetwork: jest.fn().mockResolvedValue({ name: 'test', chainId: BigInt(1) }),
+    getBlockNumber: jest.fn().mockResolvedValue(1),
+    getBalance: jest.fn().mockResolvedValue(BigInt('1000000000000000000')),
+    getCode: jest.fn().mockResolvedValue('0x123'),
+    removeAllListeners: jest.fn(),
+  };
+
+  const MockWalletConstructor = jest.fn().mockImplementation((privateKey?: string) => ({
+    ...mockWallet,
+    privateKey: privateKey || mockWallet.privateKey,
+  }));
+  (MockWalletConstructor as any).createRandom = jest.fn().mockReturnValue(mockWallet);
+
+  const actualEthers = jest.requireActual('ethers');
+
+  return {
+    ...actualEthers,
+    ethers: {
+      ...actualEthers.ethers,
+      isAddress: jest.fn().mockImplementation((address: string) => {
+        // Mock implementation that returns false for 'invalid-address'
+        return address !== 'invalid-address' && address.startsWith('0x') && address.length === 42;
+      }),
+      verifyMessage: jest.fn().mockReturnValue('0x742d35Cc6634C0532925a3b8D4C0C8b3C2e1e1e1'),
+      SigningKey: {
+        recoverPublicKey: jest.fn().mockReturnValue('0x04' + '2'.repeat(128)),
+      },
+      Wallet: MockWalletConstructor,
+      JsonRpcProvider: jest.fn().mockImplementation(() => mockProvider),
+    },
+    isAddress: jest.fn().mockImplementation((address: string) => {
+      // Mock implementation that returns false for 'invalid-address'
+      return address !== 'invalid-address' && address.startsWith('0x') && address.length === 42;
+    }),
+    verifyMessage: jest.fn().mockReturnValue('0x742d35Cc6634C0532925a3b8D4C0C8b3C2e1e1e1'),
+    SigningKey: {
+      recoverPublicKey: jest.fn().mockReturnValue('0x04' + '2'.repeat(128)),
+    },
+    Wallet: MockWalletConstructor,
+    JsonRpcProvider: jest.fn().mockImplementation(() => mockProvider),
+  };
+});
+
+// Suppress console logs during tests
+global.console = {
+  ...console,
+  log: jest.fn(),
+  debug: jest.fn(),
+  info: jest.fn(),
+  warn: jest.fn(),
+  error: jest.fn(),
+};
+
 // Global test setup
-beforeAll(async () => {
-  // Setup test database or other global test configuration
-});
-
-afterAll(async () => {
-  // Cleanup after all tests
-});
-
 beforeEach(() => {
-  // Reset mocks before each test
   jest.clearAllMocks();
-});
-
-afterEach(() => {
-  // Cleanup after each test
 });
