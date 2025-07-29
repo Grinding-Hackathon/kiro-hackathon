@@ -7,11 +7,14 @@ import { createServer } from 'http';
 import swaggerUi from 'swagger-ui-express';
 
 import { config } from '@/config/config';
-import { logger } from '@/utils/logger';
-import { errorHandler } from '@/middleware/errorHandler';
-import { rateLimiter } from '@/middleware/rateLimiter';
+import { logger, auditLogger } from '@/utils/logger';
+import { errorHandler, fraudDetectionMiddleware } from '@/middleware/errorHandler';
+import { rateLimiter, trackSuspiciousActivity, progressiveDelay, ddosProtection } from '@/middleware/rateLimiter';
 import { initializeDatabase, closeDatabase } from '@/database/init';
 import { swaggerSpec, swaggerOptions } from '@/config/swagger';
+import { healthMonitoringService } from '@/services/healthMonitoringService';
+import { backupService } from '@/services/backupService';
+import { fraudDetectionService } from '@/services/fraudDetectionService';
 import apiRoutes from '@/routes';
 
 // Load environment variables
@@ -39,17 +42,33 @@ app.use(morgan('combined', {
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Rate limiting
+// Security middleware
+app.use(ddosProtection);
+app.use(trackSuspiciousActivity);
+app.use(progressiveDelay);
 app.use(rateLimiter);
+app.use(fraudDetectionMiddleware);
 
 // Health check endpoint
-app.get('/health', (_req, res) => {
-  res.status(200).json({
-    status: 'OK',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime(),
-    environment: config.env,
-  });
+app.get('/health', async (_req, res) => {
+  try {
+    const systemHealth = await healthMonitoringService.forceHealthCheck();
+    res.status(systemHealth.overall === 'healthy' ? 200 : 503).json({
+      status: systemHealth.overall.toUpperCase(),
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      environment: config.env,
+      checks: systemHealth.checks,
+    });
+  } catch (error) {
+    res.status(503).json({
+      status: 'UNHEALTHY',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      environment: config.env,
+      error: 'Health check failed',
+    });
+  }
 });
 
 // API Documentation
@@ -78,6 +97,22 @@ async function startServer() {
     await initializeDatabase();
     logger.info('✅ Database initialized successfully');
 
+    // Initialize security services
+    healthMonitoringService.startMonitoring();
+    backupService.scheduleAutomaticBackups();
+    fraudDetectionService.startPeriodicScans();
+    logger.info('✅ Security services initialized');
+
+    // Log system startup
+    await auditLogger.logSystem({
+      action: 'SYSTEM_START',
+      details: {
+        environment: config.env,
+        port: config.port,
+        host: config.host,
+      },
+    });
+
     // Start server
     const PORT = config.port;
     const HOST = config.host;
@@ -87,6 +122,8 @@ async function startServer() {
       logger.info(`📊 Environment: ${config.env}`);
       logger.info(`🔒 CORS enabled for: ${config.cors.origin}`);
       logger.info(`💾 Database connected to: ${config.database.name}`);
+      logger.info(`🛡️  Security monitoring active`);
+      logger.info(`💾 Automatic backups scheduled`);
     });
   } catch (error) {
     logger.error('❌ Failed to start server:', error);
@@ -99,7 +136,17 @@ startServer();
 // Graceful shutdown
 process.on('SIGTERM', async () => {
   logger.info('SIGTERM received, shutting down gracefully');
+  
+  // Log system shutdown
+  await auditLogger.logSystem({
+    action: 'SYSTEM_SHUTDOWN',
+    details: { signal: 'SIGTERM' },
+  });
+  
   server.close(async () => {
+    // Stop monitoring services
+    healthMonitoringService.stopMonitoring();
+    
     await closeDatabase();
     logger.info('Process terminated');
     process.exit(0);
@@ -108,7 +155,17 @@ process.on('SIGTERM', async () => {
 
 process.on('SIGINT', async () => {
   logger.info('SIGINT received, shutting down gracefully');
+  
+  // Log system shutdown
+  await auditLogger.logSystem({
+    action: 'SYSTEM_SHUTDOWN',
+    details: { signal: 'SIGINT' },
+  });
+  
   server.close(async () => {
+    // Stop monitoring services
+    healthMonitoringService.stopMonitoring();
+    
     await closeDatabase();
     logger.info('Process terminated');
     process.exit(0);

@@ -561,6 +561,19 @@ export class BlockchainService {
   }
 
   /**
+   * Get current block number
+   */
+  async getCurrentBlockNumber(): Promise<number> {
+    try {
+      const blockNumber = await this.provider.getBlockNumber();
+      return blockNumber;
+    } catch (error) {
+      logger.error('Failed to get current block number:', error);
+      throw new Error(`Failed to get current block number: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+  }
+
+  /**
    * Get current network information
    */
   async getNetworkInfo(): Promise<{ name: string; chainId: bigint; blockNumber: number }> {
