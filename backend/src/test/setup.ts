@@ -50,8 +50,28 @@ jest.mock('../middleware/auth', () => ({
   authMiddleware: jest.fn((req: any, res: any, next: any) => {
     const authHeader = req.get('Authorization');
     if (authHeader && authHeader.startsWith('Bearer ')) {
-      req.user = { id: 'user-123', walletAddress: '0x742d35Cc6634C0532925a3b8D4C0C8b3C2e1e1e1', publicKey: '0x04' + '2'.repeat(128) };
-      next();
+      const token = authHeader.substring(7);
+      
+      // Reject obviously invalid tokens
+      if (token === 'invalid-token' || 
+          token === 'invalid.jwt.token' || 
+          token.includes('tampered') ||
+          token.includes('invalid')) {
+        return res.status(401).json({ success: false, error: 'Invalid or expired token' });
+      }
+      
+      // Try to decode JWT to check expiration
+      try {
+        const jwt = require('jsonwebtoken');
+        jwt.verify(token, process.env['JWT_SECRET'] || 'test-secret');
+        req.user = { id: 'user-123', walletAddress: '0x' + '3'.repeat(40), publicKey: '0x04' + '2'.repeat(128) };
+        next();
+      } catch (error: any) {
+        if (error.name === 'TokenExpiredError') {
+          return res.status(401).json({ success: false, error: 'Token expired' });
+        }
+        return res.status(401).json({ success: false, error: 'Invalid token' });
+      }
     } else {
       res.status(401).json({ success: false, error: 'Authorization header is required' });
     }
@@ -59,16 +79,25 @@ jest.mock('../middleware/auth', () => ({
   optionalAuthMiddleware: jest.fn((req: any, _res: any, next: any) => {
     const authHeader = req.get('Authorization');
     if (authHeader && authHeader.startsWith('Bearer ')) {
-      req.user = { id: 'user-123', walletAddress: '0x742d35Cc6634C0532925a3b8D4C0C8b3C2e1e1e1', publicKey: '0x04' + '2'.repeat(128) };
+      const token = authHeader.substring(7);
+      // Only set user for valid tokens
+      if (token !== 'invalid-token' && 
+          token !== 'invalid.jwt.token' && 
+          !token.includes('expired') && 
+          !token.includes('tampered') &&
+          !token.includes('invalid')) {
+        req.user = { id: 'user-123', walletAddress: '0x' + '3'.repeat(40), publicKey: '0x04' + '2'.repeat(128) };
+      }
     }
     next();
   }),
+  generateToken: jest.fn().mockReturnValue('valid-test-token'),
 }));
 
 // Mock all DAO classes
 jest.mock('../database/dao/UserDAO', () => ({
   UserDAO: jest.fn().mockImplementation(() => ({
-    create: jest.fn().mockResolvedValue({ id: 'user-123', wallet_address: '0x742d35Cc6634C0532925a3b8D4C0C8b3C2e1e1e1', public_key: '0x04' + '2'.repeat(128), created_at: new Date() }),
+    create: jest.fn().mockResolvedValue({ id: 'user-123', wallet_address: '0x' + '3'.repeat(40), public_key: '0x04' + '2'.repeat(128), created_at: new Date() }),
     findByWalletAddress: jest.fn().mockResolvedValue(null),
     findByEmail: jest.fn().mockResolvedValue(null),
     updateLastActivity: jest.fn().mockResolvedValue(1),
@@ -244,7 +273,7 @@ jest.mock('ethers', () => {
         // Mock implementation that returns false for 'invalid-address'
         return address !== 'invalid-address' && address.startsWith('0x') && address.length === 42;
       }),
-      verifyMessage: jest.fn().mockReturnValue('0x742d35Cc6634C0532925a3b8D4C0C8b3C2e1e1e1'),
+      verifyMessage: jest.fn().mockReturnValue('0x' + '3'.repeat(40)),
       SigningKey: {
         recoverPublicKey: jest.fn().mockReturnValue('0x04' + '2'.repeat(128)),
       },
@@ -255,7 +284,7 @@ jest.mock('ethers', () => {
       // Mock implementation that returns false for 'invalid-address'
       return address !== 'invalid-address' && address.startsWith('0x') && address.length === 42;
     }),
-    verifyMessage: jest.fn().mockReturnValue('0x742d35Cc6634C0532925a3b8D4C0C8b3C2e1e1e1'),
+    verifyMessage: jest.fn().mockReturnValue('0x' + '3'.repeat(40)),
     SigningKey: {
       recoverPublicKey: jest.fn().mockReturnValue('0x04' + '2'.repeat(128)),
     },

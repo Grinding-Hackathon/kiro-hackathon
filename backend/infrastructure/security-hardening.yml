@@ -1,0 +1,57 @@
+# Security Hardening Configuration for Production
+
+version: '3.8'
+
+services:
+  # Security scanner
+  security-scanner:
+    image: aquasec/trivy:latest
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./security-reports:/reports
+    command: >
+      sh -c "
+        trivy image --format json --output /reports/app-security-scan.json offline-wallet-backend:latest &&
+        trivy image --format json --output /reports/nginx-security-scan.json nginx:alpine &&
+        trivy image --format json --output /reports/postgres-security-scan.json postgres:15-alpine
+      "
+    networks:
+      - app-network
+
+  # Fail2ban for intrusion prevention
+  fail2ban:
+    image: crazymax/fail2ban:latest
+    network_mode: "host"
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    volumes:
+      - ./fail2ban:/data
+      - /var/log:/var/log:ro
+    environment:
+      - TZ=UTC
+      - F2B_LOG_LEVEL=INFO
+    restart: unless-stopped
+
+  # OSSEC HIDS (Host Intrusion Detection System)
+  ossec:
+    image: wazuh/wazuh-odfe:latest
+    ports:
+      - "1514:1514/udp"
+      - "1515:1515"
+      - "55000:55000"
+    volumes:
+      - ossec-data:/var/ossec/data
+      - ./ossec/ossec.conf:/var/ossec/etc/ossec.conf
+    environment:
+      - OSSEC_INIT_TYPE=server
+    restart: unless-stopped
+    networks:
+      - app-network
+
+volumes:
+  ossec-data:
+
+networks:
+  app-network:
+    external: true
