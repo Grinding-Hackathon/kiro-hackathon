@@ -1,0 +1,68 @@
+
+> offline-blockchain-wallet-backend@1.0.0 test
+> jest
+
+PASS src/test/security/cryptographicValidation.test.ts (5.526 s)
+PASS src/test/performance/loadTest.test.ts
+PASS src/test/security/securityFramework.test.ts
+FAIL src/test/integration/mobileAppSimulation.test.ts
+  ● Mobile App Integration Simulation › Online Synchronization › should redeem tokens when online
+
+    Network error
+
+      247 |     // Simulate occasional network failures
+      248 |     if (Math.random() < 0.1) {
+    > 249 |       throw new Error('Network error');
+          |             ^
+      250 |     }
+      251 |
+      252 |     // Return mock response based on endpoint
+
+      at MockMobileWallet.simulateApiCall (src/test/integration/mobileAppSimulation.test.ts:249:13)
+      at MockMobileWallet.redeemTokens (src/test/integration/mobileAppSimulation.test.ts:212:29)
+      at Object.<anonymous> (src/test/integration/mobileAppSimulation.test.ts:439:31)
+
+PASS src/test/integration/systemSecurityIntegration.test.ts
+PASS src/test/security/securityAudit.test.ts
+PASS src/test/security.integration.test.ts
+PASS src/test/api.integration.test.ts
+PASS src/test/services/healthMonitoringService.test.ts
+PASS src/test/services/backupService.test.ts
+PASS src/test/middleware/auth.test.ts
+PASS src/test/controllers/walletController.test.ts
+PASS src/test/middleware/errorHandler.test.ts
+PASS src/test/offlineTokenManager.test.ts
+PASS src/test/services/fraudDetectionService.test.ts
+PASS src/test/controllers/authController.test.ts
+PASS src/test/database/dao-structure.test.ts
+PASS src/test/integration/integrationSummary.test.ts
+PASS src/test/middleware/rateLimiter.test.ts
+PASS src/test/e2e/completeWorkflow.e2e.test.ts
+PASS src/test/blockchainService.test.ts
+PASS src/test/integration/tokenLifecycle.integration.test.ts
+PASS src/test/database/UserDAO.test.ts
+
+Summary of all failing tests
+FAIL src/test/integration/mobileAppSimulation.test.ts
+  ● Mobile App Integration Simulation › Online Synchronization › should redeem tokens when online
+
+    Network error
+
+      247 |     // Simulate occasional network failures
+      248 |     if (Math.random() < 0.1) {
+    > 249 |       throw new Error('Network error');
+          |             ^
+      250 |     }
+      251 |
+      252 |     // Return mock response based on endpoint
+
+      at MockMobileWallet.simulateApiCall (src/test/integration/mobileAppSimulation.test.ts:249:13)
+      at MockMobileWallet.redeemTokens (src/test/integration/mobileAppSimulation.test.ts:212:29)
+      at Object.<anonymous> (src/test/integration/mobileAppSimulation.test.ts:439:31)
+
+
+Test Suites: 1 failed, 1 skipped, 22 passed, 23 of 24 total
+Tests:       1 failed, 10 skipped, 245 passed, 256 total
+Snapshots:   0 total
+Time:        16.653 s
+Ran all test suites.

@@ -1,1 +1,1411 @@
-# Offline Blockchain Wallet - Complete System Documentation\n\n## 📋 Table of Contents\n\n1. [System Overview](#system-overview)\n2. [Backend Documentation](#backend-documentation)\n3. [Mobile (iOS) Documentation](#mobile-ios-documentation)\n4. [Deployment Guide](#deployment-guide)\n5. [API Reference](#api-reference)\n6. [Security Guide](#security-guide)\n7. [Troubleshooting](#troubleshooting)\n8. [Development Workflow](#development-workflow)\n\n---\n\n## 🎯 System Overview\n\n### Architecture\n\nThe Offline Blockchain Wallet is a distributed system consisting of:\n\n- **Backend API**: Node.js/TypeScript REST API with PostgreSQL database\n- **iOS Mobile App**: SwiftUI-based mobile application\n- **Blockchain Integration**: Ethereum smart contracts for token management\n- **Offline Capabilities**: Peer-to-peer transactions via Bluetooth and QR codes\n\n### Key Features\n\n- 🔐 **Secure Authentication**: JWT-based authentication with multi-factor support\n- 💰 **Token Management**: Purchase, store, and redeem blockchain tokens\n- 📱 **Offline Transactions**: Bluetooth and QR code-based peer-to-peer transfers\n- 🔄 **Synchronization**: Automatic sync when network connectivity is restored\n- 🛡️ **Security**: End-to-end encryption, digital signatures, fraud detection\n- 📊 **Monitoring**: Real-time health monitoring and alerting\n\n### Technology Stack\n\n**Backend:**\n- Node.js 18+ with TypeScript\n- Express.js framework\n- PostgreSQL database\n- Redis for caching\n- Web3.js for blockchain integration\n- Jest for testing\n\n**Mobile:**\n- iOS 15+ with SwiftUI\n- Core Data for local storage\n- CryptoKit for cryptography\n- Bluetooth LE for peer-to-peer communication\n- AVFoundation for QR code scanning\n\n**Infrastructure:**\n- Docker containers\n- Nginx reverse proxy\n- SSL/TLS encryption\n- Prometheus monitoring\n- Grafana dashboards\n\n---\n\n## 🖥️ Backend Documentation\n\n### Quick Start\n\n```bash\n# Clone and setup\ncd backend\nnpm install\n\n# Setup environment\ncp .env.example .env\n# Edit .env with your configuration\n\n# Setup database\nnpm run db:migrate\nnpm run db:seed\n\n# Start development server\nnpm run dev\n```\n\n### Project Structure\n\n```\nbackend/\n├── src/\n│   ├── controllers/          # API route handlers\n│   ├── services/            # Business logic\n│   ├── database/            # Database layer\n│   ├── middleware/          # Express middleware\n│   ├── routes/              # API routes\n│   ├── models/              # Data models\n│   ├── utils/               # Utility functions\n│   └── config/              # Configuration\n├── contracts/               # Smart contracts\n├── infrastructure/          # Docker, configs\n├── scripts/                 # Deployment scripts\n└── test/                    # Test files\n```\n\n### Core Services\n\n#### Authentication Service\n- JWT token generation and validation\n- Multi-factor authentication support\n- Session management\n- Password security (bcrypt hashing)\n\n#### Wallet Service\n- User wallet creation and management\n- Balance tracking\n- Transaction history\n- Multi-signature support\n\n#### Token Service\n- Offline token generation\n- Token validation and verification\n- Token division for change-making\n- Expiration handling\n\n#### Blockchain Service\n- Smart contract interaction\n- Transaction broadcasting\n- Balance synchronization\n- Gas fee estimation\n\n#### Security Service\n- Fraud detection algorithms\n- Audit logging\n- Rate limiting\n- Input validation\n\n### Database Schema\n\n#### Users Table\n```sql\nCREATE TABLE users (\n    id UUID PRIMARY KEY,\n    username VARCHAR(255) UNIQUE NOT NULL,\n    email VARCHAR(255) UNIQUE NOT NULL,\n    password_hash VARCHAR(255) NOT NULL,\n    public_key TEXT,\n    wallet_address VARCHAR(42),\n    created_at TIMESTAMP DEFAULT NOW(),\n    updated_at TIMESTAMP DEFAULT NOW()\n);\n```\n\n#### Offline Tokens Table\n```sql\nCREATE TABLE offline_tokens (\n    id UUID PRIMARY KEY,\n    user_id UUID REFERENCES users(id),\n    amount DECIMAL(18,8) NOT NULL,\n    signature TEXT NOT NULL,\n    is_spent BOOLEAN DEFAULT FALSE,\n    expires_at TIMESTAMP,\n    created_at TIMESTAMP DEFAULT NOW()\n);\n```\n\n#### Transactions Table\n```sql\nCREATE TABLE transactions (\n    id UUID PRIMARY KEY,\n    sender_id UUID REFERENCES users(id),\n    receiver_id UUID REFERENCES users(id),\n    amount DECIMAL(18,8) NOT NULL,\n    type VARCHAR(50) NOT NULL,\n    status VARCHAR(50) DEFAULT 'pending',\n    blockchain_hash VARCHAR(66),\n    created_at TIMESTAMP DEFAULT NOW()\n);\n```\n\n### API Endpoints\n\n#### Authentication\n```\nPOST /api/auth/register     # User registration\nPOST /api/auth/login        # User login\nPOST /api/auth/logout       # User logout\nPOST /api/auth/refresh      # Refresh JWT token\n```\n\n#### Wallet Management\n```\nGET  /api/wallet/balance    # Get wallet balance\nPOST /api/wallet/purchase   # Purchase tokens\nPOST /api/wallet/redeem     # Redeem tokens\nGET  /api/wallet/history    # Transaction history\n```\n\n#### Offline Tokens\n```\nPOST /api/tokens/generate   # Generate offline tokens\nPOST /api/tokens/validate   # Validate token\nPOST /api/tokens/divide     # Divide token for change\nPOST /api/tokens/sync       # Sync offline transactions\n```\n\n### Configuration\n\n#### Environment Variables\n```bash\n# Server\nPORT=3000\nNODE_ENV=production\n\n# Database\nDB_HOST=localhost\nDB_PORT=5432\nDB_NAME=wallet_db\nDB_USER=wallet_user\nDB_PASSWORD=secure_password\n\n# JWT\nJWT_SECRET=your_jwt_secret\nJWT_EXPIRES_IN=24h\n\n# Blockchain\nETH_RPC_URL=https://mainnet.infura.io/v3/your_key\nCONTRACT_ADDRESS=0x...\nPRIVATE_KEY=0x...\n\n# Redis\nREDIS_URL=redis://localhost:6379\n\n# Security\nRATE_LIMIT_WINDOW=15\nRATE_LIMIT_MAX=100\n```\n\n### Testing\n\n```bash\n# Run all tests\nnpm test\n\n# Run specific test suites\nnpm run test:unit\nnpm run test:integration\nnpm run test:security\n\n# Run with coverage\nnpm run test:coverage\n\n# Run load tests\nnpm run test:load\n```\n\n### Monitoring\n\n#### Health Checks\n- `/health` - Basic health status\n- `/health/detailed` - Detailed system status\n- `/metrics` - Prometheus metrics\n\n#### Logging\n- Structured JSON logging\n- Log levels: error, warn, info, debug\n- Audit trail for security events\n- Performance metrics\n\n---\n\n## 📱 Mobile (iOS) Documentation\n\n### Quick Start\n\n```bash\n# Setup Xcode project\ncd ios/offline-blockchain-wallet-ios\n./configure_project.sh\n\n# Install dependencies\nswift package resolve\n\n# Open in Xcode\nopen offline-blockchain-wallet-ios.xcodeproj\n```\n\n### Project Structure\n\n```\nios/offline-blockchain-wallet-ios/\n├── offline-blockchain-wallet-ios/\n│   ├── Views/               # SwiftUI views\n│   ├── ViewModels/          # MVVM view models\n│   ├── Services/            # Business logic services\n│   ├── Models/              # Data models\n│   ├── Utils/               # Utility classes\n│   └── Configuration/       # App configuration\n├── Tests/                   # Unit tests\n├── Scripts/                 # Build scripts\n└── Package.swift            # Dependencies\n```\n\n### Core Services\n\n#### Network Service\n- API communication with backend\n- Request/response handling\n- Network connectivity monitoring\n- Offline queue management\n\n#### Cryptography Service\n- Key pair generation (secp256k1)\n- Digital signature creation/verification\n- Hash functions (SHA-256)\n- Secure random number generation\n\n#### Storage Service\n- Core Data integration\n- Keychain storage for sensitive data\n- Local transaction caching\n- Data synchronization\n\n#### Bluetooth Service\n- Bluetooth LE advertising\n- Device discovery and pairing\n- Secure data transmission\n- Connection management\n\n#### QR Code Service\n- QR code generation\n- QR code scanning\n- Data encoding/decoding\n- Error correction\n\n#### Offline Token Service\n- Token validation\n- Token division for payments\n- Balance calculations\n- Expiration handling\n\n### Key Features Implementation\n\n#### Offline Transactions\n\n```swift\n// Generate payment QR code\nlet paymentRequest = QRCodePaymentRequest(\n    type: .payment,\n    walletId: currentWallet.id,\n    amount: paymentAmount,\n    timestamp: Date()\n)\n\nlet qrCode = try qrCodeService.generateQRCode(for: paymentRequest)\n```\n\n#### Bluetooth Communication\n\n```swift\n// Start advertising wallet\ntry bluetoothService.startAdvertising(walletInfo: WalletInfo(\n    walletId: wallet.id,\n    publicKey: wallet.publicKey\n))\n\n// Handle incoming connection\nfunc handleIncomingConnection(_ connection: BluetoothConnection) {\n    // Verify peer identity\n    // Exchange transaction data\n    // Process offline payment\n}\n```\n\n#### Token Management\n\n```swift\n// Validate offline token\nlet isValid = offlineTokenService.validateToken(token)\n\n// Divide token for payment\nlet divisionResult = try offlineTokenService.divideToken(\n    token,\n    amount: paymentAmount\n)\n```\n\n### User Interface\n\n#### Main Wallet View\n- Balance display\n- Recent transactions\n- Quick actions (send, receive, purchase)\n- Offline status indicator\n\n#### Transaction View\n- Transaction creation\n- QR code display/scanning\n- Bluetooth device selection\n- Transaction confirmation\n\n#### Settings View\n- Account management\n- Security settings\n- Network configuration\n- Backup/restore options\n\n### Data Models\n\n#### Wallet Model\n```swift\nstruct Wallet: Codable {\n    let id: String\n    let publicKey: String\n    let address: String\n    var balance: Double\n    let createdAt: Date\n}\n```\n\n#### Transaction Model\n```swift\nstruct Transaction: Codable {\n    let id: String\n    let senderId: String\n    let receiverId: String\n    let amount: Double\n    let type: TransactionType\n    var status: TransactionStatus\n    let timestamp: Date\n}\n```\n\n#### Offline Token Model\n```swift\nstruct OfflineToken: Codable {\n    let id: String\n    let amount: Double\n    let signature: String\n    let expiresAt: Date\n    var isSpent: Bool\n}\n```\n\n### Security Implementation\n\n#### Key Management\n- Secure Enclave integration\n- Keychain storage for private keys\n- Biometric authentication\n- Key rotation support\n\n#### Transaction Security\n- Digital signature verification\n- Double-spending prevention\n- Replay attack protection\n- Secure communication channels\n\n### Testing\n\n```bash\n# Run unit tests\nswift test\n\n# Run specific test\nswift test --filter CryptographyServiceTests\n\n# Run standalone tests\nswift test_crypto_standalone.swift\nswift test_offline_token_service.swift\nswift test_transaction_service.swift\n```\n\n### Build Configuration\n\n#### Debug Configuration\n```swift\n// Debug.xcconfig\nAPI_BASE_URL = https://dev-api.wallet.com\nLOG_LEVEL = DEBUG\nENABLE_MOCK_SERVICES = YES\n```\n\n#### Release Configuration\n```swift\n// Release.xcconfig\nAPI_BASE_URL = https://api.wallet.com\nLOG_LEVEL = ERROR\nENABLE_MOCK_SERVICES = NO\n```\n\n---\n\n## 🚀 Deployment Guide\n\n### Prerequisites\n\n- Docker and Docker Compose\n- PostgreSQL 13+\n- Redis 6+\n- SSL certificates\n- Domain name\n- Ethereum node access\n\n### Backend Deployment\n\n#### 1. Environment Setup\n\n```bash\n# Create production environment file\ncp backend/.env.example backend/.env.production\n\n# Edit with production values\nvim backend/.env.production\n```\n\n#### 2. Database Setup\n\n```bash\n# Start PostgreSQL\ndocker-compose -f backend/infrastructure/docker-compose.prod.yml up -d postgres\n\n# Run migrations\ncd backend\nnpm run db:migrate:prod\n```\n\n#### 3. SSL Certificate Setup\n\n```bash\n# Generate SSL certificates (Let's Encrypt)\ncd backend\n./scripts/setup-ssl.sh your-domain.com\n```\n\n#### 4. Deploy Backend Services\n\n```bash\n# Build and deploy\ncd backend\n./scripts/deploy-production.sh\n\n# Verify deployment\ncurl https://your-domain.com/health\n```\n\n#### 5. Smart Contract Deployment\n\n```bash\n# Deploy to mainnet\ncd backend\nnpm run deploy:mainnet\n\n# Verify contract\nnpm run verify:contract\n```\n\n### Mobile App Deployment\n\n#### 1. App Store Preparation\n\n```bash\n# Update version and build number\ncd ios/offline-blockchain-wallet-ios\n./scripts/update-version.sh 1.0.0\n\n# Configure release settings\nvim offline-blockchain-wallet-ios/Configuration/Release.xcconfig\n```\n\n#### 2. Build for Release\n\n```bash\n# Clean and build\n./scripts/build.sh --release\n\n# Run tests\nswift test\n\n# Archive for App Store\nxcodebuild archive -scheme offline-blockchain-wallet-ios \\\n  -archivePath build/offline-blockchain-wallet-ios.xcarchive\n```\n\n#### 3. App Store Submission\n\n```bash\n# Export for App Store\nxcodebuild -exportArchive \\\n  -archivePath build/offline-blockchain-wallet-ios.xcarchive \\\n  -exportPath build/AppStore \\\n  -exportOptionsPlist ExportOptions.plist\n\n# Upload to App Store Connect\nxcrun altool --upload-app \\\n  -f build/AppStore/offline-blockchain-wallet-ios.ipa \\\n  -u your-apple-id@example.com\n```\n\n### Infrastructure Setup\n\n#### Docker Compose Configuration\n\n```yaml\n# docker-compose.prod.yml\nversion: '3.8'\nservices:\n  app:\n    build: .\n    ports:\n      - \"3000:3000\"\n    environment:\n      - NODE_ENV=production\n    depends_on:\n      - postgres\n      - redis\n\n  postgres:\n    image: postgres:13\n    environment:\n      POSTGRES_DB: wallet_db\n      POSTGRES_USER: wallet_user\n      POSTGRES_PASSWORD: ${DB_PASSWORD}\n    volumes:\n      - postgres_data:/var/lib/postgresql/data\n\n  redis:\n    image: redis:6-alpine\n    volumes:\n      - redis_data:/data\n\n  nginx:\n    image: nginx:alpine\n    ports:\n      - \"80:80\"\n      - \"443:443\"\n    volumes:\n      - ./nginx.conf:/etc/nginx/nginx.conf\n      - ./ssl:/etc/ssl\n```\n\n#### Nginx Configuration\n\n```nginx\nserver {\n    listen 443 ssl http2;\n    server_name your-domain.com;\n\n    ssl_certificate /etc/ssl/cert.pem;\n    ssl_certificate_key /etc/ssl/key.pem;\n\n    location / {\n        proxy_pass http://app:3000;\n        proxy_set_header Host $host;\n        proxy_set_header X-Real-IP $remote_addr;\n        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;\n        proxy_set_header X-Forwarded-Proto $scheme;\n    }\n\n    location /health {\n        proxy_pass http://app:3000/health;\n        access_log off;\n    }\n}\n```\n\n### Monitoring Setup\n\n#### Prometheus Configuration\n\n```yaml\n# prometheus.yml\nglobal:\n  scrape_interval: 15s\n\nscrape_configs:\n  - job_name: 'wallet-api'\n    static_configs:\n      - targets: ['app:3000']\n    metrics_path: '/metrics'\n```\n\n#### Grafana Dashboard\n\n```json\n{\n  \"dashboard\": {\n    \"title\": \"Wallet API Monitoring\",\n    \"panels\": [\n      {\n        \"title\": \"Request Rate\",\n        \"type\": \"graph\",\n        \"targets\": [\n          {\n            \"expr\": \"rate(http_requests_total[5m])\"\n          }\n        ]\n      },\n      {\n        \"title\": \"Response Time\",\n        \"type\": \"graph\",\n        \"targets\": [\n          {\n            \"expr\": \"histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))\"\n          }\n        ]\n      }\n    ]\n  }\n}\n```\n\n### Security Hardening\n\n#### 1. Firewall Configuration\n\n```bash\n# Allow only necessary ports\nufw allow 22/tcp   # SSH\nufw allow 80/tcp   # HTTP\nufw allow 443/tcp  # HTTPS\nufw enable\n```\n\n#### 2. Database Security\n\n```bash\n# Configure PostgreSQL security\nvim /etc/postgresql/13/main/pg_hba.conf\n\n# Restrict connections\nhost    wallet_db    wallet_user    127.0.0.1/32    md5\n```\n\n#### 3. SSL/TLS Configuration\n\n```bash\n# Generate strong SSL configuration\nopenssl dhparam -out /etc/ssl/dhparam.pem 2048\n\n# Configure nginx SSL\nssl_protocols TLSv1.2 TLSv1.3;\nssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512;\nssl_prefer_server_ciphers off;\nssl_dhparam /etc/ssl/dhparam.pem;\n```\n\n### Backup and Recovery\n\n#### Database Backup\n\n```bash\n# Automated backup script\n#!/bin/bash\nBACKUP_DIR=\"/backups/postgres\"\nDATE=$(date +%Y%m%d_%H%M%S)\n\npg_dump -h localhost -U wallet_user wallet_db > \\\n  \"$BACKUP_DIR/wallet_db_$DATE.sql\"\n\n# Compress and encrypt\ngzip \"$BACKUP_DIR/wallet_db_$DATE.sql\"\ngpg --encrypt --recipient backup@company.com \\\n  \"$BACKUP_DIR/wallet_db_$DATE.sql.gz\"\n```\n\n#### Recovery Process\n\n```bash\n# Restore from backup\ngpg --decrypt backup_file.sql.gz.gpg | gunzip | \\\n  psql -h localhost -U wallet_user wallet_db\n```\n\n### Deployment Checklist\n\n#### Pre-Deployment\n- [ ] All tests passing\n- [ ] Security audit completed\n- [ ] Performance testing done\n- [ ] Backup procedures tested\n- [ ] SSL certificates valid\n- [ ] Environment variables configured\n- [ ] Database migrations ready\n\n#### Deployment\n- [ ] Deploy backend services\n- [ ] Run database migrations\n- [ ] Deploy smart contracts\n- [ ] Configure monitoring\n- [ ] Test all endpoints\n- [ ] Verify SSL configuration\n- [ ] Check logs for errors\n\n#### Post-Deployment\n- [ ] Monitor system metrics\n- [ ] Verify backup procedures\n- [ ] Test disaster recovery\n- [ ] Update documentation\n- [ ] Notify stakeholders\n\n---\n\n## 📚 API Reference\n\n### Authentication Endpoints\n\n#### POST /api/auth/register\nRegister a new user account.\n\n**Request:**\n```json\n{\n  \"username\": \"john_doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"secure_password123\"\n}\n```\n\n**Response:**\n```json\n{\n  \"success\": true,\n  \"data\": {\n    \"userId\": \"uuid-here\",\n    \"token\": \"jwt-token-here\",\n    \"expiresIn\": \"24h\"\n  }\n}\n```\n\n#### POST /api/auth/login\nAuthenticate user and get access token.\n\n**Request:**\n```json\n{\n  \"email\": \"john@example.com\",\n  \"password\": \"secure_password123\"\n}\n```\n\n**Response:**\n```json\n{\n  \"success\": true,\n  \"data\": {\n    \"token\": \"jwt-token-here\",\n    \"refreshToken\": \"refresh-token-here\",\n    \"expiresIn\": \"24h\",\n    \"user\": {\n      \"id\": \"uuid-here\",\n      \"username\": \"john_doe\",\n      \"email\": \"john@example.com\"\n    }\n  }\n}\n```\n\n### Wallet Endpoints\n\n#### GET /api/wallet/balance\nGet current wallet balance.\n\n**Headers:**\n```\nAuthorization: Bearer jwt-token-here\n```\n\n**Response:**\n```json\n{\n  \"success\": true,\n  \"data\": {\n    \"balance\": 150.75,\n    \"offlineBalance\": 25.50,\n    \"pendingBalance\": 10.00,\n    \"currency\": \"ETH\"\n  }\n}\n```\n\n#### POST /api/wallet/purchase\nPurchase tokens for offline use.\n\n**Request:**\n```json\n{\n  \"amount\": 100.00,\n  \"paymentMethod\": \"ethereum\",\n  \"transactionHash\": \"0x...\"\n}\n```\n\n**Response:**\n```json\n{\n  \"success\": true,\n  \"data\": {\n    \"tokens\": [\n      {\n        \"id\": \"token-uuid-1\",\n        \"amount\": 50.00,\n        \"signature\": \"signature-here\",\n        \"expiresAt\": \"2024-02-01T00:00:00Z\"\n      },\n      {\n        \"id\": \"token-uuid-2\",\n        \"amount\": 50.00,\n        \"signature\": \"signature-here\",\n        \"expiresAt\": \"2024-02-01T00:00:00Z\"\n      }\n    ],\n    \"transactionId\": \"transaction-uuid\"\n  }\n}\n```\n\n### Token Endpoints\n\n#### POST /api/tokens/validate\nValidate an offline token.\n\n**Request:**\n```json\n{\n  \"tokenId\": \"token-uuid\",\n  \"signature\": \"signature-here\"\n}\n```\n\n**Response:**\n```json\n{\n  \"success\": true,\n  \"data\": {\n    \"valid\": true,\n    \"amount\": 50.00,\n    \"expiresAt\": \"2024-02-01T00:00:00Z\",\n    \"isSpent\": false\n  }\n}\n```\n\n#### POST /api/tokens/divide\nDivide a token for making change.\n\n**Request:**\n```json\n{\n  \"tokenId\": \"token-uuid\",\n  \"paymentAmount\": 30.00\n}\n```\n\n**Response:**\n```json\n{\n  \"success\": true,\n  \"data\": {\n    \"paymentToken\": {\n      \"id\": \"payment-token-uuid\",\n      \"amount\": 30.00,\n      \"signature\": \"payment-signature\"\n    },\n    \"changeToken\": {\n      \"id\": \"change-token-uuid\",\n      \"amount\": 20.00,\n      \"signature\": \"change-signature\"\n    }\n  }\n}\n```\n\n### Error Responses\n\nAll endpoints return errors in this format:\n\n```json\n{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"INVALID_TOKEN\",\n    \"message\": \"The provided token is invalid or expired\",\n    \"details\": {\n      \"tokenId\": \"token-uuid\",\n      \"reason\": \"expired\"\n    }\n  }\n}\n```\n\n### Rate Limiting\n\nAll endpoints are rate limited:\n- **Default**: 100 requests per 15 minutes per IP\n- **Authentication**: 5 requests per 15 minutes per IP\n- **Token operations**: 50 requests per 15 minutes per user\n\nRate limit headers:\n```\nX-RateLimit-Limit: 100\nX-RateLimit-Remaining: 95\nX-RateLimit-Reset: 1640995200\n```\n\n---\n\n## 🔒 Security Guide\n\n### Authentication Security\n\n#### JWT Token Security\n- Tokens expire after 24 hours\n- Refresh tokens for seamless renewal\n- Secure token storage in mobile app\n- Token blacklisting on logout\n\n#### Password Security\n- bcrypt hashing with salt rounds: 12\n- Minimum password requirements\n- Password history prevention\n- Account lockout after failed attempts\n\n### Cryptographic Security\n\n#### Key Management\n- secp256k1 elliptic curve cryptography\n- Secure random number generation\n- Private key storage in Secure Enclave (iOS)\n- Key rotation capabilities\n\n#### Digital Signatures\n- ECDSA signatures for all transactions\n- Message authentication codes (MAC)\n- Timestamp-based replay protection\n- Signature verification on all operations\n\n### Network Security\n\n#### HTTPS/TLS\n- TLS 1.2+ only\n- Perfect Forward Secrecy\n- HSTS headers\n- Certificate pinning in mobile app\n\n#### API Security\n- Input validation and sanitization\n- SQL injection prevention\n- XSS protection\n- CSRF tokens\n\n### Blockchain Security\n\n#### Smart Contract Security\n- Reentrancy protection\n- Integer overflow/underflow checks\n- Access control modifiers\n- Emergency pause functionality\n\n#### Transaction Security\n- Double-spending prevention\n- Transaction replay protection\n- Gas limit optimization\n- Multi-signature requirements\n\n### Mobile Security\n\n#### Data Protection\n- Core Data encryption\n- Keychain storage for sensitive data\n- App Transport Security (ATS)\n- Jailbreak detection\n\n#### Biometric Authentication\n- Touch ID / Face ID integration\n- Fallback to passcode\n- Biometric template protection\n- Authentication timeout\n\n### Monitoring and Alerting\n\n#### Security Monitoring\n- Failed authentication attempts\n- Suspicious transaction patterns\n- Rate limit violations\n- Unusual API usage\n\n#### Incident Response\n- Automated alert notifications\n- Security event logging\n- Forensic data collection\n- Emergency response procedures\n\n---\n\n## 🔧 Troubleshooting\n\n### Common Backend Issues\n\n#### Database Connection Issues\n```bash\n# Check database status\nsudo systemctl status postgresql\n\n# Test connection\npsql -h localhost -U wallet_user -d wallet_db\n\n# Check logs\ntail -f /var/log/postgresql/postgresql-13-main.log\n```\n\n#### JWT Token Issues\n```bash\n# Verify JWT secret is set\necho $JWT_SECRET\n\n# Check token expiration\nnode -e \"console.log(require('jsonwebtoken').decode('your-token-here'))\"\n```\n\n#### Blockchain Connection Issues\n```bash\n# Test Ethereum RPC connection\ncurl -X POST -H \"Content-Type: application/json\" \\\n  --data '{\"jsonrpc\":\"2.0\",\"method\":\"eth_blockNumber\",\"params\":[],\"id\":1}' \\\n  $ETH_RPC_URL\n```\n\n### Common Mobile Issues\n\n#### Build Issues\n```bash\n# Clean build folder\nrm -rf ios/offline-blockchain-wallet-ios/.build\n\n# Reset package dependencies\nswift package reset\nswift package resolve\n\n# Fix signing issues\n./scripts/fix_build_issues.sh\n```\n\n#### Bluetooth Issues\n```swift\n// Check Bluetooth permissions\nif CBCentralManager.authorization != .allowedAlways {\n    // Request permissions\n}\n\n// Reset Bluetooth state\nbluetoothService.reset()\n```\n\n#### Keychain Issues\n```swift\n// Clear keychain data\nlet keychain = Keychain(service: \"com.wallet.app\")\ntry keychain.removeAll()\n\n// Check keychain accessibility\nlet accessibility = keychain.accessibility\n```\n\n### Performance Issues\n\n#### High Memory Usage\n```bash\n# Monitor memory usage\ntop -p $(pgrep node)\n\n# Check for memory leaks\nnode --inspect app.js\n# Open chrome://inspect in Chrome\n```\n\n#### Slow Database Queries\n```sql\n-- Enable query logging\nSET log_statement = 'all';\nSET log_min_duration_statement = 1000;\n\n-- Analyze slow queries\nSELECT query, mean_time, calls \nFROM pg_stat_statements \nORDER BY mean_time DESC;\n```\n\n#### High CPU Usage\n```bash\n# Profile Node.js application\nnode --prof app.js\nnode --prof-process isolate-*.log > processed.txt\n```\n\n### Network Issues\n\n#### SSL Certificate Problems\n```bash\n# Check certificate validity\nopenssl x509 -in cert.pem -text -noout\n\n# Test SSL connection\nopenssl s_client -connect your-domain.com:443\n```\n\n#### DNS Issues\n```bash\n# Test DNS resolution\nnslookup your-domain.com\ndig your-domain.com\n\n# Check DNS propagation\ndig @8.8.8.8 your-domain.com\n```\n\n### Deployment Issues\n\n#### Docker Container Issues\n```bash\n# Check container logs\ndocker logs container-name\n\n# Debug container\ndocker exec -it container-name /bin/bash\n\n# Check resource usage\ndocker stats\n```\n\n#### Load Balancer Issues\n```bash\n# Check nginx status\nsudo systemctl status nginx\n\n# Test upstream servers\ncurl -H \"Host: your-domain.com\" http://backend-server:3000/health\n\n# Check nginx logs\ntail -f /var/log/nginx/error.log\n```\n\n---\n\n## 🔄 Development Workflow\n\n### Git Workflow\n\n#### Branch Strategy\n```bash\n# Main branches\nmain          # Production-ready code\ndevelop       # Integration branch\nfeature/*     # Feature development\nhotfix/*      # Production fixes\nrelease/*     # Release preparation\n```\n\n#### Feature Development\n```bash\n# Create feature branch\ngit checkout -b feature/new-payment-method\n\n# Make changes and commit\ngit add .\ngit commit -m \"feat: add new payment method support\"\n\n# Push and create PR\ngit push origin feature/new-payment-method\n```\n\n### Code Quality\n\n#### Backend Linting\n```bash\n# ESLint configuration\nnpm run lint\nnpm run lint:fix\n\n# Prettier formatting\nnpm run format\n```\n\n#### Mobile Code Quality\n```bash\n# SwiftLint\nswiftlint\nswiftlint --fix\n\n# Swift format\nswift-format format --recursive .\n```\n\n### Testing Strategy\n\n#### Test Pyramid\n1. **Unit Tests** (70%): Individual functions/methods\n2. **Integration Tests** (20%): Component interactions\n3. **E2E Tests** (10%): Full user workflows\n\n#### Continuous Integration\n```yaml\n# .github/workflows/ci.yml\nname: CI\non: [push, pull_request]\n\njobs:\n  test:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: actions/checkout@v2\n      - uses: actions/setup-node@v2\n        with:\n          node-version: '18'\n      - run: npm ci\n      - run: npm test\n      - run: npm run test:security\n```\n\n### Release Process\n\n#### Backend Release\n```bash\n# Version bump\nnpm version patch  # or minor, major\n\n# Build and test\nnpm run build\nnpm test\n\n# Deploy to staging\n./scripts/deploy-staging.sh\n\n# Deploy to production\n./scripts/deploy-production.sh\n```\n\n#### Mobile Release\n```bash\n# Update version\n./scripts/update-version.sh 1.0.1\n\n# Build and test\n./scripts/build.sh --release\nswift test\n\n# Submit to App Store\n./scripts/submit-appstore.sh\n```\n\n### Documentation\n\n#### API Documentation\n- Swagger/OpenAPI specifications\n- Postman collections\n- Code examples\n- Integration guides\n\n#### Code Documentation\n- JSDoc for JavaScript/TypeScript\n- Swift documentation comments\n- README files for each module\n- Architecture decision records (ADRs)\n\n---\n\n## 📞 Support and Maintenance\n\n### Monitoring and Alerts\n\n#### System Metrics\n- CPU and memory usage\n- Database performance\n- API response times\n- Error rates\n\n#### Business Metrics\n- Transaction volume\n- User activity\n- Token utilization\n- Revenue tracking\n\n### Backup and Recovery\n\n#### Automated Backups\n- Daily database backups\n- Configuration backups\n- Log file archival\n- Disaster recovery testing\n\n#### Recovery Procedures\n- Database restoration\n- Service recovery\n- Data integrity verification\n- Business continuity planning\n\n### Security Maintenance\n\n#### Regular Security Tasks\n- Dependency updates\n- Security patch management\n- Vulnerability scanning\n- Penetration testing\n\n#### Incident Response\n- Security incident procedures\n- Communication protocols\n- Forensic analysis\n- Post-incident reviews\n\n---\n\n*This documentation is maintained by the development team and updated with each release. For questions or contributions, please contact the development team.*\n"
+# Offline Blockchain Wallet - Complete System Documentation
+
+## 📋 Table of Contents
+
+1. [System Overview](#system-overview)
+2. [Backend Documentation](#backend-documentation)
+3. [Mobile (iOS) Documentation](#mobile-ios-documentation)
+4. [Deployment Guide](#deployment-guide)
+5. [API Reference](#api-reference)
+6. [Security Guide](#security-guide)
+7. [Troubleshooting](#troubleshooting)
+8. [Development Workflow](#development-workflow)
+
+---
+
+## 🎯 System Overview
+
+### Architecture
+
+The Offline Blockchain Wallet is a distributed system consisting of:
+
+- **Backend API**: Node.js/TypeScript REST API with PostgreSQL database
+- **iOS Mobile App**: SwiftUI-based mobile application
+- **Blockchain Integration**: Ethereum smart contracts for token management
+- **Offline Capabilities**: Peer-to-peer transactions via Bluetooth and QR codes
+
+### Key Features
+
+- 🔐 **Secure Authentication**: JWT-based authentication with multi-factor support
+- 💰 **Token Management**: Purchase, store, and redeem blockchain tokens
+- 📱 **Offline Transactions**: Bluetooth and QR code-based peer-to-peer transfers
+- 🔄 **Synchronization**: Automatic sync when network connectivity is restored
+- 🛡️ **Security**: End-to-end encryption, digital signatures, fraud detection
+- 📊 **Monitoring**: Real-time health monitoring and alerting
+
+### Technology Stack
+
+**Backend:**
+- Node.js 18+ with TypeScript
+- Express.js framework
+- PostgreSQL database
+- Redis for caching
+- Web3.js for blockchain integration
+- Jest for testing
+
+**Mobile:**
+- iOS 15+ with SwiftUI
+- Core Data for local storage
+- CryptoKit for cryptography
+- Bluetooth LE for peer-to-peer communication
+- AVFoundation for QR code scanning
+
+**Infrastructure:**
+- Docker containers
+- Nginx reverse proxy
+- SSL/TLS encryption
+- Prometheus monitoring
+- Grafana dashboards
+
+---
+
+## 🖥️ Backend Documentation
+
+### Quick Start
+
+```bash
+# Clone and setup
+cd backend
+npm install
+
+# Setup environment
+cp .env.example .env
+# Edit .env with your configuration
+
+# Setup database
+npm run db:migrate
+npm run db:seed
+
+# Start development server
+npm run dev
+```
+
+### Project Structure
+
+```
+backend/
+├── src/
+│   ├── controllers/          # API route handlers
+│   ├── services/            # Business logic
+│   ├── database/            # Database layer
+│   ├── middleware/          # Express middleware
+│   ├── routes/              # API routes
+│   ├── models/              # Data models
+│   ├── utils/               # Utility functions
+│   └── config/              # Configuration
+├── contracts/               # Smart contracts
+├── infrastructure/          # Docker, configs
+├── scripts/                 # Deployment scripts
+└── test/                    # Test files
+```
+
+### Core Services
+
+#### Authentication Service
+- JWT token generation and validation
+- Multi-factor authentication support
+- Session management
+- Password security (bcrypt hashing)
+
+#### Wallet Service
+- User wallet creation and management
+- Balance tracking
+- Transaction history
+- Multi-signature support
+
+#### Token Service
+- Offline token generation
+- Token validation and verification
+- Token division for change-making
+- Expiration handling
+
+#### Blockchain Service
+- Smart contract interaction
+- Transaction broadcasting
+- Balance synchronization
+- Gas fee estimation
+
+#### Security Service
+- Fraud detection algorithms
+- Audit logging
+- Rate limiting
+- Input validation
+
+### Database Schema
+
+#### Users Table
+```sql
+CREATE TABLE users (
+    id UUID PRIMARY KEY,
+    username VARCHAR(255) UNIQUE NOT NULL,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    password_hash VARCHAR(255) NOT NULL,
+    public_key TEXT,
+    wallet_address VARCHAR(42),
+    created_at TIMESTAMP DEFAULT NOW(),
+    updated_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+#### Offline Tokens Table
+```sql
+CREATE TABLE offline_tokens (
+    id UUID PRIMARY KEY,
+    user_id UUID REFERENCES users(id),
+    amount DECIMAL(18,8) NOT NULL,
+    signature TEXT NOT NULL,
+    is_spent BOOLEAN DEFAULT FALSE,
+    expires_at TIMESTAMP,
+    created_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+#### Transactions Table
+```sql
+CREATE TABLE transactions (
+    id UUID PRIMARY KEY,
+    sender_id UUID REFERENCES users(id),
+    receiver_id UUID REFERENCES users(id),
+    amount DECIMAL(18,8) NOT NULL,
+    type VARCHAR(50) NOT NULL,
+    status VARCHAR(50) DEFAULT 'pending',
+    blockchain_hash VARCHAR(66),
+    created_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+### API Endpoints
+
+#### Authentication
+```
+POST /api/auth/register     # User registration
+POST /api/auth/login        # User login
+POST /api/auth/logout       # User logout
+POST /api/auth/refresh      # Refresh JWT token
+```
+
+#### Wallet Management
+```
+GET  /api/wallet/balance    # Get wallet balance
+POST /api/wallet/purchase   # Purchase tokens
+POST /api/wallet/redeem     # Redeem tokens
+GET  /api/wallet/history    # Transaction history
+```
+
+#### Offline Tokens
+```
+POST /api/tokens/generate   # Generate offline tokens
+POST /api/tokens/validate   # Validate token
+POST /api/tokens/divide     # Divide token for change
+POST /api/tokens/sync       # Sync offline transactions
+```
+
+### Configuration
+
+#### Environment Variables
+```bash
+# Server
+PORT=3000
+NODE_ENV=production
+
+# Database
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=wallet_db
+DB_USER=wallet_user
+DB_PASSWORD=secure_password
+
+# JWT
+JWT_SECRET=your_jwt_secret
+JWT_EXPIRES_IN=24h
+
+# Blockchain
+ETH_RPC_URL=https://mainnet.infura.io/v3/your_key
+CONTRACT_ADDRESS=0x...
+PRIVATE_KEY=0x...
+
+# Redis
+REDIS_URL=redis://localhost:6379
+
+# Security
+RATE_LIMIT_WINDOW=15
+RATE_LIMIT_MAX=100
+```
+
+### Testing
+
+```bash
+# Run all tests
+npm test
+
+# Run specific test suites
+npm run test:unit
+npm run test:integration
+npm run test:security
+
+# Run with coverage
+npm run test:coverage
+
+# Run load tests
+npm run test:load
+```
+
+### Monitoring
+
+#### Health Checks
+- `/health` - Basic health status
+- `/health/detailed` - Detailed system status
+- `/metrics` - Prometheus metrics
+
+#### Logging
+- Structured JSON logging
+- Log levels: error, warn, info, debug
+- Audit trail for security events
+- Performance metrics
+
+---
+
+## 📱 Mobile (iOS) Documentation
+
+### Quick Start
+
+```bash
+# Setup Xcode project
+cd ios/offline-blockchain-wallet-ios
+./configure_project.sh
+
+# Install dependencies
+swift package resolve
+
+# Open in Xcode
+open offline-blockchain-wallet-ios.xcodeproj
+```
+
+### Project Structure
+
+```
+ios/offline-blockchain-wallet-ios/
+├── offline-blockchain-wallet-ios/
+│   ├── Views/               # SwiftUI views
+│   ├── ViewModels/          # MVVM view models
+│   ├── Services/            # Business logic services
+│   ├── Models/              # Data models
+│   ├── Utils/               # Utility classes
+│   └── Configuration/       # App configuration
+├── Tests/                   # Unit tests
+├── Scripts/                 # Build scripts
+└── Package.swift            # Dependencies
+```
+
+### Core Services
+
+#### Network Service
+- API communication with backend
+- Request/response handling
+- Network connectivity monitoring
+- Offline queue management
+
+#### Cryptography Service
+- Key pair generation (secp256k1)
+- Digital signature creation/verification
+- Hash functions (SHA-256)
+- Secure random number generation
+
+#### Storage Service
+- Core Data integration
+- Keychain storage for sensitive data
+- Local transaction caching
+- Data synchronization
+
+#### Bluetooth Service
+- Bluetooth LE advertising
+- Device discovery and pairing
+- Secure data transmission
+- Connection management
+
+#### QR Code Service
+- QR code generation
+- QR code scanning
+- Data encoding/decoding
+- Error correction
+
+#### Offline Token Service
+- Token validation
+- Token division for payments
+- Balance calculations
+- Expiration handling
+
+### Key Features Implementation
+
+#### Offline Transactions
+
+```swift
+// Generate payment QR code
+let paymentRequest = QRCodePaymentRequest(
+    type: .payment,
+    walletId: currentWallet.id,
+    amount: paymentAmount,
+    timestamp: Date()
+)
+
+let qrCode = try qrCodeService.generateQRCode(for: paymentRequest)
+```
+
+#### Bluetooth Communication
+
+```swift
+// Start advertising wallet
+try bluetoothService.startAdvertising(walletInfo: WalletInfo(
+    walletId: wallet.id,
+    publicKey: wallet.publicKey
+))
+
+// Handle incoming connection
+func handleIncomingConnection(_ connection: BluetoothConnection) {
+    // Verify peer identity
+    // Exchange transaction data
+    // Process offline payment
+}
+```
+
+#### Token Management
+
+```swift
+// Validate offline token
+let isValid = offlineTokenService.validateToken(token)
+
+// Divide token for payment
+let divisionResult = try offlineTokenService.divideToken(
+    token,
+    amount: paymentAmount
+)
+```
+
+### User Interface
+
+#### Main Wallet View
+- Balance display
+- Recent transactions
+- Quick actions (send, receive, purchase)
+- Offline status indicator
+
+#### Transaction View
+- Transaction creation
+- QR code display/scanning
+- Bluetooth device selection
+- Transaction confirmation
+
+#### Settings View
+- Account management
+- Security settings
+- Network configuration
+- Backup/restore options
+
+### Data Models
+
+#### Wallet Model
+```swift
+struct Wallet: Codable {
+    let id: String
+    let publicKey: String
+    let address: String
+    var balance: Double
+    let createdAt: Date
+}
+```
+
+#### Transaction Model
+```swift
+struct Transaction: Codable {
+    let id: String
+    let senderId: String
+    let receiverId: String
+    let amount: Double
+    let type: TransactionType
+    var status: TransactionStatus
+    let timestamp: Date
+}
+```
+
+#### Offline Token Model
+```swift
+struct OfflineToken: Codable {
+    let id: String
+    let amount: Double
+    let signature: String
+    let expiresAt: Date
+    var isSpent: Bool
+}
+```
+
+### Security Implementation
+
+#### Key Management
+- Secure Enclave integration
+- Keychain storage for private keys
+- Biometric authentication
+- Key rotation support
+
+#### Transaction Security
+- Digital signature verification
+- Double-spending prevention
+- Replay attack protection
+- Secure communication channels
+
+### Testing
+
+```bash
+# Run unit tests
+swift test
+
+# Run specific test
+swift test --filter CryptographyServiceTests
+
+# Run standalone tests
+swift test_crypto_standalone.swift
+swift test_offline_token_service.swift
+swift test_transaction_service.swift
+```
+
+### Build Configuration
+
+#### Debug Configuration
+```swift
+// Debug.xcconfig
+API_BASE_URL = https://dev-api.wallet.com
+LOG_LEVEL = DEBUG
+ENABLE_MOCK_SERVICES = YES
+```
+
+#### Release Configuration
+```swift
+// Release.xcconfig
+API_BASE_URL = https://api.wallet.com
+LOG_LEVEL = ERROR
+ENABLE_MOCK_SERVICES = NO
+```
+
+---
+
+## 🚀 Deployment Guide
+
+### Prerequisites
+
+- Docker and Docker Compose
+- PostgreSQL 13+
+- Redis 6+
+- SSL certificates
+- Domain name
+- Ethereum node access
+
+### Backend Deployment
+
+#### 1. Environment Setup
+
+```bash
+# Create production environment file
+cp backend/.env.example backend/.env.production
+
+# Edit with production values
+vim backend/.env.production
+```
+
+#### 2. Database Setup
+
+```bash
+# Start PostgreSQL
+docker-compose -f backend/infrastructure/docker-compose.prod.yml up -d postgres
+
+# Run migrations
+cd backend
+npm run db:migrate:prod
+```
+
+#### 3. SSL Certificate Setup
+
+```bash
+# Generate SSL certificates (Let's Encrypt)
+cd backend
+./scripts/setup-ssl.sh your-domain.com
+```
+
+#### 4. Deploy Backend Services
+
+```bash
+# Build and deploy
+cd backend
+./scripts/deploy-production.sh
+
+# Verify deployment
+curl https://your-domain.com/health
+```
+
+#### 5. Smart Contract Deployment
+
+```bash
+# Deploy to mainnet
+cd backend
+npm run deploy:mainnet
+
+# Verify contract
+npm run verify:contract
+```
+
+### Mobile App Deployment
+
+#### 1. App Store Preparation
+
+```bash
+# Update version and build number
+cd ios/offline-blockchain-wallet-ios
+./scripts/update-version.sh 1.0.0
+
+# Configure release settings
+vim offline-blockchain-wallet-ios/Configuration/Release.xcconfig
+```
+
+#### 2. Build for Release
+
+```bash
+# Clean and build
+./scripts/build.sh --release
+
+# Run tests
+swift test
+
+# Archive for App Store
+xcodebuild archive -scheme offline-blockchain-wallet-ios \\
+  -archivePath build/offline-blockchain-wallet-ios.xcarchive
+```
+
+#### 3. App Store Submission
+
+```bash
+# Export for App Store
+xcodebuild -exportArchive \\
+  -archivePath build/offline-blockchain-wallet-ios.xcarchive \\
+  -exportPath build/AppStore \\
+  -exportOptionsPlist ExportOptions.plist
+
+# Upload to App Store Connect
+xcrun altool --upload-app \\
+  -f build/AppStore/offline-blockchain-wallet-ios.ipa \\
+  -u your-apple-id@example.com
+```
+
+### Infrastructure Setup
+
+#### Docker Compose Configuration
+
+```yaml
+# docker-compose.prod.yml
+version: '3.8'
+services:
+  app:
+    build: .
+    ports:
+      - \"3000:3000\"
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - postgres
+      - redis
+
+  postgres:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: wallet_db
+      POSTGRES_USER: wallet_user
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:6-alpine
+    volumes:
+      - redis_data:/data
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - \"80:80\"
+      - \"443:443\"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./ssl:/etc/ssl
+```
+
+#### Nginx Configuration
+
+```nginx
+server {
+    listen 443 ssl http2;
+    server_name your-domain.com;
+
+    ssl_certificate /etc/ssl/cert.pem;
+    ssl_certificate_key /etc/ssl/key.pem;
+
+    location / {
+        proxy_pass http://app:3000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location /health {
+        proxy_pass http://app:3000/health;
+        access_log off;
+    }
+}
+```
+
+### Monitoring Setup
+
+#### Prometheus Configuration
+
+```yaml
+# prometheus.yml
+global:
+  scrape_interval: 15s
+
+scrape_configs:
+  - job_name: 'wallet-api'
+    static_configs:
+      - targets: ['app:3000']
+    metrics_path: '/metrics'
+```
+
+#### Grafana Dashboard
+
+```json
+{
+  \"dashboard\": {
+    \"title\": \"Wallet API Monitoring\",
+    \"panels\": [
+      {
+        \"title\": \"Request Rate\",
+        \"type\": \"graph\",
+        \"targets\": [
+          {
+            \"expr\": \"rate(http_requests_total[5m])\"
+          }
+        ]
+      },
+      {
+        \"title\": \"Response Time\",
+        \"type\": \"graph\",
+        \"targets\": [
+          {
+            \"expr\": \"histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m]))\"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+### Security Hardening
+
+#### 1. Firewall Configuration
+
+```bash
+# Allow only necessary ports
+ufw allow 22/tcp   # SSH
+ufw allow 80/tcp   # HTTP
+ufw allow 443/tcp  # HTTPS
+ufw enable
+```
+
+#### 2. Database Security
+
+```bash
+# Configure PostgreSQL security
+vim /etc/postgresql/13/main/pg_hba.conf
+
+# Restrict connections
+host    wallet_db    wallet_user    127.0.0.1/32    md5
+```
+
+#### 3. SSL/TLS Configuration
+
+```bash
+# Generate strong SSL configuration
+openssl dhparam -out /etc/ssl/dhparam.pem 2048
+
+# Configure nginx SSL
+ssl_protocols TLSv1.2 TLSv1.3;
+ssl_ciphers ECDHE-RSA-AES256-GCM-SHA512:DHE-RSA-AES256-GCM-SHA512;
+ssl_prefer_server_ciphers off;
+ssl_dhparam /etc/ssl/dhparam.pem;
+```
+
+### Backup and Recovery
+
+#### Database Backup
+
+```bash
+# Automated backup script
+#!/bin/bash
+BACKUP_DIR=\"/backups/postgres\"
+DATE=$(date +%Y%m%d_%H%M%S)
+
+pg_dump -h localhost -U wallet_user wallet_db > \\
+  \"$BACKUP_DIR/wallet_db_$DATE.sql\"
+
+# Compress and encrypt
+gzip \"$BACKUP_DIR/wallet_db_$DATE.sql\"
+gpg --encrypt --recipient backup@company.com \\
+  \"$BACKUP_DIR/wallet_db_$DATE.sql.gz\"
+```
+
+#### Recovery Process
+
+```bash
+# Restore from backup
+gpg --decrypt backup_file.sql.gz.gpg | gunzip | \\
+  psql -h localhost -U wallet_user wallet_db
+```
+
+### Deployment Checklist
+
+#### Pre-Deployment
+- [ ] All tests passing
+- [ ] Security audit completed
+- [ ] Performance testing done
+- [ ] Backup procedures tested
+- [ ] SSL certificates valid
+- [ ] Environment variables configured
+- [ ] Database migrations ready
+
+#### Deployment
+- [ ] Deploy backend services
+- [ ] Run database migrations
+- [ ] Deploy smart contracts
+- [ ] Configure monitoring
+- [ ] Test all endpoints
+- [ ] Verify SSL configuration
+- [ ] Check logs for errors
+
+#### Post-Deployment
+- [ ] Monitor system metrics
+- [ ] Verify backup procedures
+- [ ] Test disaster recovery
+- [ ] Update documentation
+- [ ] Notify stakeholders
+
+---
+
+## 📚 API Reference
+
+### Authentication Endpoints
+
+#### POST /api/auth/register
+Register a new user account.
+
+**Request:**
+```json
+{
+  \"username\": \"john_doe\",
+  \"email\": \"john@example.com\",
+  \"password\": \"secure_password123\"
+}
+```
+
+**Response:**
+```json
+{
+  \"success\": true,
+  \"data\": {
+    \"userId\": \"uuid-here\",
+    \"token\": \"jwt-token-here\",
+    \"expiresIn\": \"24h\"
+  }
+}
+```
+
+#### POST /api/auth/login
+Authenticate user and get access token.
+
+**Request:**
+```json
+{
+  \"email\": \"john@example.com\",
+  \"password\": \"secure_password123\"
+}
+```
+
+**Response:**
+```json
+{
+  \"success\": true,
+  \"data\": {
+    \"token\": \"jwt-token-here\",
+    \"refreshToken\": \"refresh-token-here\",
+    \"expiresIn\": \"24h\",
+    \"user\": {
+      \"id\": \"uuid-here\",
+      \"username\": \"john_doe\",
+      \"email\": \"john@example.com\"
+    }
+  }
+}
+```
+
+### Wallet Endpoints
+
+#### GET /api/wallet/balance
+Get current wallet balance.
+
+**Headers:**
+```
+Authorization: Bearer jwt-token-here
+```
+
+**Response:**
+```json
+{
+  \"success\": true,
+  \"data\": {
+    \"balance\": 150.75,
+    \"offlineBalance\": 25.50,
+    \"pendingBalance\": 10.00,
+    \"currency\": \"ETH\"
+  }
+}
+```
+
+#### POST /api/wallet/purchase
+Purchase tokens for offline use.
+
+**Request:**
+```json
+{
+  \"amount\": 100.00,
+  \"paymentMethod\": \"ethereum\",
+  \"transactionHash\": \"0x...\"
+}
+```
+
+**Response:**
+```json
+{
+  \"success\": true,
+  \"data\": {
+    \"tokens\": [
+      {
+        \"id\": \"token-uuid-1\",
+        \"amount\": 50.00,
+        \"signature\": \"signature-here\",
+        \"expiresAt\": \"2024-02-01T00:00:00Z\"
+      },
+      {
+        \"id\": \"token-uuid-2\",
+        \"amount\": 50.00,
+        \"signature\": \"signature-here\",
+        \"expiresAt\": \"2024-02-01T00:00:00Z\"
+      }
+    ],
+    \"transactionId\": \"transaction-uuid\"
+  }
+}
+```
+
+### Token Endpoints
+
+#### POST /api/tokens/validate
+Validate an offline token.
+
+**Request:**
+```json
+{
+  \"tokenId\": \"token-uuid\",
+  \"signature\": \"signature-here\"
+}
+```
+
+**Response:**
+```json
+{
+  \"success\": true,
+  \"data\": {
+    \"valid\": true,
+    \"amount\": 50.00,
+    \"expiresAt\": \"2024-02-01T00:00:00Z\",
+    \"isSpent\": false
+  }
+}
+```
+
+#### POST /api/tokens/divide
+Divide a token for making change.
+
+**Request:**
+```json
+{
+  \"tokenId\": \"token-uuid\",
+  \"paymentAmount\": 30.00
+}
+```
+
+**Response:**
+```json
+{
+  \"success\": true,
+  \"data\": {
+    \"paymentToken\": {
+      \"id\": \"payment-token-uuid\",
+      \"amount\": 30.00,
+      \"signature\": \"payment-signature\"
+    },
+    \"changeToken\": {
+      \"id\": \"change-token-uuid\",
+      \"amount\": 20.00,
+      \"signature\": \"change-signature\"
+    }
+  }
+}
+```
+
+### Error Responses
+
+All endpoints return errors in this format:
+
+```json
+{
+  \"success\": false,
+  \"error\": {
+    \"code\": \"INVALID_TOKEN\",
+    \"message\": \"The provided token is invalid or expired\",
+    \"details\": {
+      \"tokenId\": \"token-uuid\",
+      \"reason\": \"expired\"
+    }
+  }
+}
+```
+
+### Rate Limiting
+
+All endpoints are rate limited:
+- **Default**: 100 requests per 15 minutes per IP
+- **Authentication**: 5 requests per 15 minutes per IP
+- **Token operations**: 50 requests per 15 minutes per user
+
+Rate limit headers:
+```
+X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 95
+X-RateLimit-Reset: 1640995200
+```
+
+---
+
+## 🔒 Security Guide
+
+### Authentication Security
+
+#### JWT Token Security
+- Tokens expire after 24 hours
+- Refresh tokens for seamless renewal
+- Secure token storage in mobile app
+- Token blacklisting on logout
+
+#### Password Security
+- bcrypt hashing with salt rounds: 12
+- Minimum password requirements
+- Password history prevention
+- Account lockout after failed attempts
+
+### Cryptographic Security
+
+#### Key Management
+- secp256k1 elliptic curve cryptography
+- Secure random number generation
+- Private key storage in Secure Enclave (iOS)
+- Key rotation capabilities
+
+#### Digital Signatures
+- ECDSA signatures for all transactions
+- Message authentication codes (MAC)
+- Timestamp-based replay protection
+- Signature verification on all operations
+
+### Network Security
+
+#### HTTPS/TLS
+- TLS 1.2+ only
+- Perfect Forward Secrecy
+- HSTS headers
+- Certificate pinning in mobile app
+
+#### API Security
+- Input validation and sanitization
+- SQL injection prevention
+- XSS protection
+- CSRF tokens
+
+### Blockchain Security
+
+#### Smart Contract Security
+- Reentrancy protection
+- Integer overflow/underflow checks
+- Access control modifiers
+- Emergency pause functionality
+
+#### Transaction Security
+- Double-spending prevention
+- Transaction replay protection
+- Gas limit optimization
+- Multi-signature requirements
+
+### Mobile Security
+
+#### Data Protection
+- Core Data encryption
+- Keychain storage for sensitive data
+- App Transport Security (ATS)
+- Jailbreak detection
+
+#### Biometric Authentication
+- Touch ID / Face ID integration
+- Fallback to passcode
+- Biometric template protection
+- Authentication timeout
+
+### Monitoring and Alerting
+
+#### Security Monitoring
+- Failed authentication attempts
+- Suspicious transaction patterns
+- Rate limit violations
+- Unusual API usage
+
+#### Incident Response
+- Automated alert notifications
+- Security event logging
+- Forensic data collection
+- Emergency response procedures
+
+---
+
+## 🔧 Troubleshooting
+
+### Common Backend Issues
+
+#### Database Connection Issues
+```bash
+# Check database status
+sudo systemctl status postgresql
+
+# Test connection
+psql -h localhost -U wallet_user -d wallet_db
+
+# Check logs
+tail -f /var/log/postgresql/postgresql-13-main.log
+```
+
+#### JWT Token Issues
+```bash
+# Verify JWT secret is set
+echo $JWT_SECRET
+
+# Check token expiration
+node -e \"console.log(require('jsonwebtoken').decode('your-token-here'))\"
+```
+
+#### Blockchain Connection Issues
+```bash
+# Test Ethereum RPC connection
+curl -X POST -H \"Content-Type: application/json\" \\
+  --data '{\"jsonrpc\":\"2.0\",\"method\":\"eth_blockNumber\",\"params\":[],\"id\":1}' \\
+  $ETH_RPC_URL
+```
+
+### Common Mobile Issues
+
+#### Build Issues
+```bash
+# Clean build folder
+rm -rf ios/offline-blockchain-wallet-ios/.build
+
+# Reset package dependencies
+swift package reset
+swift package resolve
+
+# Fix signing issues
+./scripts/fix_build_issues.sh
+```
+
+#### Bluetooth Issues
+```swift
+// Check Bluetooth permissions
+if CBCentralManager.authorization != .allowedAlways {
+    // Request permissions
+}
+
+// Reset Bluetooth state
+bluetoothService.reset()
+```
+
+#### Keychain Issues
+```swift
+// Clear keychain data
+let keychain = Keychain(service: \"com.wallet.app\")
+try keychain.removeAll()
+
+// Check keychain accessibility
+let accessibility = keychain.accessibility
+```
+
+### Performance Issues
+
+#### High Memory Usage
+```bash
+# Monitor memory usage
+top -p $(pgrep node)
+
+# Check for memory leaks
+node --inspect app.js
+# Open chrome://inspect in Chrome
+```
+
+#### Slow Database Queries
+```sql
+-- Enable query logging
+SET log_statement = 'all';
+SET log_min_duration_statement = 1000;
+
+-- Analyze slow queries
+SELECT query, mean_time, calls 
+FROM pg_stat_statements 
+ORDER BY mean_time DESC;
+```
+
+#### High CPU Usage
+```bash
+# Profile Node.js application
+node --prof app.js
+node --prof-process isolate-*.log > processed.txt
+```
+
+### Network Issues
+
+#### SSL Certificate Problems
+```bash
+# Check certificate validity
+openssl x509 -in cert.pem -text -noout
+
+# Test SSL connection
+openssl s_client -connect your-domain.com:443
+```
+
+#### DNS Issues
+```bash
+# Test DNS resolution
+nslookup your-domain.com
+dig your-domain.com
+
+# Check DNS propagation
+dig @8.8.8.8 your-domain.com
+```
+
+### Deployment Issues
+
+#### Docker Container Issues
+```bash
+# Check container logs
+docker logs container-name
+
+# Debug container
+docker exec -it container-name /bin/bash
+
+# Check resource usage
+docker stats
+```
+
+#### Load Balancer Issues
+```bash
+# Check nginx status
+sudo systemctl status nginx
+
+# Test upstream servers
+curl -H \"Host: your-domain.com\" http://backend-server:3000/health
+
+# Check nginx logs
+tail -f /var/log/nginx/error.log
+```
+
+---
+
+## 🔄 Development Workflow
+
+### Git Workflow
+
+#### Branch Strategy
+```bash
+# Main branches
+main          # Production-ready code
+develop       # Integration branch
+feature/*     # Feature development
+hotfix/*      # Production fixes
+release/*     # Release preparation
+```
+
+#### Feature Development
+```bash
+# Create feature branch
+git checkout -b feature/new-payment-method
+
+# Make changes and commit
+git add .
+git commit -m \"feat: add new payment method support\"
+
+# Push and create PR
+git push origin feature/new-payment-method
+```
+
+### Code Quality
+
+#### Backend Linting
+```bash
+# ESLint configuration
+npm run lint
+npm run lint:fix
+
+# Prettier formatting
+npm run format
+```
+
+#### Mobile Code Quality
+```bash
+# SwiftLint
+swiftlint
+swiftlint --fix
+
+# Swift format
+swift-format format --recursive .
+```
+
+### Testing Strategy
+
+#### Test Pyramid
+1. **Unit Tests** (70%): Individual functions/methods
+2. **Integration Tests** (20%): Component interactions
+3. **E2E Tests** (10%): Full user workflows
+
+#### Continuous Integration
+```yaml
+# .github/workflows/ci.yml
+name: CI
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v2
+        with:
+          node-version: '18'
+      - run: npm ci
+      - run: npm test
+      - run: npm run test:security
+```
+
+### Release Process
+
+#### Backend Release
+```bash
+# Version bump
+npm version patch  # or minor, major
+
+# Build and test
+npm run build
+npm test
+
+# Deploy to staging
+./scripts/deploy-staging.sh
+
+# Deploy to production
+./scripts/deploy-production.sh
+```
+
+#### Mobile Release
+```bash
+# Update version
+./scripts/update-version.sh 1.0.1
+
+# Build and test
+./scripts/build.sh --release
+swift test
+
+# Submit to App Store
+./scripts/submit-appstore.sh
+```
+
+### Documentation
+
+#### API Documentation
+- Swagger/OpenAPI specifications
+- Postman collections
+- Code examples
+- Integration guides
+
+#### Code Documentation
+- JSDoc for JavaScript/TypeScript
+- Swift documentation comments
+- README files for each module
+- Architecture decision records (ADRs)
+
+---
+
+## 📞 Support and Maintenance
+
+### Monitoring and Alerts
+
+#### System Metrics
+- CPU and memory usage
+- Database performance
+- API response times
+- Error rates
+
+#### Business Metrics
+- Transaction volume
+- User activity
+- Token utilization
+- Revenue tracking
+
+### Backup and Recovery
+
+#### Automated Backups
+- Daily database backups
+- Configuration backups
+- Log file archival
+- Disaster recovery testing
+
+#### Recovery Procedures
+- Database restoration
+- Service recovery
+- Data integrity verification
+- Business continuity planning
+
+### Security Maintenance
+
+#### Regular Security Tasks
+- Dependency updates
+- Security patch management
+- Vulnerability scanning
+- Penetration testing
+
+#### Incident Response
+- Security incident procedures
+- Communication protocols
+- Forensic analysis
+- Post-incident reviews
+
+---
+
+*This documentation is maintained by the development team and updated with each release. For questions or contributions, please contact the development team.*
+"

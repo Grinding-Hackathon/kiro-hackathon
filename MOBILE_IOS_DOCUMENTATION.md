@@ -1,1 +1,1227 @@
-# iOS Mobile App Documentation\n\n## 🎯 Overview\n\nThe Offline Blockchain Wallet iOS app is a SwiftUI-based mobile application that enables secure cryptocurrency transactions both online and offline. It supports peer-to-peer transactions via Bluetooth and QR codes, with automatic synchronization when network connectivity is restored.\n\n## 📱 Features\n\n- **Secure Wallet Management**: Create and manage cryptocurrency wallets\n- **Offline Transactions**: Send and receive payments without internet connectivity\n- **Bluetooth Communication**: Peer-to-peer transactions via Bluetooth LE\n- **QR Code Integration**: Generate and scan QR codes for payments\n- **Biometric Authentication**: Touch ID / Face ID support\n- **Background Services**: Automatic synchronization and token management\n- **Dark Mode Support**: Adaptive UI for light and dark themes\n\n## 🚀 Quick Start\n\n### Prerequisites\n\n- Xcode 15.0+\n- iOS 15.0+\n- macOS 12.0+ (for development)\n- Apple Developer Account (for device testing)\n\n### Installation\n\n```bash\n# Clone the repository\ngit clone <repository-url>\ncd ios/offline-blockchain-wallet-ios\n\n# Configure the project\n./configure_project.sh\n\n# Resolve Swift Package dependencies\nswift package resolve\n\n# Open in Xcode\nopen offline-blockchain-wallet-ios.xcodeproj\n```\n\n### Build and Run\n\n```bash\n# Build for simulator\nxcodebuild -scheme offline-blockchain-wallet-ios \\\n  -destination 'platform=iOS Simulator,name=iPhone 15,OS=latest' \\\n  build\n\n# Run tests\nswift test\n\n# Build for device\n./scripts/build.sh --device\n```\n\n## 📁 Project Structure\n\n```\nios/offline-blockchain-wallet-ios/\n├── offline-blockchain-wallet-ios/\n│   ├── Views/                      # SwiftUI Views\n│   │   ├── WalletView.swift\n│   │   ├── TransactionView.swift\n│   │   ├── QRScannerView.swift\n│   │   ├── QRCodeDisplayView.swift\n│   │   └── SettingsView.swift\n│   ├── ViewModels/                 # MVVM ViewModels\n│   │   ├── WalletViewModel.swift\n│   │   └── TransactionViewModel.swift\n│   ├── Services/                   # Business Logic Services\n│   │   ├── NetworkService.swift\n│   │   ├── CryptographyService.swift\n│   │   ├── StorageService.swift\n│   │   ├── BluetoothService.swift\n│   │   ├── QRCodeService.swift\n│   │   ├── OfflineTokenService.swift\n│   │   ├── TransactionService.swift\n│   │   ├── BackupService.swift\n│   │   ├── DataSyncService.swift\n│   │   ├── BackgroundTaskManager.swift\n│   │   ├── BackgroundServiceCoordinator.swift\n│   │   ├── BackgroundBluetoothService.swift\n│   │   ├── PushNotificationService.swift\n│   │   └── QRBluetoothIntegrationService.swift\n│   ├── Models/                     # Data Models\n│   │   ├── OfflineToken.swift\n│   │   ├── QRCodeData.swift\n│   │   ├── BluetoothModels.swift\n│   │   └── BackgroundServiceTypes.swift\n│   ├── Utils/                      # Utility Classes\n│   │   ├── Constants.swift\n│   │   ├── Logger.swift\n│   │   ├── ErrorHandler.swift\n│   │   └── ThemeManager.swift\n│   ├── Configuration/              # App Configuration\n│   │   ├── BuildConfiguration.swift\n│   │   ├── Debug.xcconfig\n│   │   └── Release.xcconfig\n│   ├── Models/                     # Core Data Models\n│   │   └── WalletDataModel.xcdatamodeld/\n│   ├── ContentView.swift           # Main App View\n│   ├── offline_blockchain_wallet_iosApp.swift  # App Entry Point\n│   ├── Info.plist                  # App Configuration\n│   └── LaunchScreen.storyboard     # Launch Screen\n├── Tests/                          # Unit Tests\n│   └── OfflineBlockchainWalletTests/\n│       ├── CryptographyServiceTests.swift\n│       ├── StorageServiceTests.swift\n│       ├── BluetoothServiceTests.swift\n│       ├── QRCodeServiceTests.swift\n│       ├── OfflineTokenServiceTests.swift\n│       ├── TransactionServiceTests.swift\n│       ├── NetworkServiceTests.swift\n│       └── WalletViewModelTests.swift\n├── Scripts/                        # Build Scripts\n│   ├── build.sh\n│   ├── fix_build_issues.sh\n│   ├── fix_dependencies_safely.sh\n│   └── device-testing-automation.sh\n├── Package.swift                   # Swift Package Manager\n├── README.md\n├── XCODE_SETUP.md\n├── TROUBLESHOOTING.md\n└── configure_project.sh\n```\n\n## 🏗️ Architecture\n\n### MVVM Pattern\n\nThe app follows the Model-View-ViewModel (MVVM) architectural pattern:\n\n```swift\n// Model\nstruct OfflineToken: Codable {\n    let id: String\n    let amount: Double\n    let signature: String\n    let expiresAt: Date\n    var isSpent: Bool\n}\n\n// ViewModel\nclass WalletViewModel: ObservableObject {\n    @Published var balance: Double = 0.0\n    @Published var tokens: [OfflineToken] = []\n    \n    private let walletService: WalletService\n    \n    func refreshBalance() {\n        // Update balance from service\n    }\n}\n\n// View\nstruct WalletView: View {\n    @StateObject private var viewModel = WalletViewModel()\n    \n    var body: some View {\n        VStack {\n            Text(\"Balance: \\(viewModel.balance)\")\n            // UI components\n        }\n        .onAppear {\n            viewModel.refreshBalance()\n        }\n    }\n}\n```\n\n### Service Layer Architecture\n\n```mermaid\ngraph TD\n    A[Views] --> B[ViewModels]\n    B --> C[Services]\n    C --> D[Core Data]\n    C --> E[Keychain]\n    C --> F[Network]\n    C --> G[Bluetooth]\n    C --> H[Cryptography]\n```\n\n## 🔧 Core Services\n\n### Network Service\n\nHandles all API communication with the backend.\n\n```swift\nclass NetworkService: NetworkServiceProtocol {\n    private let baseURL: String\n    private let session: URLSession\n    \n    func authenticateUser(email: String, password: String) async throws -> AuthResponse {\n        let request = AuthRequest(email: email, password: password)\n        return try await post(\"/auth/login\", body: request)\n    }\n    \n    func getWalletBalance(walletId: String) async throws -> WalletBalanceResponse {\n        return try await get(\"/wallet/balance\")\n    }\n    \n    func purchaseTokens(amount: Double) async throws -> TokenPurchaseResponse {\n        let request = TokenPurchaseRequest(amount: amount)\n        return try await post(\"/wallet/purchase\", body: request)\n    }\n}\n```\n\n### Cryptography Service\n\nProvides cryptographic operations for secure transactions.\n\n```swift\nclass CryptographyService {\n    func generateKeyPair() throws -> (privateKey: SecKey, publicKey: SecKey) {\n        let attributes: [String: Any] = [\n            kSecAttrKeyType as String: kSecAttrKeyTypeECSECPrimeRandom,\n            kSecAttrKeySizeInBits as String: 256\n        ]\n        \n        var publicKey, privateKey: SecKey?\n        let status = SecKeyGeneratePair(attributes as CFDictionary, &publicKey, &privateKey)\n        \n        guard status == errSecSuccess,\n              let pubKey = publicKey,\n              let privKey = privateKey else {\n            throw CryptographyError.keyGenerationFailed\n        }\n        \n        return (privKey, pubKey)\n    }\n    \n    func signData(_ data: Data, with privateKey: SecKey) throws -> Data {\n        var error: Unmanaged<CFError>?\n        guard let signature = SecKeyCreateSignature(\n            privateKey,\n            .ecdsaSignatureMessageX962SHA256,\n            data as CFData,\n            &error\n        ) else {\n            throw CryptographyError.signingFailed\n        }\n        \n        return signature as Data\n    }\n    \n    func verifySignature(_ signature: Data, for data: Data, with publicKey: SecKey) -> Bool {\n        var error: Unmanaged<CFError>?\n        return SecKeyVerifySignature(\n            publicKey,\n            .ecdsaSignatureMessageX962SHA256,\n            data as CFData,\n            signature as CFData,\n            &error\n        )\n    }\n}\n```\n\n### Storage Service\n\nManages local data persistence using Core Data and Keychain.\n\n```swift\nclass StorageService: StorageServiceProtocol {\n    private lazy var persistentContainer: NSPersistentContainer = {\n        let container = NSPersistentContainer(name: \"WalletDataModel\")\n        container.loadPersistentStores { _, error in\n            if let error = error {\n                Logger.shared.error(\"Core Data error: \\(error)\")\n            }\n        }\n        return container\n    }()\n    \n    func saveOfflineTokens(_ tokens: [OfflineToken]) async throws {\n        let context = persistentContainer.viewContext\n        \n        for token in tokens {\n            let entity = OfflineTokenEntity(context: context)\n            entity.id = token.id\n            entity.amount = token.amount\n            entity.signature = token.signature\n            entity.expiresAt = token.expiresAt\n            entity.isSpent = token.isSpent\n        }\n        \n        try context.save()\n    }\n    \n    func loadOfflineTokens() async throws -> [OfflineToken] {\n        let context = persistentContainer.viewContext\n        let request: NSFetchRequest<OfflineTokenEntity> = OfflineTokenEntity.fetchRequest()\n        \n        let entities = try context.fetch(request)\n        return entities.map { entity in\n            OfflineToken(\n                id: entity.id ?? \"\",\n                amount: entity.amount,\n                signature: entity.signature ?? \"\",\n                expiresAt: entity.expiresAt ?? Date(),\n                isSpent: entity.isSpent\n            )\n        }\n    }\n    \n    func storePrivateKey(_ key: SecKey, for identifier: String) throws {\n        let keychain = Keychain(service: \"com.wallet.app\")\n        let keyData = try keyToData(key)\n        try keychain.set(keyData, key: \"privateKey_\\(identifier)\")\n    }\n}\n```\n\n### Bluetooth Service\n\nEnables peer-to-peer communication via Bluetooth LE.\n\n```swift\nclass BluetoothService: NSObject, BluetoothServiceProtocol {\n    private var centralManager: CBCentralManager!\n    private var peripheralManager: CBPeripheralManager!\n    private let serviceUUID = CBUUID(string: \"12345678-1234-1234-1234-123456789ABC\")\n    \n    func startAdvertising(walletInfo: WalletInfo) throws {\n        let advertisementData: [String: Any] = [\n            CBAdvertisementDataServiceUUIDsKey: [serviceUUID],\n            CBAdvertisementDataLocalNameKey: \"Wallet_\\(walletInfo.walletId.prefix(8))\"\n        ]\n        \n        peripheralManager.startAdvertising(advertisementData)\n        Logger.shared.info(\"Started advertising wallet: \\(walletInfo.walletId)\")\n    }\n    \n    func scanForDevices() async throws -> [BluetoothDevice] {\n        return await withCheckedThrowingContinuation { continuation in\n            discoveredDevices = []\n            scanContinuation = continuation\n            \n            centralManager.scanForPeripherals(\n                withServices: [serviceUUID],\n                options: [CBCentralManagerScanOptionAllowDuplicatesKey: false]\n            )\n            \n            // Timeout after 10 seconds\n            DispatchQueue.main.asyncAfter(deadline: .now() + 10) {\n                self.centralManager.stopScan()\n                continuation.resume(returning: self.discoveredDevices)\n            }\n        }\n    }\n    \n    func sendData(_ data: Data, to connection: BluetoothConnection) async throws {\n        guard let peripheral = connection.peripheral,\n              let characteristic = connection.characteristic else {\n            throw BluetoothError.invalidConnection\n        }\n        \n        peripheral.writeValue(\n            data,\n            for: characteristic,\n            type: .withResponse\n        )\n    }\n}\n```\n\n### QR Code Service\n\nHandles QR code generation and scanning for payments.\n\n```swift\nclass QRCodeService {\n    func generateQRCode(for paymentRequest: QRCodePaymentRequest) throws -> UIImage {\n        let encoder = JSONEncoder()\n        let jsonData = try encoder.encode(paymentRequest)\n        \n        guard let filter = CIFilter(name: \"CIQRCodeGenerator\") else {\n            throw QRCodeError.generationFailed\n        }\n        \n        filter.setValue(jsonData, forKey: \"inputMessage\")\n        filter.setValue(\"M\", forKey: \"inputCorrectionLevel\")\n        \n        guard let outputImage = filter.outputImage else {\n            throw QRCodeError.generationFailed\n        }\n        \n        let transform = CGAffineTransform(scaleX: 10, y: 10)\n        let scaledImage = outputImage.transformed(by: transform)\n        \n        let context = CIContext()\n        guard let cgImage = context.createCGImage(scaledImage, from: scaledImage.extent) else {\n            throw QRCodeError.generationFailed\n        }\n        \n        return UIImage(cgImage: cgImage)\n    }\n    \n    func parseQRCode(_ string: String) throws -> QRCodePaymentRequest {\n        guard let data = string.data(using: .utf8) else {\n            throw QRCodeError.invalidFormat\n        }\n        \n        let decoder = JSONDecoder()\n        return try decoder.decode(QRCodePaymentRequest.self, from: data)\n    }\n    \n    func validateQRCode(_ paymentRequest: QRCodePaymentRequest) -> QRCodeValidationResult {\n        var errors: [String] = []\n        \n        // Validate timestamp (not older than 5 minutes)\n        if Date().timeIntervalSince(paymentRequest.timestamp) > 300 {\n            errors.append(\"QR code has expired\")\n        }\n        \n        // Validate amount\n        if paymentRequest.amount <= 0 {\n            errors.append(\"Invalid payment amount\")\n        }\n        \n        // Validate wallet ID format\n        if paymentRequest.walletId.isEmpty {\n            errors.append(\"Invalid wallet ID\")\n        }\n        \n        return QRCodeValidationResult(\n            isValid: errors.isEmpty,\n            errors: errors\n        )\n    }\n}\n```\n\n### Offline Token Service\n\nManages offline token operations and validation.\n\n```swift\nclass OfflineTokenService: OfflineTokenServiceProtocol {\n    private let cryptographyService: CryptographyService\n    private let storageService: StorageService\n    \n    func validateToken(_ token: OfflineToken) -> Bool {\n        // Check if token is expired\n        if token.expiresAt < Date() {\n            return false\n        }\n        \n        // Check if token is already spent\n        if token.isSpent {\n            return false\n        }\n        \n        // Verify signature\n        return verifyTokenSignature(token)\n    }\n    \n    func divideToken(_ token: OfflineToken, amount: Double) throws -> TokenDivisionResult {\n        guard validateToken(token) else {\n            throw TokenError.invalidToken\n        }\n        \n        guard amount > 0 && amount < token.amount else {\n            throw TokenError.invalidAmount\n        }\n        \n        let paymentToken = OfflineToken(\n            id: UUID().uuidString,\n            amount: amount,\n            signature: try generateTokenSignature(amount: amount),\n            expiresAt: token.expiresAt,\n            isSpent: false\n        )\n        \n        let changeAmount = token.amount - amount\n        let changeToken = OfflineToken(\n            id: UUID().uuidString,\n            amount: changeAmount,\n            signature: try generateTokenSignature(amount: changeAmount),\n            expiresAt: token.expiresAt,\n            isSpent: false\n        )\n        \n        // Mark original token as spent\n        try markTokenAsSpent(token.id)\n        \n        return TokenDivisionResult(\n            paymentToken: paymentToken,\n            changeToken: changeToken\n        )\n    }\n    \n    func calculateOfflineBalance() async throws -> Double {\n        let tokens = try await storageService.loadOfflineTokens()\n        return tokens\n            .filter { !$0.isSpent && $0.expiresAt > Date() }\n            .reduce(0) { $0 + $1.amount }\n    }\n}\n```\n\n## 📱 User Interface\n\n### Main Wallet View\n\n```swift\nstruct WalletView: View {\n    @StateObject private var walletViewModel: WalletViewModel\n    @State private var showingSettings = false\n    @State private var showingTransactionView = false\n    \n    var body: some View {\n        NavigationView {\n            ScrollView {\n                VStack(spacing: 20) {\n                    balanceSection\n                    quickActionsSection\n                    recentTransactionsSection\n                }\n                .padding()\n            }\n            .navigationTitle(\"Wallet\")\n            .navigationBarTitleDisplayMode(.large)\n            .toolbar {\n                ToolbarItem(placement: .navigationBarTrailing) {\n                    Button(action: {\n                        showingSettings = true\n                    }) {\n                        Image(systemName: \"gear\")\n                    }\n                }\n            }\n            .sheet(isPresented: $showingSettings) {\n                SettingsView()\n            }\n            .sheet(isPresented: $showingTransactionView) {\n                TransactionView()\n            }\n        }\n    }\n    \n    private var balanceSection: some View {\n        VStack(spacing: 16) {\n            HStack {\n                VStack(alignment: .leading) {\n                    Text(\"Total Balance\")\n                        .font(.headline)\n                        .foregroundColor(.secondary)\n                    \n                    HStack(alignment: .firstTextBaseline, spacing: 4) {\n                        Text(\"$\")\n                            .font(.title2)\n                            .foregroundColor(.primary)\n                        Text(String(format: \"%.2f\", walletViewModel.totalBalance))\n                            .font(.system(size: 36, weight: .bold, design: .rounded))\n                            .foregroundColor(.primary)\n                            .contentTransition(.numericText())\n                    }\n                }\n                Spacer()\n                \n                VStack {\n                    Image(systemName: walletViewModel.isOnline ? \"wifi\" : \"wifi.slash\")\n                        .foregroundColor(walletViewModel.isOnline ? .green : .orange)\n                    Text(walletViewModel.isOnline ? \"Online\" : \"Offline\")\n                        .font(.caption)\n                        .foregroundColor(.secondary)\n                }\n            }\n            \n            HStack(spacing: 20) {\n                BalanceCard(\n                    title: \"Blockchain\",\n                    amount: walletViewModel.blockchainBalance,\n                    color: .blue\n                )\n                \n                BalanceCard(\n                    title: \"Offline\",\n                    amount: walletViewModel.offlineBalance,\n                    color: .green\n                )\n            }\n        }\n        .padding()\n        .background(Color.adaptiveCardBackground)\n        .cornerRadius(16)\n    }\n    \n    private var quickActionsSection: some View {\n        HStack(spacing: 16) {\n            QuickActionButton(\n                title: \"Send\",\n                icon: \"arrow.up.circle.fill\",\n                color: .red\n            ) {\n                showingTransactionView = true\n            }\n            \n            QuickActionButton(\n                title: \"Receive\",\n                icon: \"arrow.down.circle.fill\",\n                color: .green\n            ) {\n                // Show receive view\n            }\n            \n            QuickActionButton(\n                title: \"Purchase\",\n                icon: \"plus.circle.fill\",\n                color: .blue\n            ) {\n                // Show purchase view\n            }\n            \n            QuickActionButton(\n                title: \"Scan\",\n                icon: \"qrcode.viewfinder\",\n                color: .purple\n            ) {\n                // Show QR scanner\n            }\n        }\n    }\n}\n```\n\n### Transaction View\n\n```swift\nstruct TransactionView: View {\n    @StateObject private var transactionViewModel = TransactionViewModel()\n    @Environment(\\.dismiss) private var dismiss\n    @State private var selectedTab = 0\n    \n    var body: some View {\n        NavigationView {\n            VStack {\n                Picker(\"Transaction Type\", selection: $selectedTab) {\n                    Text(\"Send\").tag(0)\n                    Text(\"Request\").tag(1)\n                }\n                .pickerStyle(SegmentedPickerStyle())\n                .padding()\n                \n                TabView(selection: $selectedTab) {\n                    SendTransactionView(viewModel: transactionViewModel)\n                        .tag(0)\n                    \n                    RequestTransactionView(viewModel: transactionViewModel)\n                        .tag(1)\n                }\n                .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))\n            }\n            .navigationTitle(\"Transactions\")\n            .toolbar {\n                ToolbarItem(placement: .topBarLeading) {\n                    Button(\"Close\") {\n                        dismiss()\n                    }\n                }\n            }\n        }\n    }\n}\n\nstruct SendTransactionView: View {\n    @ObservedObject var viewModel: TransactionViewModel\n    @State private var showingQRScanner = false\n    @State private var showingBluetoothDevices = false\n    \n    var body: some View {\n        VStack(spacing: 24) {\n            // Amount input\n            VStack(alignment: .leading, spacing: 8) {\n                Text(\"Amount\")\n                    .font(.headline)\n                \n                HStack {\n                    Text(\"$\")\n                        .font(.title2)\n                        .foregroundColor(.secondary)\n                    \n                    TextField(\"0.00\", text: $transactionViewModel.amount)\n                        .textFieldStyle(RoundedBorderTextFieldStyle())\n                        .keyboardType(.decimalPad)\n                        .font(.system(size: 24, weight: .semibold, design: .rounded))\n                        .multilineTextAlignment(.center)\n                }\n            }\n            \n            // Recipient input\n            VStack(alignment: .leading, spacing: 8) {\n                Text(\"Recipient\")\n                    .font(.headline)\n                \n                HStack {\n                    TextField(\"Wallet address or scan QR\", text: $viewModel.recipientAddress)\n                        .textFieldStyle(RoundedBorderTextFieldStyle())\n                    \n                    Button(action: {\n                        showingQRScanner = true\n                    }) {\n                        Image(systemName: \"qrcode.viewfinder\")\n                            .font(.title2)\n                    }\n                }\n            }\n            \n            // Send methods\n            VStack(alignment: .leading, spacing: 12) {\n                Text(\"Send Method\")\n                    .font(.headline)\n                \n                HStack(spacing: 16) {\n                    SendMethodButton(\n                        title: \"QR Code\",\n                        icon: \"qrcode\",\n                        isSelected: viewModel.selectedMethod == .qrCode\n                    ) {\n                        viewModel.selectedMethod = .qrCode\n                    }\n                    \n                    SendMethodButton(\n                        title: \"Bluetooth\",\n                        icon: \"bluetooth\",\n                        isSelected: viewModel.selectedMethod == .bluetooth\n                    ) {\n                        viewModel.selectedMethod = .bluetooth\n                        showingBluetoothDevices = true\n                    }\n                    \n                    SendMethodButton(\n                        title: \"Online\",\n                        icon: \"wifi\",\n                        isSelected: viewModel.selectedMethod == .online\n                    ) {\n                        viewModel.selectedMethod = .online\n                    }\n                }\n            }\n            \n            Spacer()\n            \n            // Send button\n            Button(action: {\n                Task {\n                    await viewModel.sendTransaction()\n                }\n            }) {\n                HStack {\n                    if viewModel.isProcessing {\n                        ProgressView()\n                            .progressViewStyle(CircularProgressViewStyle(tint: .white))\n                            .scaleEffect(0.8)\n                    }\n                    \n                    Text(viewModel.isProcessing ? \"Processing...\" : \"Send Payment\")\n                        .font(.headline)\n                        .foregroundColor(.white)\n                }\n                .frame(maxWidth: .infinity)\n                .padding()\n                .background(viewModel.canSend ? Color.blue : Color.gray)\n                .cornerRadius(12)\n            }\n            .disabled(!viewModel.canSend || viewModel.isProcessing)\n        }\n        .padding()\n        .sheet(isPresented: $showingQRScanner) {\n            QRScannerView { result in\n                viewModel.recipientAddress = result\n                showingQRScanner = false\n            }\n        }\n        .sheet(isPresented: $showingBluetoothDevices) {\n            BluetoothDeviceListView(viewModel: viewModel)\n        }\n    }\n}\n```\n\n## 🔒 Security Implementation\n\n### Biometric Authentication\n\n```swift\nimport LocalAuthentication\n\nclass BiometricAuthService {\n    func authenticateUser() async throws -> Bool {\n        let context = LAContext()\n        var error: NSError?\n        \n        guard context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error) else {\n            throw BiometricError.notAvailable\n        }\n        \n        let reason = \"Authenticate to access your wallet\"\n        \n        return try await withCheckedThrowingContinuation { continuation in\n            context.evaluatePolicy(\n                .deviceOwnerAuthenticationWithBiometrics,\n                localizedReason: reason\n            ) { success, error in\n                if let error = error {\n                    continuation.resume(throwing: error)\n                } else {\n                    continuation.resume(returning: success)\n                }\n            }\n        }\n    }\n}\n```\n\n### Keychain Storage\n\n```swift\nimport KeychainAccess\n\nclass SecureStorage {\n    private let keychain = Keychain(service: \"com.wallet.app\")\n        .accessibility(.whenUnlockedThisDeviceOnly)\n    \n    func storePrivateKey(_ key: Data, for identifier: String) throws {\n        try keychain.set(key, key: \"privateKey_\\(identifier)\")\n    }\n    \n    func retrievePrivateKey(for identifier: String) throws -> Data? {\n        return try keychain.getData(\"privateKey_\\(identifier)\")\n    }\n    \n    func storeAuthToken(_ token: String) throws {\n        try keychain.set(token, key: \"authToken\")\n    }\n    \n    func retrieveAuthToken() throws -> String? {\n        return try keychain.get(\"authToken\")\n    }\n    \n    func clearAll() throws {\n        try keychain.removeAll()\n    }\n}\n```\n\n## 🧪 Testing\n\n### Unit Tests\n\n```swift\nimport XCTest\n@testable import offline_blockchain_wallet_ios\n\nclass CryptographyServiceTests: XCTestCase {\n    var cryptographyService: CryptographyService!\n    \n    override func setUp() {\n        super.setUp()\n        cryptographyService = CryptographyService()\n    }\n    \n    func testKeyGeneration() throws {\n        let (privateKey, publicKey) = try cryptographyService.generateKeyPair()\n        \n        XCTAssertNotNil(privateKey)\n        XCTAssertNotNil(publicKey)\n    }\n    \n    func testSignatureCreationAndVerification() throws {\n        let (privateKey, publicKey) = try cryptographyService.generateKeyPair()\n        let testData = \"Hello, World!\".data(using: .utf8)!\n        \n        let signature = try cryptographyService.signData(testData, with: privateKey)\n        let isValid = cryptographyService.verifySignature(signature, for: testData, with: publicKey)\n        \n        XCTAssertTrue(isValid)\n    }\n    \n    func testInvalidSignatureRejection() throws {\n        let (privateKey1, _) = try cryptographyService.generateKeyPair()\n        let (_, publicKey2) = try cryptographyService.generateKeyPair()\n        let testData = \"Hello, World!\".data(using: .utf8)!\n        \n        let signature = try cryptographyService.signData(testData, with: privateKey1)\n        let isValid = cryptographyService.verifySignature(signature, for: testData, with: publicKey2)\n        \n        XCTAssertFalse(isValid)\n    }\n}\n```\n\n### Integration Tests\n\n```swift\nclass NetworkServiceIntegrationTests: XCTestCase {\n    var networkService: NetworkService!\n    \n    override func setUp() {\n        super.setUp()\n        let config = URLSessionConfiguration.default\n        config.protocolClasses = [MockURLProtocol.self]\n        let session = URLSession(configuration: config)\n        networkService = NetworkService(session: session)\n    }\n    \n    func testUserAuthentication() async throws {\n        // Mock successful authentication response\n        MockURLProtocol.mockResponse = AuthResponse(\n            user: User(id: \"123\", username: \"test\", email: \"test@example.com\"),\n            tokens: Tokens(accessToken: \"token123\", refreshToken: \"refresh123\")\n        )\n        \n        let response = try await networkService.authenticateUser(\n            email: \"test@example.com\",\n            password: \"password123\"\n        )\n        \n        XCTAssertEqual(response.user.email, \"test@example.com\")\n        XCTAssertFalse(response.tokens.accessToken.isEmpty)\n    }\n}\n```\n\n### UI Tests\n\n```swift\nclass WalletUITests: XCTestCase {\n    var app: XCUIApplication!\n    \n    override func setUp() {\n        super.setUp()\n        app = XCUIApplication()\n        app.launch()\n    }\n    \n    func testWalletBalanceDisplay() {\n        let balanceLabel = app.staticTexts[\"Total Balance\"]\n        XCTAssertTrue(balanceLabel.exists)\n        \n        let balanceAmount = app.staticTexts.matching(NSPredicate(format: \"label CONTAINS '$'\")).firstMatch\n        XCTAssertTrue(balanceAmount.exists)\n    }\n    \n    func testSendTransactionFlow() {\n        app.buttons[\"Send\"].tap()\n        \n        let amountField = app.textFields[\"0.00\"]\n        amountField.tap()\n        amountField.typeText(\"25.00\")\n        \n        let recipientField = app.textFields[\"Wallet address or scan QR\"]\n        recipientField.tap()\n        recipientField.typeText(\"0x742d35Cc6634C0532925a3b8D404d3aAB451e9c\")\n        \n        app.buttons[\"Send Payment\"].tap()\n        \n        // Verify transaction confirmation\n        let confirmationAlert = app.alerts[\"Confirm Transaction\"]\n        XCTAssertTrue(confirmationAlert.waitForExistence(timeout: 5))\n    }\n}\n```\n\n## 🔧 Configuration\n\n### Build Configurations\n\n#### Debug Configuration (Debug.xcconfig)\n```\nAPI_BASE_URL = https://dev-api.wallet.com\nLOG_LEVEL = DEBUG\nENABLE_MOCK_SERVICES = YES\nBLUETOOTH_TIMEOUT = 30\nQR_CODE_TIMEOUT = 300\nTOKEN_EXPIRY_DAYS = 30\n```\n\n#### Release Configuration (Release.xcconfig)\n```\nAPI_BASE_URL = https://api.wallet.com\nLOG_LEVEL = ERROR\nENABLE_MOCK_SERVICES = NO\nBLUETOOTH_TIMEOUT = 10\nQR_CODE_TIMEOUT = 60\nTOKEN_EXPIRY_DAYS = 7\n```\n\n### Info.plist Configuration\n\n```xml\n<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n<plist version=\"1.0\">\n<dict>\n    <key>CFBundleDisplayName</key>\n    <string>Offline Wallet</string>\n    <key>CFBundleIdentifier</key>\n    <string>com.company.offline-blockchain-wallet</string>\n    <key>CFBundleVersion</key>\n    <string>1.0.0</string>\n    \n    <!-- Camera permission for QR scanning -->\n    <key>NSCameraUsageDescription</key>\n    <string>This app needs camera access to scan QR codes for payments</string>\n    \n    <!-- Bluetooth permission -->\n    <key>NSBluetoothAlwaysUsageDescription</key>\n    <string>This app uses Bluetooth to enable offline peer-to-peer transactions</string>\n    <key>NSBluetoothPeripheralUsageDescription</key>\n    <string>This app uses Bluetooth to enable offline peer-to-peer transactions</string>\n    \n    <!-- Face ID permission -->\n    <key>NSFaceIDUsageDescription</key>\n    <string>Use Face ID to authenticate and access your wallet</string>\n    \n    <!-- Background modes -->\n    <key>UIBackgroundModes</key>\n    <array>\n        <string>bluetooth-central</string>\n        <string>bluetooth-peripheral</string>\n        <string>background-processing</string>\n    </array>\n    \n    <!-- App Transport Security -->\n    <key>NSAppTransportSecurity</key>\n    <dict>\n        <key>NSAllowsArbitraryLoads</key>\n        <false/>\n        <key>NSExceptionDomains</key>\n        <dict>\n            <key>api.wallet.com</key>\n            <dict>\n                <key>NSExceptionRequiresForwardSecrecy</key>\n                <false/>\n                <key>NSExceptionMinimumTLSVersion</key>\n                <string>TLSv1.2</string>\n            </dict>\n        </dict>\n    </dict>\n</dict>\n</plist>\n```\n\n## 🚀 Deployment\n\n### App Store Deployment\n\n#### 1. Prepare for Release\n\n```bash\n# Update version and build number\n./scripts/update-version.sh 1.0.0\n\n# Switch to release configuration\nxed . # Open in Xcode\n# Product -> Scheme -> Edit Scheme -> Run -> Build Configuration -> Release\n```\n\n#### 2. Archive and Export\n\n```bash\n# Archive for App Store\nxcodebuild archive \\\n  -scheme offline-blockchain-wallet-ios \\\n  -configuration Release \\\n  -destination generic/platform=iOS \\\n  -archivePath build/offline-blockchain-wallet-ios.xcarchive\n\n# Export for App Store\nxcodebuild -exportArchive \\\n  -archivePath build/offline-blockchain-wallet-ios.xcarchive \\\n  -exportPath build/AppStore \\\n  -exportOptionsPlist ExportOptions.plist\n```\n\n#### 3. Upload to App Store Connect\n\n```bash\n# Upload using Transporter or altool\nxcrun altool --upload-app \\\n  -f build/AppStore/offline-blockchain-wallet-ios.ipa \\\n  -u your-apple-id@example.com \\\n  -p @keychain:AC_PASSWORD\n```\n\n### TestFlight Distribution\n\n```bash\n# Export for TestFlight\nxcodebuild -exportArchive \\\n  -archivePath build/offline-blockchain-wallet-ios.xcarchive \\\n  -exportPath build/TestFlight \\\n  -exportOptionsPlist TestFlightExportOptions.plist\n\n# Upload to TestFlight\nxcrun altool --upload-app \\\n  -f build/TestFlight/offline-blockchain-wallet-ios.ipa \\\n  -u your-apple-id@example.com \\\n  -p @keychain:AC_PASSWORD\n```\n\n## 🔍 Troubleshooting\n\n### Common Build Issues\n\n#### Dependency Resolution\n```bash\n# Clear Swift Package Manager cache\nrm -rf ~/Library/Caches/org.swift.swiftpm\nrm -rf .build\n\n# Reset packages\nswift package reset\nswift package resolve\n```\n\n#### Code Signing Issues\n```bash\n# Check provisioning profiles\nsecurity find-identity -v -p codesigning\n\n# Clean derived data\nrm -rf ~/Library/Developer/Xcode/DerivedData\n\n# Fix signing issues\n./scripts/fix_build_issues.sh\n```\n\n### Runtime Issues\n\n#### Bluetooth Not Working\n```swift\n// Check Bluetooth permissions\nif CBCentralManager.authorization != .allowedAlways {\n    // Request permissions in Info.plist\n}\n\n// Reset Bluetooth state\nbluetoothService.reset()\n```\n\n#### Keychain Access Issues\n```swift\n// Clear keychain data\nlet keychain = Keychain(service: \"com.wallet.app\")\ntry keychain.removeAll()\n\n// Check keychain accessibility\nlet accessibility = keychain.accessibility\nprint(\"Keychain accessibility: \\(accessibility)\")\n```\n\n#### Core Data Issues\n```swift\n// Reset Core Data store\nlet storeURL = persistentContainer.persistentStoreDescriptions.first?.url\nif let url = storeURL {\n    try persistentContainer.persistentStoreCoordinator.destroyPersistentStore(\n        at: url,\n        ofType: NSSQLiteStoreType,\n        options: nil\n    )\n}\n```\n\n### Performance Issues\n\n#### Memory Leaks\n```swift\n// Use weak references in closures\nservice.performOperation { [weak self] result in\n    self?.handleResult(result)\n}\n\n// Properly dispose of observers\ndeinit {\n    NotificationCenter.default.removeObserver(self)\n}\n```\n\n#### Battery Usage\n```swift\n// Optimize Bluetooth scanning\nfunc optimizeBluetooth() {\n    // Scan only when needed\n    centralManager.scanForPeripherals(\n        withServices: [serviceUUID],\n        options: [CBCentralManagerScanOptionAllowDuplicatesKey: false]\n    )\n    \n    // Stop scanning after timeout\n    DispatchQueue.main.asyncAfter(deadline: .now() + 10) {\n        self.centralManager.stopScan()\n    }\n}\n```\n\n## 📚 Additional Resources\n\n### Documentation\n- [Apple Developer Documentation](https://developer.apple.com/documentation/)\n- [SwiftUI Documentation](https://developer.apple.com/documentation/swiftui)\n- [Core Data Documentation](https://developer.apple.com/documentation/coredata)\n- [CryptoKit Documentation](https://developer.apple.com/documentation/cryptokit)\n\n### Sample Code\n- [Bluetooth LE Implementation](./BLUETOOTH_IMPLEMENTATION_SUMMARY.md)\n- [Cryptography Service](./CRYPTOGRAPHY_IMPLEMENTATION_SUMMARY.md)\n- [Background Services](./BACKGROUND_SERVICES_IMPLEMENTATION.md)\n- [Transaction Service](./TRANSACTION_SERVICE_IMPLEMENTATION.md)\n\n### Testing Resources\n- [Device Testing Matrix](./DEVICE_TESTING_MATRIX.md)\n- [Xcode Setup Guide](./XCODE_SETUP.md)\n- [Troubleshooting Guide](./TROUBLESHOOTING.md)\n\n---\n\n*This documentation is maintained by the iOS development team and updated with each release. For questions or contributions, please contact the development team.*\n"
+# iOS Mobile App Documentation
+
+## 🎯 Overview
+
+The Offline Blockchain Wallet iOS app is a SwiftUI-based mobile application that enables secure cryptocurrency transactions both online and offline. It supports peer-to-peer transactions via Bluetooth and QR codes, with automatic synchronization when network connectivity is restored.
+
+## 📱 Features
+
+- **Secure Wallet Management**: Create and manage cryptocurrency wallets
+- **Offline Transactions**: Send and receive payments without internet connectivity
+- **Bluetooth Communication**: Peer-to-peer transactions via Bluetooth LE
+- **QR Code Integration**: Generate and scan QR codes for payments
+- **Biometric Authentication**: Touch ID / Face ID support
+- **Background Services**: Automatic synchronization and token management
+- **Dark Mode Support**: Adaptive UI for light and dark themes
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Xcode 15.0+
+- iOS 15.0+
+- macOS 12.0+ (for development)
+- Apple Developer Account (for device testing)
+
+### Installation
+
+```bash
+# Clone the repository
+git clone <repository-url>
+cd ios/offline-blockchain-wallet-ios
+
+# Configure the project
+./configure_project.sh
+
+# Resolve Swift Package dependencies
+swift package resolve
+
+# Open in Xcode
+open offline-blockchain-wallet-ios.xcodeproj
+```
+
+### Build and Run
+
+```bash
+# Build for simulator
+xcodebuild -scheme offline-blockchain-wallet-ios \\
+  -destination 'platform=iOS Simulator,name=iPhone 15,OS=latest' \\
+  build
+
+# Run tests
+swift test
+
+# Build for device
+./scripts/build.sh --device
+```
+
+## 📁 Project Structure
+
+```
+ios/offline-blockchain-wallet-ios/
+├── offline-blockchain-wallet-ios/
+│   ├── Views/                      # SwiftUI Views
+│   │   ├── WalletView.swift
+│   │   ├── TransactionView.swift
+│   │   ├── QRScannerView.swift
+│   │   ├── QRCodeDisplayView.swift
+│   │   └── SettingsView.swift
+│   ├── ViewModels/                 # MVVM ViewModels
+│   │   ├── WalletViewModel.swift
+│   │   └── TransactionViewModel.swift
+│   ├── Services/                   # Business Logic Services
+│   │   ├── NetworkService.swift
+│   │   ├── CryptographyService.swift
+│   │   ├── StorageService.swift
+│   │   ├── BluetoothService.swift
+│   │   ├── QRCodeService.swift
+│   │   ├── OfflineTokenService.swift
+│   │   ├── TransactionService.swift
+│   │   ├── BackupService.swift
+│   │   ├── DataSyncService.swift
+│   │   ├── BackgroundTaskManager.swift
+│   │   ├── BackgroundServiceCoordinator.swift
+│   │   ├── BackgroundBluetoothService.swift
+│   │   ├── PushNotificationService.swift
+│   │   └── QRBluetoothIntegrationService.swift
+│   ├── Models/                     # Data Models
+│   │   ├── OfflineToken.swift
+│   │   ├── QRCodeData.swift
+│   │   ├── BluetoothModels.swift
+│   │   └── BackgroundServiceTypes.swift
+│   ├── Utils/                      # Utility Classes
+│   │   ├── Constants.swift
+│   │   ├── Logger.swift
+│   │   ├── ErrorHandler.swift
+│   │   └── ThemeManager.swift
+│   ├── Configuration/              # App Configuration
+│   │   ├── BuildConfiguration.swift
+│   │   ├── Debug.xcconfig
+│   │   └── Release.xcconfig
+│   ├── Models/                     # Core Data Models
+│   │   └── WalletDataModel.xcdatamodeld/
+│   ├── ContentView.swift           # Main App View
+│   ├── offline_blockchain_wallet_iosApp.swift  # App Entry Point
+│   ├── Info.plist                  # App Configuration
+│   └── LaunchScreen.storyboard     # Launch Screen
+├── Tests/                          # Unit Tests
+│   └── OfflineBlockchainWalletTests/
+│       ├── CryptographyServiceTests.swift
+│       ├── StorageServiceTests.swift
+│       ├── BluetoothServiceTests.swift
+│       ├── QRCodeServiceTests.swift
+│       ├── OfflineTokenServiceTests.swift
+│       ├── TransactionServiceTests.swift
+│       ├── NetworkServiceTests.swift
+│       └── WalletViewModelTests.swift
+├── Scripts/                        # Build Scripts
+│   ├── build.sh
+│   ├── fix_build_issues.sh
+│   ├── fix_dependencies_safely.sh
+│   └── device-testing-automation.sh
+├── Package.swift                   # Swift Package Manager
+├── README.md
+├── XCODE_SETUP.md
+├── TROUBLESHOOTING.md
+└── configure_project.sh
+```
+
+## 🏗️ Architecture
+
+### MVVM Pattern
+
+The app follows the Model-View-ViewModel (MVVM) architectural pattern:
+
+```swift
+// Model
+struct OfflineToken: Codable {
+    let id: String
+    let amount: Double
+    let signature: String
+    let expiresAt: Date
+    var isSpent: Bool
+}
+
+// ViewModel
+class WalletViewModel: ObservableObject {
+    @Published var balance: Double = 0.0
+    @Published var tokens: [OfflineToken] = []
+    
+    private let walletService: WalletService
+    
+    func refreshBalance() {
+        // Update balance from service
+    }
+}
+
+// View
+struct WalletView: View {
+    @StateObject private var viewModel = WalletViewModel()
+    
+    var body: some View {
+        VStack {
+            Text(\"Balance: \\(viewModel.balance)\")
+            // UI components
+        }
+        .onAppear {
+            viewModel.refreshBalance()
+        }
+    }
+}
+```
+
+### Service Layer Architecture
+
+```mermaid
+graph TD
+    A[Views] --> B[ViewModels]
+    B --> C[Services]
+    C --> D[Core Data]
+    C --> E[Keychain]
+    C --> F[Network]
+    C --> G[Bluetooth]
+    C --> H[Cryptography]
+```
+
+## 🔧 Core Services
+
+### Network Service
+
+Handles all API communication with the backend.
+
+```swift
+class NetworkService: NetworkServiceProtocol {
+    private let baseURL: String
+    private let session: URLSession
+    
+    func authenticateUser(email: String, password: String) async throws -> AuthResponse {
+        let request = AuthRequest(email: email, password: password)
+        return try await post(\"/auth/login\", body: request)
+    }
+    
+    func getWalletBalance(walletId: String) async throws -> WalletBalanceResponse {
+        return try await get(\"/wallet/balance\")
+    }
+    
+    func purchaseTokens(amount: Double) async throws -> TokenPurchaseResponse {
+        let request = TokenPurchaseRequest(amount: amount)
+        return try await post(\"/wallet/purchase\", body: request)
+    }
+}
+```
+
+### Cryptography Service
+
+Provides cryptographic operations for secure transactions.
+
+```swift
+class CryptographyService {
+    func generateKeyPair() throws -> (privateKey: SecKey, publicKey: SecKey) {
+        let attributes: [String: Any] = [
+            kSecAttrKeyType as String: kSecAttrKeyTypeECSECPrimeRandom,
+            kSecAttrKeySizeInBits as String: 256
+        ]
+        
+        var publicKey, privateKey: SecKey?
+        let status = SecKeyGeneratePair(attributes as CFDictionary, &publicKey, &privateKey)
+        
+        guard status == errSecSuccess,
+              let pubKey = publicKey,
+              let privKey = privateKey else {
+            throw CryptographyError.keyGenerationFailed
+        }
+        
+        return (privKey, pubKey)
+    }
+    
+    func signData(_ data: Data, with privateKey: SecKey) throws -> Data {
+        var error: Unmanaged<CFError>?
+        guard let signature = SecKeyCreateSignature(
+            privateKey,
+            .ecdsaSignatureMessageX962SHA256,
+            data as CFData,
+            &error
+        ) else {
+            throw CryptographyError.signingFailed
+        }
+        
+        return signature as Data
+    }
+    
+    func verifySignature(_ signature: Data, for data: Data, with publicKey: SecKey) -> Bool {
+        var error: Unmanaged<CFError>?
+        return SecKeyVerifySignature(
+            publicKey,
+            .ecdsaSignatureMessageX962SHA256,
+            data as CFData,
+            signature as CFData,
+            &error
+        )
+    }
+}
+```
+
+### Storage Service
+
+Manages local data persistence using Core Data and Keychain.
+
+```swift
+class StorageService: StorageServiceProtocol {
+    private lazy var persistentContainer: NSPersistentContainer = {
+        let container = NSPersistentContainer(name: \"WalletDataModel\")
+        container.loadPersistentStores { _, error in
+            if let error = error {
+                Logger.shared.error(\"Core Data error: \\(error)\")
+            }
+        }
+        return container
+    }()
+    
+    func saveOfflineTokens(_ tokens: [OfflineToken]) async throws {
+        let context = persistentContainer.viewContext
+        
+        for token in tokens {
+            let entity = OfflineTokenEntity(context: context)
+            entity.id = token.id
+            entity.amount = token.amount
+            entity.signature = token.signature
+            entity.expiresAt = token.expiresAt
+            entity.isSpent = token.isSpent
+        }
+        
+        try context.save()
+    }
+    
+    func loadOfflineTokens() async throws -> [OfflineToken] {
+        let context = persistentContainer.viewContext
+        let request: NSFetchRequest<OfflineTokenEntity> = OfflineTokenEntity.fetchRequest()
+        
+        let entities = try context.fetch(request)
+        return entities.map { entity in
+            OfflineToken(
+                id: entity.id ?? \"\",
+                amount: entity.amount,
+                signature: entity.signature ?? \"\",
+                expiresAt: entity.expiresAt ?? Date(),
+                isSpent: entity.isSpent
+            )
+        }
+    }
+    
+    func storePrivateKey(_ key: SecKey, for identifier: String) throws {
+        let keychain = Keychain(service: \"com.wallet.app\")
+        let keyData = try keyToData(key)
+        try keychain.set(keyData, key: \"privateKey_\\(identifier)\")
+    }
+}
+```
+
+### Bluetooth Service
+
+Enables peer-to-peer communication via Bluetooth LE.
+
+```swift
+class BluetoothService: NSObject, BluetoothServiceProtocol {
+    private var centralManager: CBCentralManager!
+    private var peripheralManager: CBPeripheralManager!
+    private let serviceUUID = CBUUID(string: \"12345678-1234-1234-1234-123456789ABC\")
+    
+    func startAdvertising(walletInfo: WalletInfo) throws {
+        let advertisementData: [String: Any] = [
+            CBAdvertisementDataServiceUUIDsKey: [serviceUUID],
+            CBAdvertisementDataLocalNameKey: \"Wallet_\\(walletInfo.walletId.prefix(8))\"
+        ]
+        
+        peripheralManager.startAdvertising(advertisementData)
+        Logger.shared.info(\"Started advertising wallet: \\(walletInfo.walletId)\")
+    }
+    
+    func scanForDevices() async throws -> [BluetoothDevice] {
+        return await withCheckedThrowingContinuation { continuation in
+            discoveredDevices = []
+            scanContinuation = continuation
+            
+            centralManager.scanForPeripherals(
+                withServices: [serviceUUID],
+                options: [CBCentralManagerScanOptionAllowDuplicatesKey: false]
+            )
+            
+            // Timeout after 10 seconds
+            DispatchQueue.main.asyncAfter(deadline: .now() + 10) {
+                self.centralManager.stopScan()
+                continuation.resume(returning: self.discoveredDevices)
+            }
+        }
+    }
+    
+    func sendData(_ data: Data, to connection: BluetoothConnection) async throws {
+        guard let peripheral = connection.peripheral,
+              let characteristic = connection.characteristic else {
+            throw BluetoothError.invalidConnection
+        }
+        
+        peripheral.writeValue(
+            data,
+            for: characteristic,
+            type: .withResponse
+        )
+    }
+}
+```
+
+### QR Code Service
+
+Handles QR code generation and scanning for payments.
+
+```swift
+class QRCodeService {
+    func generateQRCode(for paymentRequest: QRCodePaymentRequest) throws -> UIImage {
+        let encoder = JSONEncoder()
+        let jsonData = try encoder.encode(paymentRequest)
+        
+        guard let filter = CIFilter(name: \"CIQRCodeGenerator\") else {
+            throw QRCodeError.generationFailed
+        }
+        
+        filter.setValue(jsonData, forKey: \"inputMessage\")
+        filter.setValue(\"M\", forKey: \"inputCorrectionLevel\")
+        
+        guard let outputImage = filter.outputImage else {
+            throw QRCodeError.generationFailed
+        }
+        
+        let transform = CGAffineTransform(scaleX: 10, y: 10)
+        let scaledImage = outputImage.transformed(by: transform)
+        
+        let context = CIContext()
+        guard let cgImage = context.createCGImage(scaledImage, from: scaledImage.extent) else {
+            throw QRCodeError.generationFailed
+        }
+        
+        return UIImage(cgImage: cgImage)
+    }
+    
+    func parseQRCode(_ string: String) throws -> QRCodePaymentRequest {
+        guard let data = string.data(using: .utf8) else {
+            throw QRCodeError.invalidFormat
+        }
+        
+        let decoder = JSONDecoder()
+        return try decoder.decode(QRCodePaymentRequest.self, from: data)
+    }
+    
+    func validateQRCode(_ paymentRequest: QRCodePaymentRequest) -> QRCodeValidationResult {
+        var errors: [String] = []
+        
+        // Validate timestamp (not older than 5 minutes)
+        if Date().timeIntervalSince(paymentRequest.timestamp) > 300 {
+            errors.append(\"QR code has expired\")
+        }
+        
+        // Validate amount
+        if paymentRequest.amount <= 0 {
+            errors.append(\"Invalid payment amount\")
+        }
+        
+        // Validate wallet ID format
+        if paymentRequest.walletId.isEmpty {
+            errors.append(\"Invalid wallet ID\")
+        }
+        
+        return QRCodeValidationResult(
+            isValid: errors.isEmpty,
+            errors: errors
+        )
+    }
+}
+```
+
+### Offline Token Service
+
+Manages offline token operations and validation.
+
+```swift
+class OfflineTokenService: OfflineTokenServiceProtocol {
+    private let cryptographyService: CryptographyService
+    private let storageService: StorageService
+    
+    func validateToken(_ token: OfflineToken) -> Bool {
+        // Check if token is expired
+        if token.expiresAt < Date() {
+            return false
+        }
+        
+        // Check if token is already spent
+        if token.isSpent {
+            return false
+        }
+        
+        // Verify signature
+        return verifyTokenSignature(token)
+    }
+    
+    func divideToken(_ token: OfflineToken, amount: Double) throws -> TokenDivisionResult {
+        guard validateToken(token) else {
+            throw TokenError.invalidToken
+        }
+        
+        guard amount > 0 && amount < token.amount else {
+            throw TokenError.invalidAmount
+        }
+        
+        let paymentToken = OfflineToken(
+            id: UUID().uuidString,
+            amount: amount,
+            signature: try generateTokenSignature(amount: amount),
+            expiresAt: token.expiresAt,
+            isSpent: false
+        )
+        
+        let changeAmount = token.amount - amount
+        let changeToken = OfflineToken(
+            id: UUID().uuidString,
+            amount: changeAmount,
+            signature: try generateTokenSignature(amount: changeAmount),
+            expiresAt: token.expiresAt,
+            isSpent: false
+        )
+        
+        // Mark original token as spent
+        try markTokenAsSpent(token.id)
+        
+        return TokenDivisionResult(
+            paymentToken: paymentToken,
+            changeToken: changeToken
+        )
+    }
+    
+    func calculateOfflineBalance() async throws -> Double {
+        let tokens = try await storageService.loadOfflineTokens()
+        return tokens
+            .filter { !$0.isSpent && $0.expiresAt > Date() }
+            .reduce(0) { $0 + $1.amount }
+    }
+}
+```
+
+## 📱 User Interface
+
+### Main Wallet View
+
+```swift
+struct WalletView: View {
+    @StateObject private var walletViewModel: WalletViewModel
+    @State private var showingSettings = false
+    @State private var showingTransactionView = false
+    
+    var body: some View {
+        NavigationView {
+            ScrollView {
+                VStack(spacing: 20) {
+                    balanceSection
+                    quickActionsSection
+                    recentTransactionsSection
+                }
+                .padding()
+            }
+            .navigationTitle(\"Wallet\")
+            .navigationBarTitleDisplayMode(.large)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: {
+                        showingSettings = true
+                    }) {
+                        Image(systemName: \"gear\")
+                    }
+                }
+            }
+            .sheet(isPresented: $showingSettings) {
+                SettingsView()
+            }
+            .sheet(isPresented: $showingTransactionView) {
+                TransactionView()
+            }
+        }
+    }
+    
+    private var balanceSection: some View {
+        VStack(spacing: 16) {
+            HStack {
+                VStack(alignment: .leading) {
+                    Text(\"Total Balance\")
+                        .font(.headline)
+                        .foregroundColor(.secondary)
+                    
+                    HStack(alignment: .firstTextBaseline, spacing: 4) {
+                        Text(\"$\")
+                            .font(.title2)
+                            .foregroundColor(.primary)
+                        Text(String(format: \"%.2f\", walletViewModel.totalBalance))
+                            .font(.system(size: 36, weight: .bold, design: .rounded))
+                            .foregroundColor(.primary)
+                            .contentTransition(.numericText())
+                    }
+                }
+                Spacer()
+                
+                VStack {
+                    Image(systemName: walletViewModel.isOnline ? \"wifi\" : \"wifi.slash\")
+                        .foregroundColor(walletViewModel.isOnline ? .green : .orange)
+                    Text(walletViewModel.isOnline ? \"Online\" : \"Offline\")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+            
+            HStack(spacing: 20) {
+                BalanceCard(
+                    title: \"Blockchain\",
+                    amount: walletViewModel.blockchainBalance,
+                    color: .blue
+                )
+                
+                BalanceCard(
+                    title: \"Offline\",
+                    amount: walletViewModel.offlineBalance,
+                    color: .green
+                )
+            }
+        }
+        .padding()
+        .background(Color.adaptiveCardBackground)
+        .cornerRadius(16)
+    }
+    
+    private var quickActionsSection: some View {
+        HStack(spacing: 16) {
+            QuickActionButton(
+                title: \"Send\",
+                icon: \"arrow.up.circle.fill\",
+                color: .red
+            ) {
+                showingTransactionView = true
+            }
+            
+            QuickActionButton(
+                title: \"Receive\",
+                icon: \"arrow.down.circle.fill\",
+                color: .green
+            ) {
+                // Show receive view
+            }
+            
+            QuickActionButton(
+                title: \"Purchase\",
+                icon: \"plus.circle.fill\",
+                color: .blue
+            ) {
+                // Show purchase view
+            }
+            
+            QuickActionButton(
+                title: \"Scan\",
+                icon: \"qrcode.viewfinder\",
+                color: .purple
+            ) {
+                // Show QR scanner
+            }
+        }
+    }
+}
+```
+
+### Transaction View
+
+```swift
+struct TransactionView: View {
+    @StateObject private var transactionViewModel = TransactionViewModel()
+    @Environment(\\.dismiss) private var dismiss
+    @State private var selectedTab = 0
+    
+    var body: some View {
+        NavigationView {
+            VStack {
+                Picker(\"Transaction Type\", selection: $selectedTab) {
+                    Text(\"Send\").tag(0)
+                    Text(\"Request\").tag(1)
+                }
+                .pickerStyle(SegmentedPickerStyle())
+                .padding()
+                
+                TabView(selection: $selectedTab) {
+                    SendTransactionView(viewModel: transactionViewModel)
+                        .tag(0)
+                    
+                    RequestTransactionView(viewModel: transactionViewModel)
+                        .tag(1)
+                }
+                .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
+            }
+            .navigationTitle(\"Transactions\")
+            .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button(\"Close\") {
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+}
+
+struct SendTransactionView: View {
+    @ObservedObject var viewModel: TransactionViewModel
+    @State private var showingQRScanner = false
+    @State private var showingBluetoothDevices = false
+    
+    var body: some View {
+        VStack(spacing: 24) {
+            // Amount input
+            VStack(alignment: .leading, spacing: 8) {
+                Text(\"Amount\")
+                    .font(.headline)
+                
+                HStack {
+                    Text(\"$\")
+                        .font(.title2)
+                        .foregroundColor(.secondary)
+                    
+                    TextField(\"0.00\", text: $transactionViewModel.amount)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .keyboardType(.decimalPad)
+                        .font(.system(size: 24, weight: .semibold, design: .rounded))
+                        .multilineTextAlignment(.center)
+                }
+            }
+            
+            // Recipient input
+            VStack(alignment: .leading, spacing: 8) {
+                Text(\"Recipient\")
+                    .font(.headline)
+                
+                HStack {
+                    TextField(\"Wallet address or scan QR\", text: $viewModel.recipientAddress)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                    
+                    Button(action: {
+                        showingQRScanner = true
+                    }) {
+                        Image(systemName: \"qrcode.viewfinder\")
+                            .font(.title2)
+                    }
+                }
+            }
+            
+            // Send methods
+            VStack(alignment: .leading, spacing: 12) {
+                Text(\"Send Method\")
+                    .font(.headline)
+                
+                HStack(spacing: 16) {
+                    SendMethodButton(
+                        title: \"QR Code\",
+                        icon: \"qrcode\",
+                        isSelected: viewModel.selectedMethod == .qrCode
+                    ) {
+                        viewModel.selectedMethod = .qrCode
+                    }
+                    
+                    SendMethodButton(
+                        title: \"Bluetooth\",
+                        icon: \"bluetooth\",
+                        isSelected: viewModel.selectedMethod == .bluetooth
+                    ) {
+                        viewModel.selectedMethod = .bluetooth
+                        showingBluetoothDevices = true
+                    }
+                    
+                    SendMethodButton(
+                        title: \"Online\",
+                        icon: \"wifi\",
+                        isSelected: viewModel.selectedMethod == .online
+                    ) {
+                        viewModel.selectedMethod = .online
+                    }
+                }
+            }
+            
+            Spacer()
+            
+            // Send button
+            Button(action: {
+                Task {
+                    await viewModel.sendTransaction()
+                }
+            }) {
+                HStack {
+                    if viewModel.isProcessing {
+                        ProgressView()
+                            .progressViewStyle(CircularProgressViewStyle(tint: .white))
+                            .scaleEffect(0.8)
+                    }
+                    
+                    Text(viewModel.isProcessing ? \"Processing...\" : \"Send Payment\")
+                        .font(.headline)
+                        .foregroundColor(.white)
+                }
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(viewModel.canSend ? Color.blue : Color.gray)
+                .cornerRadius(12)
+            }
+            .disabled(!viewModel.canSend || viewModel.isProcessing)
+        }
+        .padding()
+        .sheet(isPresented: $showingQRScanner) {
+            QRScannerView { result in
+                viewModel.recipientAddress = result
+                showingQRScanner = false
+            }
+        }
+        .sheet(isPresented: $showingBluetoothDevices) {
+            BluetoothDeviceListView(viewModel: viewModel)
+        }
+    }
+}
+```
+
+## 🔒 Security Implementation
+
+### Biometric Authentication
+
+```swift
+import LocalAuthentication
+
+class BiometricAuthService {
+    func authenticateUser() async throws -> Bool {
+        let context = LAContext()
+        var error: NSError?
+        
+        guard context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error) else {
+            throw BiometricError.notAvailable
+        }
+        
+        let reason = \"Authenticate to access your wallet\"
+        
+        return try await withCheckedThrowingContinuation { continuation in
+            context.evaluatePolicy(
+                .deviceOwnerAuthenticationWithBiometrics,
+                localizedReason: reason
+            ) { success, error in
+                if let error = error {
+                    continuation.resume(throwing: error)
+                } else {
+                    continuation.resume(returning: success)
+                }
+            }
+        }
+    }
+}
+```
+
+### Keychain Storage
+
+```swift
+import KeychainAccess
+
+class SecureStorage {
+    private let keychain = Keychain(service: \"com.wallet.app\")
+        .accessibility(.whenUnlockedThisDeviceOnly)
+    
+    func storePrivateKey(_ key: Data, for identifier: String) throws {
+        try keychain.set(key, key: \"privateKey_\\(identifier)\")
+    }
+    
+    func retrievePrivateKey(for identifier: String) throws -> Data? {
+        return try keychain.getData(\"privateKey_\\(identifier)\")
+    }
+    
+    func storeAuthToken(_ token: String) throws {
+        try keychain.set(token, key: \"authToken\")
+    }
+    
+    func retrieveAuthToken() throws -> String? {
+        return try keychain.get(\"authToken\")
+    }
+    
+    func clearAll() throws {
+        try keychain.removeAll()
+    }
+}
+```
+
+## 🧪 Testing
+
+### Unit Tests
+
+```swift
+import XCTest
+@testable import offline_blockchain_wallet_ios
+
+class CryptographyServiceTests: XCTestCase {
+    var cryptographyService: CryptographyService!
+    
+    override func setUp() {
+        super.setUp()
+        cryptographyService = CryptographyService()
+    }
+    
+    func testKeyGeneration() throws {
+        let (privateKey, publicKey) = try cryptographyService.generateKeyPair()
+        
+        XCTAssertNotNil(privateKey)
+        XCTAssertNotNil(publicKey)
+    }
+    
+    func testSignatureCreationAndVerification() throws {
+        let (privateKey, publicKey) = try cryptographyService.generateKeyPair()
+        let testData = \"Hello, World!\".data(using: .utf8)!
+        
+        let signature = try cryptographyService.signData(testData, with: privateKey)
+        let isValid = cryptographyService.verifySignature(signature, for: testData, with: publicKey)
+        
+        XCTAssertTrue(isValid)
+    }
+    
+    func testInvalidSignatureRejection() throws {
+        let (privateKey1, _) = try cryptographyService.generateKeyPair()
+        let (_, publicKey2) = try cryptographyService.generateKeyPair()
+        let testData = \"Hello, World!\".data(using: .utf8)!
+        
+        let signature = try cryptographyService.signData(testData, with: privateKey1)
+        let isValid = cryptographyService.verifySignature(signature, for: testData, with: publicKey2)
+        
+        XCTAssertFalse(isValid)
+    }
+}
+```
+
+### Integration Tests
+
+```swift
+class NetworkServiceIntegrationTests: XCTestCase {
+    var networkService: NetworkService!
+    
+    override func setUp() {
+        super.setUp()
+        let config = URLSessionConfiguration.default
+        config.protocolClasses = [MockURLProtocol.self]
+        let session = URLSession(configuration: config)
+        networkService = NetworkService(session: session)
+    }
+    
+    func testUserAuthentication() async throws {
+        // Mock successful authentication response
+        MockURLProtocol.mockResponse = AuthResponse(
+            user: User(id: \"123\", username: \"test\", email: \"test@example.com\"),
+            tokens: Tokens(accessToken: \"token123\", refreshToken: \"refresh123\")
+        )
+        
+        let response = try await networkService.authenticateUser(
+            email: \"test@example.com\",
+            password: \"password123\"
+        )
+        
+        XCTAssertEqual(response.user.email, \"test@example.com\")
+        XCTAssertFalse(response.tokens.accessToken.isEmpty)
+    }
+}
+```
+
+### UI Tests
+
+```swift
+class WalletUITests: XCTestCase {
+    var app: XCUIApplication!
+    
+    override func setUp() {
+        super.setUp()
+        app = XCUIApplication()
+        app.launch()
+    }
+    
+    func testWalletBalanceDisplay() {
+        let balanceLabel = app.staticTexts[\"Total Balance\"]
+        XCTAssertTrue(balanceLabel.exists)
+        
+        let balanceAmount = app.staticTexts.matching(NSPredicate(format: \"label CONTAINS '$'\")).firstMatch
+        XCTAssertTrue(balanceAmount.exists)
+    }
+    
+    func testSendTransactionFlow() {
+        app.buttons[\"Send\"].tap()
+        
+        let amountField = app.textFields[\"0.00\"]
+        amountField.tap()
+        amountField.typeText(\"25.00\")
+        
+        let recipientField = app.textFields[\"Wallet address or scan QR\"]
+        recipientField.tap()
+        recipientField.typeText(\"0x742d35Cc6634C0532925a3b8D404d3aAB451e9c\")
+        
+        app.buttons[\"Send Payment\"].tap()
+        
+        // Verify transaction confirmation
+        let confirmationAlert = app.alerts[\"Confirm Transaction\"]
+        XCTAssertTrue(confirmationAlert.waitForExistence(timeout: 5))
+    }
+}
+```
+
+## 🔧 Configuration
+
+### Build Configurations
+
+#### Debug Configuration (Debug.xcconfig)
+```
+API_BASE_URL = https://dev-api.wallet.com
+LOG_LEVEL = DEBUG
+ENABLE_MOCK_SERVICES = YES
+BLUETOOTH_TIMEOUT = 30
+QR_CODE_TIMEOUT = 300
+TOKEN_EXPIRY_DAYS = 30
+```
+
+#### Release Configuration (Release.xcconfig)
+```
+API_BASE_URL = https://api.wallet.com
+LOG_LEVEL = ERROR
+ENABLE_MOCK_SERVICES = NO
+BLUETOOTH_TIMEOUT = 10
+QR_CODE_TIMEOUT = 60
+TOKEN_EXPIRY_DAYS = 7
+```
+
+### Info.plist Configuration
+
+```xml
+<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">
+<plist version=\"1.0\">
+<dict>
+    <key>CFBundleDisplayName</key>
+    <string>Offline Wallet</string>
+    <key>CFBundleIdentifier</key>
+    <string>com.company.offline-blockchain-wallet</string>
+    <key>CFBundleVersion</key>
+    <string>1.0.0</string>
+    
+    <!-- Camera permission for QR scanning -->
+    <key>NSCameraUsageDescription</key>
+    <string>This app needs camera access to scan QR codes for payments</string>
+    
+    <!-- Bluetooth permission -->
+    <key>NSBluetoothAlwaysUsageDescription</key>
+    <string>This app uses Bluetooth to enable offline peer-to-peer transactions</string>
+    <key>NSBluetoothPeripheralUsageDescription</key>
+    <string>This app uses Bluetooth to enable offline peer-to-peer transactions</string>
+    
+    <!-- Face ID permission -->
+    <key>NSFaceIDUsageDescription</key>
+    <string>Use Face ID to authenticate and access your wallet</string>
+    
+    <!-- Background modes -->
+    <key>UIBackgroundModes</key>
+    <array>
+        <string>bluetooth-central</string>
+        <string>bluetooth-peripheral</string>
+        <string>background-processing</string>
+    </array>
+    
+    <!-- App Transport Security -->
+    <key>NSAppTransportSecurity</key>
+    <dict>
+        <key>NSAllowsArbitraryLoads</key>
+        <false/>
+        <key>NSExceptionDomains</key>
+        <dict>
+            <key>api.wallet.com</key>
+            <dict>
+                <key>NSExceptionRequiresForwardSecrecy</key>
+                <false/>
+                <key>NSExceptionMinimumTLSVersion</key>
+                <string>TLSv1.2</string>
+            </dict>
+        </dict>
+    </dict>
+</dict>
+</plist>
+```
+
+## 🚀 Deployment
+
+### App Store Deployment
+
+#### 1. Prepare for Release
+
+```bash
+# Update version and build number
+./scripts/update-version.sh 1.0.0
+
+# Switch to release configuration
+xed . # Open in Xcode
+# Product -> Scheme -> Edit Scheme -> Run -> Build Configuration -> Release
+```
+
+#### 2. Archive and Export
+
+```bash
+# Archive for App Store
+xcodebuild archive \\
+  -scheme offline-blockchain-wallet-ios \\
+  -configuration Release \\
+  -destination generic/platform=iOS \\
+  -archivePath build/offline-blockchain-wallet-ios.xcarchive
+
+# Export for App Store
+xcodebuild -exportArchive \\
+  -archivePath build/offline-blockchain-wallet-ios.xcarchive \\
+  -exportPath build/AppStore \\
+  -exportOptionsPlist ExportOptions.plist
+```
+
+#### 3. Upload to App Store Connect
+
+```bash
+# Upload using Transporter or altool
+xcrun altool --upload-app \\
+  -f build/AppStore/offline-blockchain-wallet-ios.ipa \\
+  -u your-apple-id@example.com \\
+  -p @keychain:AC_PASSWORD
+```
+
+### TestFlight Distribution
+
+```bash
+# Export for TestFlight
+xcodebuild -exportArchive \\
+  -archivePath build/offline-blockchain-wallet-ios.xcarchive \\
+  -exportPath build/TestFlight \\
+  -exportOptionsPlist TestFlightExportOptions.plist
+
+# Upload to TestFlight
+xcrun altool --upload-app \\
+  -f build/TestFlight/offline-blockchain-wallet-ios.ipa \\
+  -u your-apple-id@example.com \\
+  -p @keychain:AC_PASSWORD
+```
+
+## 🔍 Troubleshooting
+
+### Common Build Issues
+
+#### Dependency Resolution
+```bash
+# Clear Swift Package Manager cache
+rm -rf ~/Library/Caches/org.swift.swiftpm
+rm -rf .build
+
+# Reset packages
+swift package reset
+swift package resolve
+```
+
+#### Code Signing Issues
+```bash
+# Check provisioning profiles
+security find-identity -v -p codesigning
+
+# Clean derived data
+rm -rf ~/Library/Developer/Xcode/DerivedData
+
+# Fix signing issues
+./scripts/fix_build_issues.sh
+```
+
+### Runtime Issues
+
+#### Bluetooth Not Working
+```swift
+// Check Bluetooth permissions
+if CBCentralManager.authorization != .allowedAlways {
+    // Request permissions in Info.plist
+}
+
+// Reset Bluetooth state
+bluetoothService.reset()
+```
+
+#### Keychain Access Issues
+```swift
+// Clear keychain data
+let keychain = Keychain(service: \"com.wallet.app\")
+try keychain.removeAll()
+
+// Check keychain accessibility
+let accessibility = keychain.accessibility
+print(\"Keychain accessibility: \\(accessibility)\")
+```
+
+#### Core Data Issues
+```swift
+// Reset Core Data store
+let storeURL = persistentContainer.persistentStoreDescriptions.first?.url
+if let url = storeURL {
+    try persistentContainer.persistentStoreCoordinator.destroyPersistentStore(
+        at: url,
+        ofType: NSSQLiteStoreType,
+        options: nil
+    )
+}
+```
+
+### Performance Issues
+
+#### Memory Leaks
+```swift
+// Use weak references in closures
+service.performOperation { [weak self] result in
+    self?.handleResult(result)
+}
+
+// Properly dispose of observers
+deinit {
+    NotificationCenter.default.removeObserver(self)
+}
+```
+
+#### Battery Usage
+```swift
+// Optimize Bluetooth scanning
+func optimizeBluetooth() {
+    // Scan only when needed
+    centralManager.scanForPeripherals(
+        withServices: [serviceUUID],
+        options: [CBCentralManagerScanOptionAllowDuplicatesKey: false]
+    )
+    
+    // Stop scanning after timeout
+    DispatchQueue.main.asyncAfter(deadline: .now() + 10) {
+        self.centralManager.stopScan()
+    }
+}
+```
+
+## 📚 Additional Resources
+
+### Documentation
+- [Apple Developer Documentation](https://developer.apple.com/documentation/)
+- [SwiftUI Documentation](https://developer.apple.com/documentation/swiftui)
+- [Core Data Documentation](https://developer.apple.com/documentation/coredata)
+- [CryptoKit Documentation](https://developer.apple.com/documentation/cryptokit)
+
+### Sample Code
+- [Bluetooth LE Implementation](./BLUETOOTH_IMPLEMENTATION_SUMMARY.md)
+- [Cryptography Service](./CRYPTOGRAPHY_IMPLEMENTATION_SUMMARY.md)
+- [Background Services](./BACKGROUND_SERVICES_IMPLEMENTATION.md)
+- [Transaction Service](./TRANSACTION_SERVICE_IMPLEMENTATION.md)
+
+### Testing Resources
+- [Device Testing Matrix](./DEVICE_TESTING_MATRIX.md)
+- [Xcode Setup Guide](./XCODE_SETUP.md)
+- [Troubleshooting Guide](./TROUBLESHOOTING.md)
+
+---
+
+*This documentation is maintained by the iOS development team and updated with each release. For questions or contributions, please contact the development team.*
+"

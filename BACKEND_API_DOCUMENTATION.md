@@ -1,1 +1,1063 @@
-# Backend API Documentation\n\n## 🎯 Overview\n\nThe Offline Blockchain Wallet Backend API is a RESTful service built with Node.js, TypeScript, and Express.js. It provides secure endpoints for wallet management, token operations, and blockchain integration.\n\n## 🚀 Quick Start\n\n### Prerequisites\n- Node.js 18+\n- PostgreSQL 13+\n- Redis 6+\n- npm or yarn\n\n### Installation\n\n```bash\n# Clone repository\ngit clone <repository-url>\ncd backend\n\n# Install dependencies\nnpm install\n\n# Setup environment\ncp .env.example .env\n# Edit .env with your configuration\n\n# Setup database\nnpm run db:setup\nnpm run db:migrate\nnpm run db:seed\n\n# Start development server\nnpm run dev\n```\n\n### Environment Configuration\n\n```bash\n# Server Configuration\nPORT=3000\nNODE_ENV=development\nAPI_VERSION=v1\n\n# Database Configuration\nDB_HOST=localhost\nDB_PORT=5432\nDB_NAME=wallet_db\nDB_USER=wallet_user\nDB_PASSWORD=your_secure_password\nDB_SSL=false\n\n# JWT Configuration\nJWT_SECRET=your_jwt_secret_key_here\nJWT_EXPIRES_IN=24h\nJWT_REFRESH_EXPIRES_IN=7d\n\n# Blockchain Configuration\nETH_RPC_URL=https://mainnet.infura.io/v3/your_infura_key\nETH_PRIVATE_KEY=0x...\nCONTRACT_ADDRESS=0x...\nGAS_LIMIT=21000\nGAS_PRICE=20000000000\n\n# Redis Configuration\nREDIS_URL=redis://localhost:6379\nREDIS_PASSWORD=\nREDIS_DB=0\n\n# Security Configuration\nRATE_LIMIT_WINDOW_MS=900000  # 15 minutes\nRATE_LIMIT_MAX_REQUESTS=100\nBCRYPT_SALT_ROUNDS=12\n\n# Monitoring Configuration\nLOG_LEVEL=info\nMETRICS_ENABLED=true\nHEALTH_CHECK_INTERVAL=30000\n```\n\n## 📁 Project Structure\n\n```\nbackend/\n├── src/\n│   ├── controllers/          # Request handlers\n│   │   ├── authController.ts\n│   │   ├── walletController.ts\n│   │   ├── tokenController.ts\n│   │   └── transactionController.ts\n│   ├── services/            # Business logic\n│   │   ├── authService.ts\n│   │   ├── walletService.ts\n│   │   ├── tokenService.ts\n│   │   ├── blockchainService.ts\n│   │   └── offlineTokenManager.ts\n│   ├── database/            # Database layer\n│   │   ├── connection.ts\n│   │   ├── dao/            # Data Access Objects\n│   │   └── migrations/     # Database migrations\n│   ├── middleware/          # Express middleware\n│   │   ├── auth.ts\n│   │   ├── rateLimiter.ts\n│   │   ├── errorHandler.ts\n│   │   └── validation.ts\n│   ├── routes/              # API routes\n│   │   ├── auth.ts\n│   │   ├── wallet.ts\n│   │   ├── tokens.ts\n│   │   └── transactions.ts\n│   ├── models/              # Data models\n│   │   ├── User.ts\n│   │   ├── Wallet.ts\n│   │   ├── Transaction.ts\n│   │   └── OfflineToken.ts\n│   ├── utils/               # Utility functions\n│   │   ├── logger.ts\n│   │   ├── crypto.ts\n│   │   └── validation.ts\n│   ├── config/              # Configuration\n│   │   ├── config.ts\n│   │   ├── database.ts\n│   │   └── swagger.ts\n│   └── types/               # TypeScript types\n│       └── index.ts\n├── contracts/               # Smart contracts\n│   ├── OfflineWalletToken.sol\n│   └── migrations/\n├── scripts/                 # Deployment scripts\n│   ├── deploy.ts\n│   ├── migrate.ts\n│   └── seed.ts\n├── test/                    # Test files\n│   ├── unit/\n│   ├── integration/\n│   └── e2e/\n└── infrastructure/          # Infrastructure configs\n    ├── docker/\n    ├── nginx/\n    └── monitoring/\n```\n\n## 🔐 Authentication\n\n### JWT Token Authentication\n\nAll protected endpoints require a valid JWT token in the Authorization header:\n\n```\nAuthorization: Bearer <jwt-token>\n```\n\n### Token Lifecycle\n\n1. **Login**: Get access token and refresh token\n2. **Access**: Use access token for API calls\n3. **Refresh**: Use refresh token to get new access token\n4. **Logout**: Invalidate both tokens\n\n### Authentication Flow\n\n```mermaid\nsequenceDiagram\n    participant Client\n    participant API\n    participant DB\n    \n    Client->>API: POST /auth/login\n    API->>DB: Validate credentials\n    DB-->>API: User data\n    API-->>Client: Access token + Refresh token\n    \n    Client->>API: GET /wallet/balance (with token)\n    API->>API: Validate token\n    API-->>Client: Wallet data\n    \n    Client->>API: POST /auth/refresh\n    API->>API: Validate refresh token\n    API-->>Client: New access token\n```\n\n## 📚 API Endpoints\n\n### Authentication Endpoints\n\n#### POST /api/auth/register\n\nRegister a new user account.\n\n**Request Body:**\n```json\n{\n  \"username\": \"john_doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"SecurePass123!\",\n  \"confirmPassword\": \"SecurePass123!\"\n}\n```\n\n**Response (201):**\n```json\n{\n  \"success\": true,\n  \"data\": {\n    \"user\": {\n      \"id\": \"550e8400-e29b-41d4-a716-446655440000\",\n      \"username\": \"john_doe\",\n      \"email\": \"john@example.com\",\n      \"walletAddress\": \"0x742d35Cc6634C0532925a3b8D404d3aAB451e9c\",\n      \"createdAt\": \"2024-01-15T10:30:00Z\"\n    },\n    \"tokens\": {\n      \"accessToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n      \"refreshToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n      \"expiresIn\": \"24h\"\n    }\n  }\n}\n```\n\n**Validation Rules:**\n- Username: 3-30 characters, alphanumeric and underscore only\n- Email: Valid email format\n- Password: Minimum 8 characters, must contain uppercase, lowercase, number, and special character\n\n#### POST /api/auth/login\n\nAuthenticate user and receive access tokens.\n\n**Request Body:**\n```json\n{\n  \"email\": \"john@example.com\",\n  \"password\": \"SecurePass123!\"\n}\n```\n\n**Response (200):**\n```json\n{\n  \"success\": true,\n  \"data\": {\n    \"user\": {\n      \"id\": \"550e8400-e29b-41d4-a716-446655440000\",\n      \"username\": \"john_doe\",\n      \"email\": \"john@example.com\",\n      \"walletAddress\": \"0x742d35Cc6634C0532925a3b8D404d3aAB451e9c\"\n    },\n    \"tokens\": {\n      \"accessToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n      \"refreshToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n      \"expiresIn\": \"24h\"\n    }\n  }\n}\n```\n\n#### POST /api/auth/refresh\n\nRefresh access token using refresh token.\n\n**Request Body:**\n```json\n{\n  \"refreshToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"\n}\n```\n\n**Response (200):**\n```json\n{\n  \"success\": true,\n  \"data\": {\n    \"accessToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n    \"expiresIn\": \"24h\"\n  }\n}\n```\n\n#### POST /api/auth/logout\n\nInvalidate user tokens.\n\n**Headers:**\n```\nAuthorization: Bearer <access-token>\n```\n\n**Request Body:**\n```json\n{\n  \"refreshToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"\n}\n```\n\n**Response (200):**\n```json\n{\n  \"success\": true,\n  \"message\": \"Successfully logged out\"\n}\n```\n\n### Wallet Endpoints\n\n#### GET /api/wallet/balance\n\nGet current wallet balance and token information.\n\n**Headers:**\n```\nAuthorization: Bearer <access-token>\n```\n\n**Response (200):**\n```json\n{\n  \"success\": true,\n  \"data\": {\n    \"walletAddress\": \"0x742d35Cc6634C0532925a3b8D404d3aAB451e9c\",\n    \"balances\": {\n      \"blockchain\": {\n        \"amount\": 1250.75,\n        \"currency\": \"ETH\",\n        \"lastUpdated\": \"2024-01-15T10:30:00Z\"\n      },\n      \"offline\": {\n        \"amount\": 125.50,\n        \"tokenCount\": 5,\n        \"lastUpdated\": \"2024-01-15T09:45:00Z\"\n      },\n      \"pending\": {\n        \"amount\": 25.00,\n        \"transactionCount\": 2\n      }\n    },\n    \"totalBalance\": 1401.25\n  }\n}\n```\n\n#### POST /api/wallet/purchase\n\nPurchase tokens for offline use.\n\n**Headers:**\n```\nAuthorization: Bearer <access-token>\n```\n\n**Request Body:**\n```json\n{\n  \"amount\": 100.00,\n  \"paymentMethod\": \"ethereum\",\n  \"transactionHash\": \"0x1234567890abcdef...\",\n  \"gasPrice\": \"20000000000\",\n  \"gasLimit\": \"21000\"\n}\n```\n\n**Response (201):**\n```json\n{\n  \"success\": true,\n  \"data\": {\n    \"transactionId\": \"550e8400-e29b-41d4-a716-446655440001\",\n    \"tokens\": [\n      {\n        \"id\": \"token-uuid-1\",\n        \"amount\": 25.00,\n        \"signature\": \"0x3045022100...\",\n        \"expiresAt\": \"2024-02-15T10:30:00Z\",\n        \"createdAt\": \"2024-01-15T10:30:00Z\"\n      },\n      {\n        \"id\": \"token-uuid-2\",\n        \"amount\": 25.00,\n        \"signature\": \"0x3045022100...\",\n        \"expiresAt\": \"2024-02-15T10:30:00Z\",\n        \"createdAt\": \"2024-01-15T10:30:00Z\"\n      },\n      {\n        \"id\": \"token-uuid-3\",\n        \"amount\": 25.00,\n        \"signature\": \"0x3045022100...\",\n        \"expiresAt\": \"2024-02-15T10:30:00Z\",\n        \"createdAt\": \"2024-01-15T10:30:00Z\"\n      },\n      {\n        \"id\": \"token-uuid-4\",\n        \"amount\": 25.00,\n        \"signature\": \"0x3045022100...\",\n        \"expiresAt\": \"2024-02-15T10:30:00Z\",\n        \"createdAt\": \"2024-01-15T10:30:00Z\"\n      }\n    ],\n    \"totalAmount\": 100.00,\n    \"blockchainTransaction\": {\n      \"hash\": \"0x1234567890abcdef...\",\n      \"blockNumber\": 18500000,\n      \"gasUsed\": \"21000\",\n      \"status\": \"confirmed\"\n    }\n  }\n}\n```\n\n#### POST /api/wallet/redeem\n\nRedeem offline tokens back to blockchain.\n\n**Headers:**\n```\nAuthorization: Bearer <access-token>\n```\n\n**Request Body:**\n```json\n{\n  \"tokens\": [\n    {\n      \"id\": \"token-uuid-1\",\n      \"signature\": \"0x3045022100...\"\n    },\n    {\n      \"id\": \"token-uuid-2\",\n      \"signature\": \"0x3045022100...\"\n    }\n  ],\n  \"destinationAddress\": \"0x742d35Cc6634C0532925a3b8D404d3aAB451e9c\"\n}\n```\n\n**Response (200):**\n```json\n{\n  \"success\": true,\n  \"data\": {\n    \"transactionId\": \"550e8400-e29b-41d4-a716-446655440002\",\n    \"redeemedTokens\": [\n      {\n        \"id\": \"token-uuid-1\",\n        \"amount\": 25.00,\n        \"status\": \"redeemed\"\n      },\n      {\n        \"id\": \"token-uuid-2\",\n        \"amount\": 25.00,\n        \"status\": \"redeemed\"\n      }\n    ],\n    \"totalAmount\": 50.00,\n    \"blockchainTransaction\": {\n      \"hash\": \"0xabcdef1234567890...\",\n      \"status\": \"pending\",\n      \"estimatedConfirmation\": \"2024-01-15T10:35:00Z\"\n    }\n  }\n}\n```\n\n#### GET /api/wallet/history\n\nGet transaction history.\n\n**Headers:**\n```\nAuthorization: Bearer <access-token>\n```\n\n**Query Parameters:**\n- `page` (optional): Page number (default: 1)\n- `limit` (optional): Items per page (default: 20, max: 100)\n- `type` (optional): Transaction type filter\n- `status` (optional): Transaction status filter\n- `startDate` (optional): Start date filter (ISO 8601)\n- `endDate` (optional): End date filter (ISO 8601)\n\n**Response (200):**\n```json\n{\n  \"success\": true,\n  \"data\": {\n    \"transactions\": [\n      {\n        \"id\": \"550e8400-e29b-41d4-a716-446655440003\",\n        \"type\": \"token_purchase\",\n        \"amount\": 100.00,\n        \"status\": \"completed\",\n        \"blockchainHash\": \"0x1234567890abcdef...\",\n        \"createdAt\": \"2024-01-15T10:30:00Z\",\n        \"completedAt\": \"2024-01-15T10:32:00Z\",\n        \"metadata\": {\n          \"tokenCount\": 4,\n          \"gasUsed\": \"21000\"\n        }\n      },\n      {\n        \"id\": \"550e8400-e29b-41d4-a716-446655440004\",\n        \"type\": \"offline_transfer\",\n        \"amount\": 25.00,\n        \"status\": \"pending_sync\",\n        \"recipientAddress\": \"0x987fcdeb51234567...\",\n        \"createdAt\": \"2024-01-15T09:15:00Z\",\n        \"metadata\": {\n          \"transferMethod\": \"bluetooth\",\n          \"deviceName\": \"iPhone 12\"\n        }\n      }\n    ],\n    \"pagination\": {\n      \"currentPage\": 1,\n      \"totalPages\": 5,\n      \"totalItems\": 95,\n      \"itemsPerPage\": 20\n    }\n  }\n}\n```\n\n### Token Endpoints\n\n#### POST /api/tokens/validate\n\nValidate an offline token.\n\n**Headers:**\n```\nAuthorization: Bearer <access-token>\n```\n\n**Request Body:**\n```json\n{\n  \"tokenId\": \"token-uuid-1\",\n  \"signature\": \"0x3045022100...\",\n  \"amount\": 25.00\n}\n```\n\n**Response (200):**\n```json\n{\n  \"success\": true,\n  \"data\": {\n    \"valid\": true,\n    \"token\": {\n      \"id\": \"token-uuid-1\",\n      \"amount\": 25.00,\n      \"ownerId\": \"550e8400-e29b-41d4-a716-446655440000\",\n      \"signature\": \"0x3045022100...\",\n      \"isSpent\": false,\n      \"expiresAt\": \"2024-02-15T10:30:00Z\",\n      \"createdAt\": \"2024-01-15T10:30:00Z\"\n    },\n    \"validationDetails\": {\n      \"signatureValid\": true,\n      \"notExpired\": true,\n      \"notSpent\": true,\n      \"ownershipValid\": true\n    }\n  }\n}\n```\n\n#### POST /api/tokens/divide\n\nDivide a token for making change in transactions.\n\n**Headers:**\n```\nAuthorization: Bearer <access-token>\n```\n\n**Request Body:**\n```json\n{\n  \"tokenId\": \"token-uuid-1\",\n  \"paymentAmount\": 15.00,\n  \"signature\": \"0x3045022100...\"\n}\n```\n\n**Response (200):**\n```json\n{\n  \"success\": true,\n  \"data\": {\n    \"originalToken\": {\n      \"id\": \"token-uuid-1\",\n      \"amount\": 25.00,\n      \"status\": \"divided\"\n    },\n    \"paymentToken\": {\n      \"id\": \"payment-token-uuid\",\n      \"amount\": 15.00,\n      \"signature\": \"0x3045022100...\",\n      \"expiresAt\": \"2024-02-15T10:30:00Z\",\n      \"createdAt\": \"2024-01-15T11:00:00Z\"\n    },\n    \"changeToken\": {\n      \"id\": \"change-token-uuid\",\n      \"amount\": 10.00,\n      \"signature\": \"0x3045022100...\",\n      \"expiresAt\": \"2024-02-15T10:30:00Z\",\n      \"createdAt\": \"2024-01-15T11:00:00Z\"\n    }\n  }\n}\n```\n\n#### POST /api/tokens/sync\n\nSynchronize offline transactions with the blockchain.\n\n**Headers:**\n```\nAuthorization: Bearer <access-token>\n```\n\n**Request Body:**\n```json\n{\n  \"transactions\": [\n    {\n      \"id\": \"offline-tx-1\",\n      \"senderId\": \"550e8400-e29b-41d4-a716-446655440000\",\n      \"receiverId\": \"550e8400-e29b-41d4-a716-446655440005\",\n      \"amount\": 15.00,\n      \"tokenIds\": [\"payment-token-uuid\"],\n      \"signature\": \"0x3045022100...\",\n      \"timestamp\": \"2024-01-15T11:00:00Z\",\n      \"method\": \"bluetooth\"\n    }\n  ]\n}\n```\n\n**Response (200):**\n```json\n{\n  \"success\": true,\n  \"data\": {\n    \"syncedTransactions\": [\n      {\n        \"offlineId\": \"offline-tx-1\",\n        \"blockchainId\": \"550e8400-e29b-41d4-a716-446655440006\",\n        \"status\": \"synced\",\n        \"blockchainHash\": \"0xdef1234567890abc...\"\n      }\n    ],\n    \"failedTransactions\": [],\n    \"summary\": {\n      \"totalTransactions\": 1,\n      \"successfulSyncs\": 1,\n      \"failedSyncs\": 0\n    }\n  }\n}\n```\n\n### Transaction Endpoints\n\n#### GET /api/transactions/:id\n\nGet detailed transaction information.\n\n**Headers:**\n```\nAuthorization: Bearer <access-token>\n```\n\n**Response (200):**\n```json\n{\n  \"success\": true,\n  \"data\": {\n    \"transaction\": {\n      \"id\": \"550e8400-e29b-41d4-a716-446655440003\",\n      \"type\": \"token_purchase\",\n      \"amount\": 100.00,\n      \"status\": \"completed\",\n      \"senderId\": \"550e8400-e29b-41d4-a716-446655440000\",\n      \"receiverId\": null,\n      \"blockchainHash\": \"0x1234567890abcdef...\",\n      \"createdAt\": \"2024-01-15T10:30:00Z\",\n      \"completedAt\": \"2024-01-15T10:32:00Z\",\n      \"metadata\": {\n        \"tokenCount\": 4,\n        \"gasUsed\": \"21000\",\n        \"gasPrice\": \"20000000000\",\n        \"blockNumber\": 18500000\n      }\n    },\n    \"relatedTokens\": [\n      {\n        \"id\": \"token-uuid-1\",\n        \"amount\": 25.00,\n        \"status\": \"active\"\n      },\n      {\n        \"id\": \"token-uuid-2\",\n        \"amount\": 25.00,\n        \"status\": \"active\"\n      },\n      {\n        \"id\": \"token-uuid-3\",\n        \"amount\": 25.00,\n        \"status\": \"active\"\n      },\n      {\n        \"id\": \"token-uuid-4\",\n        \"amount\": 25.00,\n        \"status\": \"active\"\n      }\n    ]\n  }\n}\n```\n\n#### POST /api/transactions/estimate\n\nEstimate transaction costs and fees.\n\n**Headers:**\n```\nAuthorization: Bearer <access-token>\n```\n\n**Request Body:**\n```json\n{\n  \"type\": \"token_purchase\",\n  \"amount\": 100.00,\n  \"paymentMethod\": \"ethereum\"\n}\n```\n\n**Response (200):**\n```json\n{\n  \"success\": true,\n  \"data\": {\n    \"estimate\": {\n      \"amount\": 100.00,\n      \"gasLimit\": \"21000\",\n      \"gasPrice\": \"20000000000\",\n      \"gasCost\": 0.00042,\n      \"totalCost\": 100.00042,\n      \"estimatedConfirmationTime\": \"2-5 minutes\"\n    },\n    \"tokenBreakdown\": {\n      \"recommendedTokenCount\": 4,\n      \"tokenAmounts\": [25.00, 25.00, 25.00, 25.00],\n      \"expirationDate\": \"2024-02-15T10:30:00Z\"\n    }\n  }\n}\n```\n\n## 🔒 Security\n\n### Rate Limiting\n\nAll endpoints are protected by rate limiting:\n\n- **Default**: 100 requests per 15 minutes per IP\n- **Authentication**: 5 requests per 15 minutes per IP\n- **Token operations**: 50 requests per 15 minutes per user\n- **Wallet operations**: 30 requests per 15 minutes per user\n\n### Input Validation\n\nAll inputs are validated using Joi schemas:\n\n```typescript\n// Example validation schema\nconst purchaseTokenSchema = Joi.object({\n  amount: Joi.number().positive().max(10000).required(),\n  paymentMethod: Joi.string().valid('ethereum', 'bitcoin').required(),\n  transactionHash: Joi.string().pattern(/^0x[a-fA-F0-9]{64}$/).required()\n});\n```\n\n### Error Handling\n\nStandardized error responses:\n\n```json\n{\n  \"success\": false,\n  \"error\": {\n    \"code\": \"VALIDATION_ERROR\",\n    \"message\": \"Invalid input data\",\n    \"details\": {\n      \"field\": \"amount\",\n      \"reason\": \"Amount must be positive\"\n    },\n    \"timestamp\": \"2024-01-15T10:30:00Z\",\n    \"requestId\": \"req-uuid-here\"\n  }\n}\n```\n\n### Common Error Codes\n\n- `AUTHENTICATION_REQUIRED`: Missing or invalid authentication\n- `AUTHORIZATION_FAILED`: Insufficient permissions\n- `VALIDATION_ERROR`: Invalid input data\n- `RESOURCE_NOT_FOUND`: Requested resource doesn't exist\n- `RATE_LIMIT_EXCEEDED`: Too many requests\n- `BLOCKCHAIN_ERROR`: Blockchain operation failed\n- `INSUFFICIENT_BALANCE`: Not enough funds\n- `TOKEN_EXPIRED`: Token has expired\n- `TOKEN_ALREADY_SPENT`: Token has already been used\n- `INTERNAL_SERVER_ERROR`: Unexpected server error\n\n## 📊 Monitoring and Health Checks\n\n### Health Check Endpoints\n\n#### GET /health\n\nBasic health status.\n\n**Response (200):**\n```json\n{\n  \"status\": \"healthy\",\n  \"timestamp\": \"2024-01-15T10:30:00Z\",\n  \"uptime\": 86400,\n  \"version\": \"1.0.0\"\n}\n```\n\n#### GET /health/detailed\n\nDetailed system status.\n\n**Response (200):**\n```json\n{\n  \"status\": \"healthy\",\n  \"timestamp\": \"2024-01-15T10:30:00Z\",\n  \"services\": {\n    \"database\": {\n      \"status\": \"healthy\",\n      \"responseTime\": 15,\n      \"connections\": {\n        \"active\": 5,\n        \"idle\": 10,\n        \"total\": 15\n      }\n    },\n    \"redis\": {\n      \"status\": \"healthy\",\n      \"responseTime\": 2,\n      \"memory\": {\n        \"used\": \"50MB\",\n        \"peak\": \"75MB\"\n      }\n    },\n    \"blockchain\": {\n      \"status\": \"healthy\",\n      \"responseTime\": 250,\n      \"blockNumber\": 18500000,\n      \"gasPrice\": \"20000000000\"\n    }\n  },\n  \"metrics\": {\n    \"requestsPerMinute\": 45,\n    \"averageResponseTime\": 120,\n    \"errorRate\": 0.02\n  }\n}\n```\n\n#### GET /metrics\n\nPrometheus metrics endpoint.\n\n**Response (200):**\n```\n# HELP http_requests_total Total number of HTTP requests\n# TYPE http_requests_total counter\nhttp_requests_total{method=\"GET\",route=\"/api/wallet/balance\",status_code=\"200\"} 1234\n\n# HELP http_request_duration_seconds HTTP request duration in seconds\n# TYPE http_request_duration_seconds histogram\nhttp_request_duration_seconds_bucket{method=\"GET\",route=\"/api/wallet/balance\",le=\"0.1\"} 800\nhttp_request_duration_seconds_bucket{method=\"GET\",route=\"/api/wallet/balance\",le=\"0.5\"} 1200\n```\n\n## 🧪 Testing\n\n### Running Tests\n\n```bash\n# Run all tests\nnpm test\n\n# Run specific test suites\nnpm run test:unit\nnpm run test:integration\nnpm run test:e2e\nnpm run test:security\n\n# Run with coverage\nnpm run test:coverage\n\n# Run load tests\nnpm run test:load\n```\n\n### Test Structure\n\n```\ntest/\n├── unit/                    # Unit tests\n│   ├── controllers/\n│   ├── services/\n│   └── utils/\n├── integration/             # Integration tests\n│   ├── api/\n│   ├── database/\n│   └── blockchain/\n├── e2e/                     # End-to-end tests\n│   └── workflows/\n├── security/                # Security tests\n│   ├── authentication/\n│   ├── authorization/\n│   └── validation/\n└── performance/             # Performance tests\n    └── load/\n```\n\n### Example Test\n\n```typescript\n// test/integration/api/wallet.test.ts\ndescribe('Wallet API', () => {\n  let authToken: string;\n  \n  beforeEach(async () => {\n    // Setup test user and get auth token\n    const response = await request(app)\n      .post('/api/auth/login')\n      .send({\n        email: 'test@example.com',\n        password: 'TestPass123!'\n      });\n    \n    authToken = response.body.data.tokens.accessToken;\n  });\n  \n  describe('GET /api/wallet/balance', () => {\n    it('should return wallet balance for authenticated user', async () => {\n      const response = await request(app)\n        .get('/api/wallet/balance')\n        .set('Authorization', `Bearer ${authToken}`)\n        .expect(200);\n      \n      expect(response.body.success).toBe(true);\n      expect(response.body.data).toHaveProperty('balances');\n      expect(response.body.data.balances).toHaveProperty('blockchain');\n      expect(response.body.data.balances).toHaveProperty('offline');\n    });\n    \n    it('should return 401 for unauthenticated request', async () => {\n      await request(app)\n        .get('/api/wallet/balance')\n        .expect(401);\n    });\n  });\n});\n```\n\n## 🚀 Deployment\n\n### Production Deployment\n\n```bash\n# Build application\nnpm run build\n\n# Run database migrations\nnpm run db:migrate:prod\n\n# Start production server\nnpm run start:prod\n```\n\n### Docker Deployment\n\n```bash\n# Build Docker image\ndocker build -t wallet-api .\n\n# Run with Docker Compose\ndocker-compose -f docker-compose.prod.yml up -d\n```\n\n### Environment-Specific Configuration\n\n```bash\n# Development\ncp .env.development .env\nnpm run dev\n\n# Staging\ncp .env.staging .env\nnpm run start:staging\n\n# Production\ncp .env.production .env\nnpm run start:prod\n```\n\n## 📝 Logging\n\n### Log Levels\n\n- `error`: Error conditions\n- `warn`: Warning conditions\n- `info`: Informational messages\n- `debug`: Debug-level messages\n\n### Log Format\n\n```json\n{\n  \"timestamp\": \"2024-01-15T10:30:00.123Z\",\n  \"level\": \"info\",\n  \"message\": \"User authenticated successfully\",\n  \"userId\": \"550e8400-e29b-41d4-a716-446655440000\",\n  \"requestId\": \"req-uuid-here\",\n  \"ip\": \"192.168.1.100\",\n  \"userAgent\": \"Mozilla/5.0...\",\n  \"duration\": 45\n}\n```\n\n### Security Audit Logs\n\n```json\n{\n  \"timestamp\": \"2024-01-15T10:30:00.123Z\",\n  \"level\": \"warn\",\n  \"event\": \"FAILED_LOGIN_ATTEMPT\",\n  \"userId\": null,\n  \"email\": \"attacker@example.com\",\n  \"ip\": \"192.168.1.200\",\n  \"attempts\": 5,\n  \"locked\": true\n}\n```\n\n---\n\n*This API documentation is automatically updated with each release. For the latest version, please refer to the Swagger documentation at `/api-docs` when the server is running.*\n"
+# Backend API Documentation
+
+## 🎯 Overview
+
+The Offline Blockchain Wallet Backend API is a RESTful service built with Node.js, TypeScript, and Express.js. It provides secure endpoints for wallet management, token operations, and blockchain integration.
+
+## 🚀 Quick Start
+
+### Prerequisites
+- Node.js 18+
+- PostgreSQL 13+
+- Redis 6+
+- npm or yarn
+
+### Installation
+
+```bash
+# Clone repository
+git clone <repository-url>
+cd backend
+
+# Install dependencies
+npm install
+
+# Setup environment
+cp .env.example .env
+# Edit .env with your configuration
+
+# Setup database
+npm run db:setup
+npm run db:migrate
+npm run db:seed
+
+# Start development server
+npm run dev
+```
+
+### Environment Configuration
+
+```bash
+# Server Configuration
+PORT=3000
+NODE_ENV=development
+API_VERSION=v1
+
+# Database Configuration
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=wallet_db
+DB_USER=wallet_user
+DB_PASSWORD=your_secure_password
+DB_SSL=false
+
+# JWT Configuration
+JWT_SECRET=your_jwt_secret_key_here
+JWT_EXPIRES_IN=24h
+JWT_REFRESH_EXPIRES_IN=7d
+
+# Blockchain Configuration
+ETH_RPC_URL=https://mainnet.infura.io/v3/your_infura_key
+ETH_PRIVATE_KEY=0x...
+CONTRACT_ADDRESS=0x...
+GAS_LIMIT=21000
+GAS_PRICE=20000000000
+
+# Redis Configuration
+REDIS_URL=redis://localhost:6379
+REDIS_PASSWORD=
+REDIS_DB=0
+
+# Security Configuration
+RATE_LIMIT_WINDOW_MS=900000  # 15 minutes
+RATE_LIMIT_MAX_REQUESTS=100
+BCRYPT_SALT_ROUNDS=12
+
+# Monitoring Configuration
+LOG_LEVEL=info
+METRICS_ENABLED=true
+HEALTH_CHECK_INTERVAL=30000
+```
+
+## 📁 Project Structure
+
+```
+backend/
+├── src/
+│   ├── controllers/          # Request handlers
+│   │   ├── authController.ts
+│   │   ├── walletController.ts
+│   │   ├── tokenController.ts
+│   │   └── transactionController.ts
+│   ├── services/            # Business logic
+│   │   ├── authService.ts
+│   │   ├── walletService.ts
+│   │   ├── tokenService.ts
+│   │   ├── blockchainService.ts
+│   │   └── offlineTokenManager.ts
+│   ├── database/            # Database layer
+│   │   ├── connection.ts
+│   │   ├── dao/            # Data Access Objects
+│   │   └── migrations/     # Database migrations
+│   ├── middleware/          # Express middleware
+│   │   ├── auth.ts
+│   │   ├── rateLimiter.ts
+│   │   ├── errorHandler.ts
+│   │   └── validation.ts
+│   ├── routes/              # API routes
+│   │   ├── auth.ts
+│   │   ├── wallet.ts
+│   │   ├── tokens.ts
+│   │   └── transactions.ts
+│   ├── models/              # Data models
+│   │   ├── User.ts
+│   │   ├── Wallet.ts
+│   │   ├── Transaction.ts
+│   │   └── OfflineToken.ts
+│   ├── utils/               # Utility functions
+│   │   ├── logger.ts
+│   │   ├── crypto.ts
+│   │   └── validation.ts
+│   ├── config/              # Configuration
+│   │   ├── config.ts
+│   │   ├── database.ts
+│   │   └── swagger.ts
+│   └── types/               # TypeScript types
+│       └── index.ts
+├── contracts/               # Smart contracts
+│   ├── OfflineWalletToken.sol
+│   └── migrations/
+├── scripts/                 # Deployment scripts
+│   ├── deploy.ts
+│   ├── migrate.ts
+│   └── seed.ts
+├── test/                    # Test files
+│   ├── unit/
+│   ├── integration/
+│   └── e2e/
+└── infrastructure/          # Infrastructure configs
+    ├── docker/
+    ├── nginx/
+    └── monitoring/
+```
+
+## 🔐 Authentication
+
+### JWT Token Authentication
+
+All protected endpoints require a valid JWT token in the Authorization header:
+
+```
+Authorization: Bearer <jwt-token>
+```
+
+### Token Lifecycle
+
+1. **Login**: Get access token and refresh token
+2. **Access**: Use access token for API calls
+3. **Refresh**: Use refresh token to get new access token
+4. **Logout**: Invalidate both tokens
+
+### Authentication Flow
+
+```mermaid
+sequenceDiagram
+    participant Client
+    participant API
+    participant DB
+    
+    Client->>API: POST /auth/login
+    API->>DB: Validate credentials
+    DB-->>API: User data
+    API-->>Client: Access token + Refresh token
+    
+    Client->>API: GET /wallet/balance (with token)
+    API->>API: Validate token
+    API-->>Client: Wallet data
+    
+    Client->>API: POST /auth/refresh
+    API->>API: Validate refresh token
+    API-->>Client: New access token
+```
+
+## 📚 API Endpoints
+
+### Authentication Endpoints
+
+#### POST /api/auth/register
+
+Register a new user account.
+
+**Request Body:**
+```json
+{
+  \"username\": \"john_doe\",
+  \"email\": \"john@example.com\",
+  \"password\": \"SecurePass123!\",
+  \"confirmPassword\": \"SecurePass123!\"
+}
+```
+
+**Response (201):**
+```json
+{
+  \"success\": true,
+  \"data\": {
+    \"user\": {
+      \"id\": \"550e8400-e29b-41d4-a716-446655440000\",
+      \"username\": \"john_doe\",
+      \"email\": \"john@example.com\",
+      \"walletAddress\": \"0x742d35Cc6634C0532925a3b8D404d3aAB451e9c\",
+      \"createdAt\": \"2024-01-15T10:30:00Z\"
+    },
+    \"tokens\": {
+      \"accessToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",
+      \"refreshToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",
+      \"expiresIn\": \"24h\"
+    }
+  }
+}
+```
+
+**Validation Rules:**
+- Username: 3-30 characters, alphanumeric and underscore only
+- Email: Valid email format
+- Password: Minimum 8 characters, must contain uppercase, lowercase, number, and special character
+
+#### POST /api/auth/login
+
+Authenticate user and receive access tokens.
+
+**Request Body:**
+```json
+{
+  \"email\": \"john@example.com\",
+  \"password\": \"SecurePass123!\"
+}
+```
+
+**Response (200):**
+```json
+{
+  \"success\": true,
+  \"data\": {
+    \"user\": {
+      \"id\": \"550e8400-e29b-41d4-a716-446655440000\",
+      \"username\": \"john_doe\",
+      \"email\": \"john@example.com\",
+      \"walletAddress\": \"0x742d35Cc6634C0532925a3b8D404d3aAB451e9c\"
+    },
+    \"tokens\": {
+      \"accessToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",
+      \"refreshToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",
+      \"expiresIn\": \"24h\"
+    }
+  }
+}
+```
+
+#### POST /api/auth/refresh
+
+Refresh access token using refresh token.
+
+**Request Body:**
+```json
+{
+  \"refreshToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"
+}
+```
+
+**Response (200):**
+```json
+{
+  \"success\": true,
+  \"data\": {
+    \"accessToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",
+    \"expiresIn\": \"24h\"
+  }
+}
+```
+
+#### POST /api/auth/logout
+
+Invalidate user tokens.
+
+**Headers:**
+```
+Authorization: Bearer <access-token>
+```
+
+**Request Body:**
+```json
+{
+  \"refreshToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\"
+}
+```
+
+**Response (200):**
+```json
+{
+  \"success\": true,
+  \"message\": \"Successfully logged out\"
+}
+```
+
+### Wallet Endpoints
+
+#### GET /api/wallet/balance
+
+Get current wallet balance and token information.
+
+**Headers:**
+```
+Authorization: Bearer <access-token>
+```
+
+**Response (200):**
+```json
+{
+  \"success\": true,
+  \"data\": {
+    \"walletAddress\": \"0x742d35Cc6634C0532925a3b8D404d3aAB451e9c\",
+    \"balances\": {
+      \"blockchain\": {
+        \"amount\": 1250.75,
+        \"currency\": \"ETH\",
+        \"lastUpdated\": \"2024-01-15T10:30:00Z\"
+      },
+      \"offline\": {
+        \"amount\": 125.50,
+        \"tokenCount\": 5,
+        \"lastUpdated\": \"2024-01-15T09:45:00Z\"
+      },
+      \"pending\": {
+        \"amount\": 25.00,
+        \"transactionCount\": 2
+      }
+    },
+    \"totalBalance\": 1401.25
+  }
+}
+```
+
+#### POST /api/wallet/purchase
+
+Purchase tokens for offline use.
+
+**Headers:**
+```
+Authorization: Bearer <access-token>
+```
+
+**Request Body:**
+```json
+{
+  \"amount\": 100.00,
+  \"paymentMethod\": \"ethereum\",
+  \"transactionHash\": \"0x1234567890abcdef...\",
+  \"gasPrice\": \"20000000000\",
+  \"gasLimit\": \"21000\"
+}
+```
+
+**Response (201):**
+```json
+{
+  \"success\": true,
+  \"data\": {
+    \"transactionId\": \"550e8400-e29b-41d4-a716-446655440001\",
+    \"tokens\": [
+      {
+        \"id\": \"token-uuid-1\",
+        \"amount\": 25.00,
+        \"signature\": \"0x3045022100...\",
+        \"expiresAt\": \"2024-02-15T10:30:00Z\",
+        \"createdAt\": \"2024-01-15T10:30:00Z\"
+      },
+      {
+        \"id\": \"token-uuid-2\",
+        \"amount\": 25.00,
+        \"signature\": \"0x3045022100...\",
+        \"expiresAt\": \"2024-02-15T10:30:00Z\",
+        \"createdAt\": \"2024-01-15T10:30:00Z\"
+      },
+      {
+        \"id\": \"token-uuid-3\",
+        \"amount\": 25.00,
+        \"signature\": \"0x3045022100...\",
+        \"expiresAt\": \"2024-02-15T10:30:00Z\",
+        \"createdAt\": \"2024-01-15T10:30:00Z\"
+      },
+      {
+        \"id\": \"token-uuid-4\",
+        \"amount\": 25.00,
+        \"signature\": \"0x3045022100...\",
+        \"expiresAt\": \"2024-02-15T10:30:00Z\",
+        \"createdAt\": \"2024-01-15T10:30:00Z\"
+      }
+    ],
+    \"totalAmount\": 100.00,
+    \"blockchainTransaction\": {
+      \"hash\": \"0x1234567890abcdef...\",
+      \"blockNumber\": 18500000,
+      \"gasUsed\": \"21000\",
+      \"status\": \"confirmed\"
+    }
+  }
+}
+```
+
+#### POST /api/wallet/redeem
+
+Redeem offline tokens back to blockchain.
+
+**Headers:**
+```
+Authorization: Bearer <access-token>
+```
+
+**Request Body:**
+```json
+{
+  \"tokens\": [
+    {
+      \"id\": \"token-uuid-1\",
+      \"signature\": \"0x3045022100...\"
+    },
+    {
+      \"id\": \"token-uuid-2\",
+      \"signature\": \"0x3045022100...\"
+    }
+  ],
+  \"destinationAddress\": \"0x742d35Cc6634C0532925a3b8D404d3aAB451e9c\"
+}
+```
+
+**Response (200):**
+```json
+{
+  \"success\": true,
+  \"data\": {
+    \"transactionId\": \"550e8400-e29b-41d4-a716-446655440002\",
+    \"redeemedTokens\": [
+      {
+        \"id\": \"token-uuid-1\",
+        \"amount\": 25.00,
+        \"status\": \"redeemed\"
+      },
+      {
+        \"id\": \"token-uuid-2\",
+        \"amount\": 25.00,
+        \"status\": \"redeemed\"
+      }
+    ],
+    \"totalAmount\": 50.00,
+    \"blockchainTransaction\": {
+      \"hash\": \"0xabcdef1234567890...\",
+      \"status\": \"pending\",
+      \"estimatedConfirmation\": \"2024-01-15T10:35:00Z\"
+    }
+  }
+}
+```
+
+#### GET /api/wallet/history
+
+Get transaction history.
+
+**Headers:**
+```
+Authorization: Bearer <access-token>
+```
+
+**Query Parameters:**
+- `page` (optional): Page number (default: 1)
+- `limit` (optional): Items per page (default: 20, max: 100)
+- `type` (optional): Transaction type filter
+- `status` (optional): Transaction status filter
+- `startDate` (optional): Start date filter (ISO 8601)
+- `endDate` (optional): End date filter (ISO 8601)
+
+**Response (200):**
+```json
+{
+  \"success\": true,
+  \"data\": {
+    \"transactions\": [
+      {
+        \"id\": \"550e8400-e29b-41d4-a716-446655440003\",
+        \"type\": \"token_purchase\",
+        \"amount\": 100.00,
+        \"status\": \"completed\",
+        \"blockchainHash\": \"0x1234567890abcdef...\",
+        \"createdAt\": \"2024-01-15T10:30:00Z\",
+        \"completedAt\": \"2024-01-15T10:32:00Z\",
+        \"metadata\": {
+          \"tokenCount\": 4,
+          \"gasUsed\": \"21000\"
+        }
+      },
+      {
+        \"id\": \"550e8400-e29b-41d4-a716-446655440004\",
+        \"type\": \"offline_transfer\",
+        \"amount\": 25.00,
+        \"status\": \"pending_sync\",
+        \"recipientAddress\": \"0x987fcdeb51234567...\",
+        \"createdAt\": \"2024-01-15T09:15:00Z\",
+        \"metadata\": {
+          \"transferMethod\": \"bluetooth\",
+          \"deviceName\": \"iPhone 12\"
+        }
+      }
+    ],
+    \"pagination\": {
+      \"currentPage\": 1,
+      \"totalPages\": 5,
+      \"totalItems\": 95,
+      \"itemsPerPage\": 20
+    }
+  }
+}
+```
+
+### Token Endpoints
+
+#### POST /api/tokens/validate
+
+Validate an offline token.
+
+**Headers:**
+```
+Authorization: Bearer <access-token>
+```
+
+**Request Body:**
+```json
+{
+  \"tokenId\": \"token-uuid-1\",
+  \"signature\": \"0x3045022100...\",
+  \"amount\": 25.00
+}
+```
+
+**Response (200):**
+```json
+{
+  \"success\": true,
+  \"data\": {
+    \"valid\": true,
+    \"token\": {
+      \"id\": \"token-uuid-1\",
+      \"amount\": 25.00,
+      \"ownerId\": \"550e8400-e29b-41d4-a716-446655440000\",
+      \"signature\": \"0x3045022100...\",
+      \"isSpent\": false,
+      \"expiresAt\": \"2024-02-15T10:30:00Z\",
+      \"createdAt\": \"2024-01-15T10:30:00Z\"
+    },
+    \"validationDetails\": {
+      \"signatureValid\": true,
+      \"notExpired\": true,
+      \"notSpent\": true,
+      \"ownershipValid\": true
+    }
+  }
+}
+```
+
+#### POST /api/tokens/divide
+
+Divide a token for making change in transactions.
+
+**Headers:**
+```
+Authorization: Bearer <access-token>
+```
+
+**Request Body:**
+```json
+{
+  \"tokenId\": \"token-uuid-1\",
+  \"paymentAmount\": 15.00,
+  \"signature\": \"0x3045022100...\"
+}
+```
+
+**Response (200):**
+```json
+{
+  \"success\": true,
+  \"data\": {
+    \"originalToken\": {
+      \"id\": \"token-uuid-1\",
+      \"amount\": 25.00,
+      \"status\": \"divided\"
+    },
+    \"paymentToken\": {
+      \"id\": \"payment-token-uuid\",
+      \"amount\": 15.00,
+      \"signature\": \"0x3045022100...\",
+      \"expiresAt\": \"2024-02-15T10:30:00Z\",
+      \"createdAt\": \"2024-01-15T11:00:00Z\"
+    },
+    \"changeToken\": {
+      \"id\": \"change-token-uuid\",
+      \"amount\": 10.00,
+      \"signature\": \"0x3045022100...\",
+      \"expiresAt\": \"2024-02-15T10:30:00Z\",
+      \"createdAt\": \"2024-01-15T11:00:00Z\"
+    }
+  }
+}
+```
+
+#### POST /api/tokens/sync
+
+Synchronize offline transactions with the blockchain.
+
+**Headers:**
+```
+Authorization: Bearer <access-token>
+```
+
+**Request Body:**
+```json
+{
+  \"transactions\": [
+    {
+      \"id\": \"offline-tx-1\",
+      \"senderId\": \"550e8400-e29b-41d4-a716-446655440000\",
+      \"receiverId\": \"550e8400-e29b-41d4-a716-446655440005\",
+      \"amount\": 15.00,
+      \"tokenIds\": [\"payment-token-uuid\"],
+      \"signature\": \"0x3045022100...\",
+      \"timestamp\": \"2024-01-15T11:00:00Z\",
+      \"method\": \"bluetooth\"
+    }
+  ]
+}
+```
+
+**Response (200):**
+```json
+{
+  \"success\": true,
+  \"data\": {
+    \"syncedTransactions\": [
+      {
+        \"offlineId\": \"offline-tx-1\",
+        \"blockchainId\": \"550e8400-e29b-41d4-a716-446655440006\",
+        \"status\": \"synced\",
+        \"blockchainHash\": \"0xdef1234567890abc...\"
+      }
+    ],
+    \"failedTransactions\": [],
+    \"summary\": {
+      \"totalTransactions\": 1,
+      \"successfulSyncs\": 1,
+      \"failedSyncs\": 0
+    }
+  }
+}
+```
+
+### Transaction Endpoints
+
+#### GET /api/transactions/:id
+
+Get detailed transaction information.
+
+**Headers:**
+```
+Authorization: Bearer <access-token>
+```
+
+**Response (200):**
+```json
+{
+  \"success\": true,
+  \"data\": {
+    \"transaction\": {
+      \"id\": \"550e8400-e29b-41d4-a716-446655440003\",
+      \"type\": \"token_purchase\",
+      \"amount\": 100.00,
+      \"status\": \"completed\",
+      \"senderId\": \"550e8400-e29b-41d4-a716-446655440000\",
+      \"receiverId\": null,
+      \"blockchainHash\": \"0x1234567890abcdef...\",
+      \"createdAt\": \"2024-01-15T10:30:00Z\",
+      \"completedAt\": \"2024-01-15T10:32:00Z\",
+      \"metadata\": {
+        \"tokenCount\": 4,
+        \"gasUsed\": \"21000\",
+        \"gasPrice\": \"20000000000\",
+        \"blockNumber\": 18500000
+      }
+    },
+    \"relatedTokens\": [
+      {
+        \"id\": \"token-uuid-1\",
+        \"amount\": 25.00,
+        \"status\": \"active\"
+      },
+      {
+        \"id\": \"token-uuid-2\",
+        \"amount\": 25.00,
+        \"status\": \"active\"
+      },
+      {
+        \"id\": \"token-uuid-3\",
+        \"amount\": 25.00,
+        \"status\": \"active\"
+      },
+      {
+        \"id\": \"token-uuid-4\",
+        \"amount\": 25.00,
+        \"status\": \"active\"
+      }
+    ]
+  }
+}
+```
+
+#### POST /api/transactions/estimate
+
+Estimate transaction costs and fees.
+
+**Headers:**
+```
+Authorization: Bearer <access-token>
+```
+
+**Request Body:**
+```json
+{
+  \"type\": \"token_purchase\",
+  \"amount\": 100.00,
+  \"paymentMethod\": \"ethereum\"
+}
+```
+
+**Response (200):**
+```json
+{
+  \"success\": true,
+  \"data\": {
+    \"estimate\": {
+      \"amount\": 100.00,
+      \"gasLimit\": \"21000\",
+      \"gasPrice\": \"20000000000\",
+      \"gasCost\": 0.00042,
+      \"totalCost\": 100.00042,
+      \"estimatedConfirmationTime\": \"2-5 minutes\"
+    },
+    \"tokenBreakdown\": {
+      \"recommendedTokenCount\": 4,
+      \"tokenAmounts\": [25.00, 25.00, 25.00, 25.00],
+      \"expirationDate\": \"2024-02-15T10:30:00Z\"
+    }
+  }
+}
+```
+
+## 🔒 Security
+
+### Rate Limiting
+
+All endpoints are protected by rate limiting:
+
+- **Default**: 100 requests per 15 minutes per IP
+- **Authentication**: 5 requests per 15 minutes per IP
+- **Token operations**: 50 requests per 15 minutes per user
+- **Wallet operations**: 30 requests per 15 minutes per user
+
+### Input Validation
+
+All inputs are validated using Joi schemas:
+
+```typescript
+// Example validation schema
+const purchaseTokenSchema = Joi.object({
+  amount: Joi.number().positive().max(10000).required(),
+  paymentMethod: Joi.string().valid('ethereum', 'bitcoin').required(),
+  transactionHash: Joi.string().pattern(/^0x[a-fA-F0-9]{64}$/).required()
+});
+```
+
+### Error Handling
+
+Standardized error responses:
+
+```json
+{
+  \"success\": false,
+  \"error\": {
+    \"code\": \"VALIDATION_ERROR\",
+    \"message\": \"Invalid input data\",
+    \"details\": {
+      \"field\": \"amount\",
+      \"reason\": \"Amount must be positive\"
+    },
+    \"timestamp\": \"2024-01-15T10:30:00Z\",
+    \"requestId\": \"req-uuid-here\"
+  }
+}
+```
+
+### Common Error Codes
+
+- `AUTHENTICATION_REQUIRED`: Missing or invalid authentication
+- `AUTHORIZATION_FAILED`: Insufficient permissions
+- `VALIDATION_ERROR`: Invalid input data
+- `RESOURCE_NOT_FOUND`: Requested resource doesn't exist
+- `RATE_LIMIT_EXCEEDED`: Too many requests
+- `BLOCKCHAIN_ERROR`: Blockchain operation failed
+- `INSUFFICIENT_BALANCE`: Not enough funds
+- `TOKEN_EXPIRED`: Token has expired
+- `TOKEN_ALREADY_SPENT`: Token has already been used
+- `INTERNAL_SERVER_ERROR`: Unexpected server error
+
+## 📊 Monitoring and Health Checks
+
+### Health Check Endpoints
+
+#### GET /health
+
+Basic health status.
+
+**Response (200):**
+```json
+{
+  \"status\": \"healthy\",
+  \"timestamp\": \"2024-01-15T10:30:00Z\",
+  \"uptime\": 86400,
+  \"version\": \"1.0.0\"
+}
+```
+
+#### GET /health/detailed
+
+Detailed system status.
+
+**Response (200):**
+```json
+{
+  \"status\": \"healthy\",
+  \"timestamp\": \"2024-01-15T10:30:00Z\",
+  \"services\": {
+    \"database\": {
+      \"status\": \"healthy\",
+      \"responseTime\": 15,
+      \"connections\": {
+        \"active\": 5,
+        \"idle\": 10,
+        \"total\": 15
+      }
+    },
+    \"redis\": {
+      \"status\": \"healthy\",
+      \"responseTime\": 2,
+      \"memory\": {
+        \"used\": \"50MB\",
+        \"peak\": \"75MB\"
+      }
+    },
+    \"blockchain\": {
+      \"status\": \"healthy\",
+      \"responseTime\": 250,
+      \"blockNumber\": 18500000,
+      \"gasPrice\": \"20000000000\"
+    }
+  },
+  \"metrics\": {
+    \"requestsPerMinute\": 45,
+    \"averageResponseTime\": 120,
+    \"errorRate\": 0.02
+  }
+}
+```
+
+#### GET /metrics
+
+Prometheus metrics endpoint.
+
+**Response (200):**
+```
+# HELP http_requests_total Total number of HTTP requests
+# TYPE http_requests_total counter
+http_requests_total{method=\"GET\",route=\"/api/wallet/balance\",status_code=\"200\"} 1234
+
+# HELP http_request_duration_seconds HTTP request duration in seconds
+# TYPE http_request_duration_seconds histogram
+http_request_duration_seconds_bucket{method=\"GET\",route=\"/api/wallet/balance\",le=\"0.1\"} 800
+http_request_duration_seconds_bucket{method=\"GET\",route=\"/api/wallet/balance\",le=\"0.5\"} 1200
+```
+
+## 🧪 Testing
+
+### Running Tests
+
+```bash
+# Run all tests
+npm test
+
+# Run specific test suites
+npm run test:unit
+npm run test:integration
+npm run test:e2e
+npm run test:security
+
+# Run with coverage
+npm run test:coverage
+
+# Run load tests
+npm run test:load
+```
+
+### Test Structure
+
+```
+test/
+├── unit/                    # Unit tests
+│   ├── controllers/
+│   ├── services/
+│   └── utils/
+├── integration/             # Integration tests
+│   ├── api/
+│   ├── database/
+│   └── blockchain/
+├── e2e/                     # End-to-end tests
+│   └── workflows/
+├── security/                # Security tests
+│   ├── authentication/
+│   ├── authorization/
+│   └── validation/
+└── performance/             # Performance tests
+    └── load/
+```
+
+### Example Test
+
+```typescript
+// test/integration/api/wallet.test.ts
+describe('Wallet API', () => {
+  let authToken: string;
+  
+  beforeEach(async () => {
+    // Setup test user and get auth token
+    const response = await request(app)
+      .post('/api/auth/login')
+      .send({
+        email: 'test@example.com',
+        password: 'TestPass123!'
+      });
+    
+    authToken = response.body.data.tokens.accessToken;
+  });
+  
+  describe('GET /api/wallet/balance', () => {
+    it('should return wallet balance for authenticated user', async () => {
+      const response = await request(app)
+        .get('/api/wallet/balance')
+        .set('Authorization', `Bearer ${authToken}`)
+        .expect(200);
+      
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toHaveProperty('balances');
+      expect(response.body.data.balances).toHaveProperty('blockchain');
+      expect(response.body.data.balances).toHaveProperty('offline');
+    });
+    
+    it('should return 401 for unauthenticated request', async () => {
+      await request(app)
+        .get('/api/wallet/balance')
+        .expect(401);
+    });
+  });
+});
+```
+
+## 🚀 Deployment
+
+### Production Deployment
+
+```bash
+# Build application
+npm run build
+
+# Run database migrations
+npm run db:migrate:prod
+
+# Start production server
+npm run start:prod
+```
+
+### Docker Deployment
+
+```bash
+# Build Docker image
+docker build -t wallet-api .
+
+# Run with Docker Compose
+docker-compose -f docker-compose.prod.yml up -d
+```
+
+### Environment-Specific Configuration
+
+```bash
+# Development
+cp .env.development .env
+npm run dev
+
+# Staging
+cp .env.staging .env
+npm run start:staging
+
+# Production
+cp .env.production .env
+npm run start:prod
+```
+
+## 📝 Logging
+
+### Log Levels
+
+- `error`: Error conditions
+- `warn`: Warning conditions
+- `info`: Informational messages
+- `debug`: Debug-level messages
+
+### Log Format
+
+```json
+{
+  \"timestamp\": \"2024-01-15T10:30:00.123Z\",
+  \"level\": \"info\",
+  \"message\": \"User authenticated successfully\",
+  \"userId\": \"550e8400-e29b-41d4-a716-446655440000\",
+  \"requestId\": \"req-uuid-here\",
+  \"ip\": \"192.168.1.100\",
+  \"userAgent\": \"Mozilla/5.0...\",
+  \"duration\": 45
+}
+```
+
+### Security Audit Logs
+
+```json
+{
+  \"timestamp\": \"2024-01-15T10:30:00.123Z\",
+  \"level\": \"warn\",
+  \"event\": \"FAILED_LOGIN_ATTEMPT\",
+  \"userId\": null,
+  \"email\": \"attacker@example.com\",
+  \"ip\": \"192.168.1.200\",
+  \"attempts\": 5,
+  \"locked\": true
+}
+```
+
+---
+
+*This API documentation is automatically updated with each release. For the latest version, please refer to the Swagger documentation at `/api-docs` when the server is running.*
+"
