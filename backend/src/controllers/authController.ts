@@ -255,3 +255,44 @@ export const validateLogin = [
     .notEmpty()
     .withMessage('Message is required'),
 ];
+
+/**
+ * @swagger
+ * /api/v1/auth/logout:
+ *   post:
+ *     summary: Logout user (invalidate token)
+ *     tags: [Authentication]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Logout successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ApiResponse'
+ *       401:
+ *         description: Unauthorized
+ */
+export const logout = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  try {
+    // In a stateless JWT system, logout is typically handled client-side
+    // by removing the token. For enhanced security, you could maintain
+    // a blacklist of tokens or use shorter expiration times.
+    
+    const response: ApiResponse = {
+      success: true,
+      message: 'Logout successful',
+      timestamp: new Date().toISOString(),
+    };
+
+    logger.info('User logged out', { 
+      userId: (req as any).user?.id,
+      walletAddress: (req as any).user?.walletAddress 
+    });
+
+    res.status(200).json(response);
+  } catch (error) {
+    next(error);
+  }
+};

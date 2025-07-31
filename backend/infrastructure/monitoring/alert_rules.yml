@@ -1,0 +1,143 @@
+groups:
+  - name: offline-wallet-alerts
+    rules:
+      # Application Health Alerts
+      - alert: ApplicationDown
+        expr: up{job="offline-wallet-backend"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Application instance is down"
+          description: "Application instance {{ $labels.instance }} has been down for more than 1 minute."
+
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is {{ $value }} errors per second on {{ $labels.instance }}."
+
+      - alert: HighResponseTime
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High response time"
+          description: "95th percentile response time is {{ $value }}s on {{ $labels.instance }}."
+
+      # Database Alerts
+      - alert: DatabaseDown
+        expr: up{job="postgres-exporter"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Database is down"
+          description: "PostgreSQL database has been down for more than 1 minute."
+
+      - alert: DatabaseHighConnections
+        expr: pg_stat_database_numbackends / pg_settings_max_connections > 0.8
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Database connection usage high"
+          description: "Database connection usage is {{ $value | humanizePercentage }}."
+
+      - alert: DatabaseSlowQueries
+        expr: rate(pg_stat_database_tup_returned[5m]) / rate(pg_stat_database_tup_fetched[5m]) < 0.1
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Database slow queries detected"
+          description: "Database query efficiency is low: {{ $value | humanizePercentage }}."
+
+      # System Resource Alerts
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 80
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High CPU usage"
+          description: "CPU usage is {{ $value }}% on {{ $labels.instance }}."
+
+      - alert: HighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High memory usage"
+          description: "Memory usage is {{ $value }}% on {{ $labels.instance }}."
+
+      - alert: DiskSpaceLow
+        expr: (1 - (node_filesystem_avail_bytes / node_filesystem_size_bytes)) * 100 > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Low disk space"
+          description: "Disk usage is {{ $value }}% on {{ $labels.instance }} {{ $labels.mountpoint }}."
+
+      # Blockchain Alerts
+      - alert: BlockchainConnectionLost
+        expr: blockchain_connection_status == 0
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Blockchain connection lost"
+          description: "Connection to Ethereum blockchain has been lost for more than 2 minutes."
+
+      - alert: HighGasPrice
+        expr: ethereum_gas_price_gwei > 100
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High gas prices detected"
+          description: "Current gas price is {{ $value }} gwei, which is unusually high."
+
+      # Security Alerts
+      - alert: SuspiciousActivity
+        expr: rate(security_events_total{type="suspicious"}[5m]) > 0.1
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Suspicious activity detected"
+          description: "{{ $value }} suspicious events per second detected."
+
+      - alert: FailedAuthenticationAttempts
+        expr: rate(auth_failures_total[5m]) > 1
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High authentication failure rate"
+          description: "{{ $value }} authentication failures per second."
+
+      # Business Logic Alerts
+      - alert: HighTokenExpirationRate
+        expr: rate(offline_tokens_expired_total[1h]) > 10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High token expiration rate"
+          description: "{{ $value }} tokens are expiring per hour, which may indicate issues."
+
+      - alert: TransactionProcessingDelay
+        expr: transaction_processing_delay_seconds > 300
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Transaction processing delays"
+          description: "Average transaction processing delay is {{ $value }} seconds."

@@ -157,7 +157,7 @@
 
 ## Integration and Deployment Tasks
 
-- [ ] 20. Integrate mobile app with backend services
+- [x] 20. Integrate mobile app with backend services
   - Test complete token purchase and redemption flow
   - Verify offline transaction processing and online synchronization
   - Test automatic token management and expiration handling
@@ -165,7 +165,7 @@
   - Perform end-to-end testing of all user scenarios
   - _Requirements: 1.1, 1.5, 2.4, 7.1, 7.5, 8.5_
 
-- [ ] 21. Deploy backend services to production environment
+- [x] 21. Deploy backend services to production environment
   - Set up production infrastructure with load balancing
   - Configure database with proper backup and monitoring
   - Deploy smart contracts to Ethereum mainnet
@@ -173,7 +173,7 @@
   - Configure SSL certificates and security hardening
   - _Requirements: 11.1, 11.4, 11.5_
 
-- [ ] 22. Perform final testing and security validation
+- [x] 22. Perform final testing and security validation
   - Complete comprehensive security audit and penetration testing
   - Test app functionality on various iOS devices and versions
   - Validate all cryptographic operations and security measures

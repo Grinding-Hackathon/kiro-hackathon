@@ -28,7 +28,11 @@
     "test:contracts": "npx hardhat test",
     "deploy:local": "npx hardhat run scripts/deploy.ts --network hardhat",
     "deploy:sepolia": "npx hardhat run scripts/deploy.ts --network sepolia",
-    "deploy:goerli": "npx hardhat run scripts/deploy.ts --network goerli"
+    "deploy:goerli": "npx hardhat run scripts/deploy.ts --network goerli",
+    "deploy:mainnet": "npx hardhat run scripts/deploy-mainnet.ts --network mainnet",
+    "deploy:production": "./scripts/deploy-production.sh",
+    "backup:database": "./scripts/backup-database.sh",
+    "setup:ssl": "./scripts/setup-ssl.sh"
   },
   "keywords": [
     "blockchain",
@@ -53,6 +57,7 @@
     "knex": "^3.0.1",
     "morgan": "^1.10.0",
     "pg": "^8.11.3",
+    "prom-client": "^15.1.0",
     "secp256k1": "^5.0.0",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
@@ -71,6 +76,7 @@
     "@types/morgan": "^1.9.9",
     "@types/node": "^20.9.0",
     "@types/pg": "^8.10.7",
+
     "@types/supertest": "^2.0.16",
     "@types/swagger-jsdoc": "^6.0.4",
     "@types/swagger-ui-express": "^4.1.8",

@@ -1,5 +1,6 @@
 import { Router } from 'express';
-import { login, getNonce, validateLogin } from '../controllers/authController';
+import { login, getNonce, validateLogin, logout } from '../controllers/authController';
+import { authMiddleware } from '../middleware/auth';
 
 const router = Router();
 
@@ -15,5 +16,8 @@ router.get('/nonce', getNonce);
 
 // User login with wallet signature
 router.post('/login', validateLogin, login);
+
+// User logout
+router.post('/logout', authMiddleware, logout);
 
 export default router;

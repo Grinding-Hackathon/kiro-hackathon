@@ -2,7 +2,8 @@ import request from 'supertest';
 import { app } from '../index';
 
 describe('Security Integration Tests', () => {
-  const mockAuthToken = 'Bearer mock-jwt-token';
+  const jwt = require('jsonwebtoken');
+  const mockAuthToken = `Bearer ${jwt.sign({ userId: 'user-123' }, process.env['JWT_SECRET'] || 'test-secret', { expiresIn: '1h' })}`;
 
   // Mock JWT verification for protected routes
   beforeEach(() => {

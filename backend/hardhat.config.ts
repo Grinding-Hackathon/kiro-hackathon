@@ -18,6 +18,10 @@ const config: HardhatUserConfig = {
     hardhat: {
       chainId: 1337,
     },
+    localhost: {
+      url: "http://127.0.0.1:8545",
+      chainId: 1337
+    },
     goerli: {
       url: process.env.GOERLI_URL || "",
       accounts: process.env.PRIVATE_KEY && process.env.PRIVATE_KEY.length === 64 ? [process.env.PRIVATE_KEY] : [],
@@ -26,6 +30,13 @@ const config: HardhatUserConfig = {
       url: process.env.SEPOLIA_URL || "",
       accounts: process.env.PRIVATE_KEY && process.env.PRIVATE_KEY.length === 64 ? [process.env.PRIVATE_KEY] : [],
     },
+    mainnet: {
+      url: process.env.ETHEREUM_MAINNET_RPC_URL || "",
+      accounts: process.env.ETHEREUM_PRIVATE_KEY ? [process.env.ETHEREUM_PRIVATE_KEY] : [],
+      chainId: 1,
+      gasPrice: "auto",
+      gas: "auto"
+    }
   },
   gasReporter: {
     enabled: process.env.REPORT_GAS !== undefined,

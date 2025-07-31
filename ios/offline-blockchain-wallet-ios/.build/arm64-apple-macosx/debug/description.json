@@ -346,6 +346,7 @@
         "-emit-objc-header",
         "-emit-objc-header-path",
         "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/Alamofire.build/Alamofire-Swift.h",
+        "-color-diagnostics",
         "-swift-version",
         "5",
         "-enable-upcoming-feature",
@@ -752,6 +753,7 @@
         "-emit-objc-header",
         "-emit-objc-header-path",
         "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/BigInt.build/BigInt-Swift.h",
+        "-color-diagnostics",
         "-swift-version",
         "5",
         "-sdk",
@@ -954,6 +956,7 @@
         "-emit-objc-header",
         "-emit-objc-header-path",
         "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/CodeScanner.build/CodeScanner-Swift.h",
+        "-color-diagnostics",
         "-swift-version",
         "5",
         "-sdk",
@@ -1620,6 +1623,7 @@
         "-emit-objc-header",
         "-emit-objc-header-path",
         "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/CryptoSwift.build/CryptoSwift-Swift.h",
+        "-color-diagnostics",
         "-swift-version",
         "5",
         "-sdk",
@@ -2270,6 +2274,7 @@
         "-emit-objc-header",
         "-emit-objc-header-path",
         "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/KeychainAccess.build/KeychainAccess-Swift.h",
+        "-color-diagnostics",
         "-swift-version",
         "5",
         "-sdk",
@@ -2325,6 +2330,10 @@
         {
           "kind" : "file",
           "name" : "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/offline-blockchain-wallet-ios/ContentView.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/offline-blockchain-wallet-ios/Models/BackgroundServiceTypes.swift"
         },
         {
           "kind" : "file",
@@ -2424,6 +2433,10 @@
         },
         {
           "kind" : "file",
+          "name" : "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/offline-blockchain-wallet-ios/Utils/ThemeManager.swift"
+        },
+        {
+          "kind" : "file",
           "name" : "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/offline-blockchain-wallet-ios/ViewModels/TransactionViewModel.swift"
         },
         {
@@ -2493,6 +2506,7 @@
       "objects" : [
         "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/OfflineBlockchainWallet.build/BuildConfiguration.swift.o",
         "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/OfflineBlockchainWallet.build/ContentView.swift.o",
+        "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/OfflineBlockchainWallet.build/BackgroundServiceTypes.swift.o",
         "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/OfflineBlockchainWallet.build/BluetoothModels.swift.o",
         "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/OfflineBlockchainWallet.build/OfflineToken.swift.o",
         "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/OfflineBlockchainWallet.build/QRCodeData.swift.o",
@@ -2517,6 +2531,7 @@
         "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/OfflineBlockchainWallet.build/DependencyContainer.swift.o",
         "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/OfflineBlockchainWallet.build/ErrorHandler.swift.o",
         "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/OfflineBlockchainWallet.build/Logger.swift.o",
+        "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/OfflineBlockchainWallet.build/ThemeManager.swift.o",
         "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/OfflineBlockchainWallet.build/TransactionViewModel.swift.o",
         "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/OfflineBlockchainWallet.build/WalletViewModel.swift.o",
         "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/OfflineBlockchainWallet.build/QRCodeDisplayView.swift.o",
@@ -2550,6 +2565,7 @@
         "-emit-objc-header",
         "-emit-objc-header-path",
         "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/OfflineBlockchainWallet.build/OfflineBlockchainWallet-Swift.h",
+        "-color-diagnostics",
         "-swift-version",
         "5",
         "-sdk",
@@ -2583,6 +2599,10 @@
         {
           "kind" : "file",
           "name" : "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/OfflineBlockchainWallet.build/ContentView.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/OfflineBlockchainWallet.build/BackgroundServiceTypes.swift.o"
         },
         {
           "kind" : "file",
@@ -2682,6 +2702,10 @@
         },
         {
           "kind" : "file",
+          "name" : "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/OfflineBlockchainWallet.build/ThemeManager.swift.o"
+        },
+        {
+          "kind" : "file",
           "name" : "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/OfflineBlockchainWallet.build/TransactionViewModel.swift.o"
         },
         {
@@ -2721,6 +2745,7 @@
       "sources" : [
         "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/offline-blockchain-wallet-ios/Configuration/BuildConfiguration.swift",
         "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/offline-blockchain-wallet-ios/ContentView.swift",
+        "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/offline-blockchain-wallet-ios/Models/BackgroundServiceTypes.swift",
         "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/offline-blockchain-wallet-ios/Models/BluetoothModels.swift",
         "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/offline-blockchain-wallet-ios/Models/OfflineToken.swift",
         "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/offline-blockchain-wallet-ios/Models/QRCodeData.swift",
@@ -2745,6 +2770,7 @@
         "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/offline-blockchain-wallet-ios/Utils/DependencyContainer.swift",
         "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/offline-blockchain-wallet-ios/Utils/ErrorHandler.swift",
         "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/offline-blockchain-wallet-ios/Utils/Logger.swift",
+        "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/offline-blockchain-wallet-ios/Utils/ThemeManager.swift",
         "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/offline-blockchain-wallet-ios/ViewModels/TransactionViewModel.swift",
         "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/offline-blockchain-wallet-ios/ViewModels/WalletViewModel.swift",
         "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/offline-blockchain-wallet-ios/Views/QRCodeDisplayView.swift",
@@ -2809,6 +2835,7 @@
         "-emit-objc-header",
         "-emit-objc-header-path",
         "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/OfflineBlockchainWalletPackageTests.build/OfflineBlockchainWalletPackageTests-Swift.h",
+        "-color-diagnostics",
         "-sdk",
         "/Applications/Xcode-16.2.0.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk",
         "-F",
@@ -2933,6 +2960,7 @@
         "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/ModuleCache",
         "-parseable-output",
         "-parse-as-library",
+        "-color-diagnostics",
         "-swift-version",
         "5",
         "-sdk",
@@ -3630,6 +3658,7 @@
         "-emit-objc-header",
         "-emit-objc-header-path",
         "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/QRCode.build/QRCode-Swift.h",
+        "-color-diagnostics",
         "-swift-version",
         "5",
         "-sdk",
@@ -4285,6 +4314,7 @@
         "-emit-objc-header",
         "-emit-objc-header-path",
         "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/QRCodeDetector.build/QRCodeDetector-Swift.h",
+        "-color-diagnostics",
         "-swift-version",
         "5",
         "-sdk",
@@ -4405,6 +4435,7 @@
         "-emit-objc-header",
         "-emit-objc-header-path",
         "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/QRCodeGenerator.build/QRCodeGenerator-Swift.h",
+        "-color-diagnostics",
         "-swift-version",
         "5",
         "-sdk",
@@ -4595,6 +4626,7 @@
         "-emit-objc-header",
         "-emit-objc-header-path",
         "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/SwiftImageReadWrite.build/SwiftImageReadWrite-Swift.h",
+        "-color-diagnostics",
         "-swift-version",
         "5",
         "-sdk",
@@ -5143,6 +5175,7 @@
         "-emit-objc-header",
         "-emit-objc-header-path",
         "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/Web3Core.build/Web3Core-Swift.h",
+        "-color-diagnostics",
         "-swift-version",
         "5",
         "-sdk",
@@ -5725,6 +5758,7 @@
         "-emit-objc-header",
         "-emit-objc-header-path",
         "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/secp256k1.build/secp256k1-Swift.h",
+        "-color-diagnostics",
         "-swift-version",
         "5",
         "-sdk",
@@ -6227,6 +6261,7 @@
         "-emit-objc-header",
         "-emit-objc-header-path",
         "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/web3swift.build/web3swift-Swift.h",
+        "-color-diagnostics",
         "-swift-version",
         "5",
         "-sdk",
@@ -6729,6 +6764,7 @@
         "-emit-objc-header",
         "-emit-objc-header-path",
         "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/zkp.build/zkp-Swift.h",
+        "-color-diagnostics",
         "-swift-version",
         "5",
         "-sdk",
@@ -6947,6 +6983,7 @@
       "-emit-objc-header",
       "-emit-objc-header-path",
       "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/Alamofire.build/Alamofire-Swift.h",
+      "-color-diagnostics",
       "-swift-version",
       "5",
       "-enable-upcoming-feature",
@@ -7029,6 +7066,7 @@
       "-emit-objc-header",
       "-emit-objc-header-path",
       "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/BigInt.build/BigInt-Swift.h",
+      "-color-diagnostics",
       "-swift-version",
       "5",
       "-sdk",
@@ -7088,6 +7126,7 @@
       "-emit-objc-header",
       "-emit-objc-header-path",
       "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/CodeScanner.build/CodeScanner-Swift.h",
+      "-color-diagnostics",
       "-swift-version",
       "5",
       "-sdk",
@@ -7256,6 +7295,7 @@
       "-emit-objc-header",
       "-emit-objc-header-path",
       "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/CryptoSwift.build/CryptoSwift-Swift.h",
+      "-color-diagnostics",
       "-swift-version",
       "5",
       "-sdk",
@@ -7309,6 +7349,7 @@
       "-emit-objc-header",
       "-emit-objc-header-path",
       "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/KeychainAccess.build/KeychainAccess-Swift.h",
+      "-color-diagnostics",
       "-swift-version",
       "5",
       "-sdk",
@@ -7344,6 +7385,7 @@
       "-c",
       "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/offline-blockchain-wallet-ios/Configuration/BuildConfiguration.swift",
       "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/offline-blockchain-wallet-ios/ContentView.swift",
+      "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/offline-blockchain-wallet-ios/Models/BackgroundServiceTypes.swift",
       "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/offline-blockchain-wallet-ios/Models/BluetoothModels.swift",
       "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/offline-blockchain-wallet-ios/Models/OfflineToken.swift",
       "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/offline-blockchain-wallet-ios/Models/QRCodeData.swift",
@@ -7368,6 +7410,7 @@
       "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/offline-blockchain-wallet-ios/Utils/DependencyContainer.swift",
       "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/offline-blockchain-wallet-ios/Utils/ErrorHandler.swift",
       "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/offline-blockchain-wallet-ios/Utils/Logger.swift",
+      "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/offline-blockchain-wallet-ios/Utils/ThemeManager.swift",
       "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/offline-blockchain-wallet-ios/ViewModels/TransactionViewModel.swift",
       "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/offline-blockchain-wallet-ios/ViewModels/WalletViewModel.swift",
       "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/offline-blockchain-wallet-ios/Views/QRCodeDisplayView.swift",
@@ -7401,6 +7444,7 @@
       "-emit-objc-header",
       "-emit-objc-header-path",
       "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/OfflineBlockchainWallet.build/OfflineBlockchainWallet-Swift.h",
+      "-color-diagnostics",
       "-swift-version",
       "5",
       "-sdk",
@@ -7459,6 +7503,7 @@
       "-emit-objc-header",
       "-emit-objc-header-path",
       "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/OfflineBlockchainWalletPackageTests.build/OfflineBlockchainWalletPackageTests-Swift.h",
+      "-color-diagnostics",
       "-sdk",
       "/Applications/Xcode-16.2.0.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX15.2.sdk",
       "-F",
@@ -7519,6 +7564,7 @@
       "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/ModuleCache",
       "-parseable-output",
       "-parse-as-library",
+      "-color-diagnostics",
       "-swift-version",
       "5",
       "-sdk",
@@ -7685,6 +7731,7 @@
       "-emit-objc-header",
       "-emit-objc-header-path",
       "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/QRCode.build/QRCode-Swift.h",
+      "-color-diagnostics",
       "-swift-version",
       "5",
       "-sdk",
@@ -7738,6 +7785,7 @@
       "-emit-objc-header",
       "-emit-objc-header-path",
       "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/QRCodeDetector.build/QRCodeDetector-Swift.h",
+      "-color-diagnostics",
       "-swift-version",
       "5",
       "-sdk",
@@ -7798,6 +7846,7 @@
       "-emit-objc-header",
       "-emit-objc-header-path",
       "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/QRCodeGenerator.build/QRCodeGenerator-Swift.h",
+      "-color-diagnostics",
       "-swift-version",
       "5",
       "-sdk",
@@ -7865,6 +7914,7 @@
       "-emit-objc-header",
       "-emit-objc-header-path",
       "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/SwiftImageReadWrite.build/SwiftImageReadWrite-Swift.h",
+      "-color-diagnostics",
       "-swift-version",
       "5",
       "-sdk",
@@ -7999,6 +8049,7 @@
       "-emit-objc-header",
       "-emit-objc-header-path",
       "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/Web3Core.build/Web3Core-Swift.h",
+      "-color-diagnostics",
       "-swift-version",
       "5",
       "-sdk",
@@ -8078,6 +8129,7 @@
       "-emit-objc-header",
       "-emit-objc-header-path",
       "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/secp256k1.build/secp256k1-Swift.h",
+      "-color-diagnostics",
       "-swift-version",
       "5",
       "-sdk",
@@ -8196,6 +8248,7 @@
       "-emit-objc-header",
       "-emit-objc-header-path",
       "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/web3swift.build/web3swift-Swift.h",
+      "-color-diagnostics",
       "-swift-version",
       "5",
       "-sdk",
@@ -8275,6 +8328,7 @@
       "-emit-objc-header",
       "-emit-objc-header-path",
       "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/zkp.build/zkp-Swift.h",
+      "-color-diagnostics",
       "-swift-version",
       "5",
       "-sdk",
@@ -9401,6 +9455,10 @@
         },
         {
           "kind" : "file",
+          "name" : "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/offline-blockchain-wallet-ios/Models/BackgroundServiceTypes.swift"
+        },
+        {
+          "kind" : "file",
           "name" : "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/offline-blockchain-wallet-ios/Models/BluetoothModels.swift"
         },
         {
@@ -9494,6 +9552,10 @@
         {
           "kind" : "file",
           "name" : "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/offline-blockchain-wallet-ios/Utils/Logger.swift"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/offline-blockchain-wallet-ios/Utils/ThemeManager.swift"
         },
         {
           "kind" : "file",
@@ -10293,6 +10355,10 @@
         },
         {
           "kind" : "file",
+          "name" : "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/OfflineBlockchainWallet.build/BackgroundServiceTypes.swift.o"
+        },
+        {
+          "kind" : "file",
           "name" : "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/OfflineBlockchainWallet.build/BackgroundTaskManager.swift.o"
         },
         {
@@ -10382,6 +10448,10 @@
         {
           "kind" : "file",
           "name" : "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/OfflineBlockchainWallet.build/StorageService.swift.o"
+        },
+        {
+          "kind" : "file",
+          "name" : "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/OfflineBlockchainWallet.build/ThemeManager.swift.o"
         },
         {
           "kind" : "file",

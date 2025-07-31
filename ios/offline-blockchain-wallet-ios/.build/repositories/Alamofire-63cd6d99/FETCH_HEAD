@@ -1167,7 +1167,6 @@ c49afc03ba021c758f2a97889aa5e4f7c27ad571	not-for-merge	'refs/pull/3917/head' of 
 aa091c5bb94629568e8aae2bde762d5c076d3dda	not-for-merge	'refs/pull/3924/head' of https://github.com/Alamofire/Alamofire
 d41dee00976d342f75a30605a455692792ef4e81	not-for-merge	'refs/pull/3929/head' of https://github.com/Alamofire/Alamofire
 74090ca080debcb0607853e8fd15d21baf2c64c4	not-for-merge	'refs/pull/3939/head' of https://github.com/Alamofire/Alamofire
-2e008c7a2e87c2096ba9c01039d5e6565de33f49	not-for-merge	'refs/pull/3939/merge' of https://github.com/Alamofire/Alamofire
 63a00ae700a402ee3efb1eeebfd6297cf40aae26	not-for-merge	'refs/pull/394/head' of https://github.com/Alamofire/Alamofire
 762a0ae286dccfe699c2bf54dddb5dd420b082e7	not-for-merge	'refs/pull/3945/head' of https://github.com/Alamofire/Alamofire
 4a7c57da0371d33d0676b88c9a401c97df1dce6e	not-for-merge	'refs/pull/3946/head' of https://github.com/Alamofire/Alamofire
@@ -1179,6 +1178,8 @@ cfeb11acc5c8cb2a3239672992a4dc1f46372d81	not-for-merge	'refs/pull/3947/merge' of
 6f0ca06791960cf2f40e67df36285ac989a0ade4	not-for-merge	'refs/pull/3949/head' of https://github.com/Alamofire/Alamofire
 4fddf4e893588c7d89860071c97cbfd573125733	not-for-merge	'refs/pull/3955/head' of https://github.com/Alamofire/Alamofire
 463296eccd8cb39cfad499295f861858503159c4	not-for-merge	'refs/pull/3964/head' of https://github.com/Alamofire/Alamofire
+a88addfcc3e2f1ee4fbbce200f9f3d983353fc70	not-for-merge	'refs/pull/3967/head' of https://github.com/Alamofire/Alamofire
+c48a1dcb017d06eb359727d977b64a20e51d4c0c	not-for-merge	'refs/pull/3969/head' of https://github.com/Alamofire/Alamofire
 84ce8c8c1f50e34a602e8b3c20b9f50d7adcfe10	not-for-merge	'refs/pull/4/head' of https://github.com/Alamofire/Alamofire
 390fad0398cfe0212f00a7ec05ebb96049b1e94b	not-for-merge	'refs/pull/4/merge' of https://github.com/Alamofire/Alamofire
 ee567d955892438b218789ce3ebc2dc38e9cc440	not-for-merge	'refs/pull/40/head' of https://github.com/Alamofire/Alamofire

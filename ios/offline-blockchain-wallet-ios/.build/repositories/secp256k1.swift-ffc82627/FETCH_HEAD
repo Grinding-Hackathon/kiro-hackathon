@@ -2,8 +2,8 @@ ecf1239f289c78e795267bed5f09c0a404192a7c	not-for-merge	branch 'BIP137' of https:
 e23c3c0dc1fd6b942db88a412c5437f7294025d9	not-for-merge	branch 'CT' of https://github.com/GigaBitcoin/secp256k1.swift
 47fd03d185126dbab73e57486290c03edffb48d7	not-for-merge	branch 'DEV' of https://github.com/GigaBitcoin/secp256k1.swift
 503942dee15d11f670aed9e874d8dcbe17be04aa	not-for-merge	branch 'DOCC' of https://github.com/GigaBitcoin/secp256k1.swift
-e7e6f201e62ae542c6f3e481b6fbd457cbb200e8	not-for-merge	branch 'dependabot/submodules/Submodules/swift-crypto-88b9c9b' of https://github.com/GigaBitcoin/secp256k1.swift
-a5081e5e46672eb1001a3574415e3428f4267447	not-for-merge	branch 'main' of https://github.com/GigaBitcoin/secp256k1.swift
+8f9a0f74deb2bdf2b73c45e231dbbc76e825bbe7	not-for-merge	branch 'dependabot/submodules/Submodules/swift-crypto-84b1d49' of https://github.com/GigaBitcoin/secp256k1.swift
+d9976566378dea032c1c1ce8f66d58f8cdc439dc	not-for-merge	branch 'main' of https://github.com/GigaBitcoin/secp256k1.swift
 a653c8a46c4485b9094805640f946527e40e315e	not-for-merge	'refs/pull/1/head' of https://github.com/GigaBitcoin/secp256k1.swift
 8f445a8caeb91b3f9ecc09118492e1fd5bdb74d2	not-for-merge	'refs/pull/10/head' of https://github.com/GigaBitcoin/secp256k1.swift
 a1acc4aec6c3ac6d9a52ba40bfce9e25b85e8a5e	not-for-merge	'refs/pull/100/head' of https://github.com/GigaBitcoin/secp256k1.swift
@@ -731,8 +731,11 @@ ae8acc391d025e288da6557225b32f3e99f25b54	not-for-merge	'refs/pull/778/head' of h
 9fb415a16cd8da3784ab04ecc13b17fabc3966b5	not-for-merge	'refs/pull/783/head' of https://github.com/GigaBitcoin/secp256k1.swift
 628d70002d6ee3176c3f181d18e14dfc8f59986c	not-for-merge	'refs/pull/784/head' of https://github.com/GigaBitcoin/secp256k1.swift
 e7e6f201e62ae542c6f3e481b6fbd457cbb200e8	not-for-merge	'refs/pull/785/head' of https://github.com/GigaBitcoin/secp256k1.swift
-e5dab3a09e6589031d40be4f3e62026b62e15e72	not-for-merge	'refs/pull/785/merge' of https://github.com/GigaBitcoin/secp256k1.swift
 f6952e2e0cd975ddb7e4f4e46f219ae3fd93e6c0	not-for-merge	'refs/pull/786/head' of https://github.com/GigaBitcoin/secp256k1.swift
+8f9a0f74deb2bdf2b73c45e231dbbc76e825bbe7	not-for-merge	'refs/pull/787/head' of https://github.com/GigaBitcoin/secp256k1.swift
+b3ee9170cb9488d6c1b11543891db0847507cb03	not-for-merge	'refs/pull/787/merge' of https://github.com/GigaBitcoin/secp256k1.swift
+ac20c7a415af25abb41a5210b241579621908a5f	not-for-merge	'refs/pull/788/head' of https://github.com/GigaBitcoin/secp256k1.swift
+9fd0f57f6c54ece67995b91f860a68d41b699840	not-for-merge	'refs/pull/789/head' of https://github.com/GigaBitcoin/secp256k1.swift
 6b1cb8580bc0f75fd0011f3bba7c92de0493596e	not-for-merge	'refs/pull/79/head' of https://github.com/GigaBitcoin/secp256k1.swift
 9603018e9a71f149c352035b29dbf6a439d7c232	not-for-merge	'refs/pull/8/head' of https://github.com/GigaBitcoin/secp256k1.swift
 435d4f37a88755c7c7f16c5ae95cb2d1c0a9d8e3	not-for-merge	'refs/pull/80/head' of https://github.com/GigaBitcoin/secp256k1.swift

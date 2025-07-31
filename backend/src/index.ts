@@ -10,6 +10,7 @@ import { config } from '@/config/config';
 import { logger, auditLogger } from '@/utils/logger';
 import { errorHandler, fraudDetectionMiddleware } from '@/middleware/errorHandler';
 import { rateLimiter, trackSuspiciousActivity, progressiveDelay, ddosProtection } from '@/middleware/rateLimiter';
+import { metricsMiddleware, metricsHandler } from '@/middleware/metrics';
 import { initializeDatabase, closeDatabase } from '@/database/init';
 import { swaggerSpec, swaggerOptions } from '@/config/swagger';
 import { healthMonitoringService } from '@/services/healthMonitoringService';
@@ -42,12 +43,18 @@ app.use(morgan('combined', {
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// Metrics middleware (before other middleware to capture all requests)
+app.use(metricsMiddleware);
+
 // Security middleware
 app.use(ddosProtection);
 app.use(trackSuspiciousActivity);
 app.use(progressiveDelay);
 app.use(rateLimiter);
 app.use(fraudDetectionMiddleware);
+
+// Metrics endpoint
+app.get('/metrics', metricsHandler);
 
 // Health check endpoint
 app.get('/health', async (_req, res) => {
