@@ -75,7 +75,7 @@ class QRCodeService: QRCodeServiceProtocol {
         logger.log("Generating QR code with data: \(jsonString)", level: .debug)
         
         // Create QR code
-        let qrCode = try QRCode.Document(utf8String: jsonString)
+        let qrCode = QRCode.Document(utf8String: jsonString)
         qrCode.errorCorrection = mapCorrectionLevel(options.correctionLevel)
         
         // Configure design
@@ -83,7 +83,9 @@ class QRCodeService: QRCodeServiceProtocol {
         qrCode.design.foregroundColor(CGColor.from(hex: options.foregroundColor))
         
         // Generate PNG data
-        let pngData = try qrCode.pngData(dimension: Int(options.size.width))
+        guard let pngData = qrCode.pngData(dimension: Int(options.size.width)) else {
+            throw QRCodeServiceError.generationFailed
+        }
         
         return pngData
     }

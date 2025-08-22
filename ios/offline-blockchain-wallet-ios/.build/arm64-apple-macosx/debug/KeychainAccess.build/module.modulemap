@@ -1,4 +1,0 @@
-module KeychainAccess {
-    header "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/KeychainAccess.build/KeychainAccess-Swift.h"
-    requires objc
-}

@@ -1,4 +1,0 @@
-module secp256k1_bindings {
-    umbrella "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/checkouts/secp256k1.swift/Sources/secp256k1_bindings/include"
-    export *
-}

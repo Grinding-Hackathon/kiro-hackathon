@@ -1,4 +1,0 @@
-module zkp {
-    header "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/zkp.build/zkp-Swift.h"
-    requires objc
-}

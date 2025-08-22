@@ -1,3 +1,29 @@
+#!/bin/bash
+
+echo "🔧 Fixing Xcode project corruption..."
+
+# Navigate to project directory
+cd "$(dirname "$0")/.."
+
+# Backup the current project file
+cp offline-blockchain-wallet-ios.xcodeproj/project.pbxproj offline-blockchain-wallet-ios.xcodeproj/project.pbxproj.backup-$(date +%Y%m%d_%H%M%S)
+
+# Fix common project file issues
+echo "🔨 Repairing project.pbxproj..."
+
+# Remove any malformed lines and fix syntax
+sed -i '' '/^NaN-undefined$/d' offline-blockchain-wallet-ios.xcodeproj/project.pbxproj
+sed -i '' '/^undefined$/d' offline-blockchain-wallet-ios.xcodeproj/project.pbxproj
+sed -i '' '/^[[:space:]]*$/N;/^\n$/d' offline-blockchain-wallet-ios.xcodeproj/project.pbxproj
+
+# Validate the file is now readable
+if plutil -lint offline-blockchain-wallet-ios.xcodeproj/project.pbxproj >/dev/null 2>&1; then
+    echo "✅ Project file syntax is valid"
+else
+    echo "⚠️  Project file still has issues, trying alternative fix..."
+    
+    # Alternative: Create a minimal working project file
+    cat > offline-blockchain-wallet-ios.xcodeproj/project.pbxproj << 'EOF'
 // !$*UTF8*$!
 {
 	archiveVersion = 1;
@@ -136,7 +162,6 @@
 				E11F32FE2E2F2F5F006A51DE /* XCRemoteSwiftPackageReference "QRCode" */,
 				E11F33072E2F2F6F006A51DE /* XCRemoteSwiftPackageReference "CodeScanner" */,
 			);
-			preferredProjectObjectVersion = 77;
 			productRefGroup = E11518EE2E2E216500A0B401 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -294,7 +319,6 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"offline-blockchain-wallet-ios/Preview Content\"";
-				DEVELOPMENT_TEAM = 9P78Q47KY2;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "offline-blockchain-wallet-ios/Info.plist";
@@ -328,7 +352,6 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"offline-blockchain-wallet-ios/Preview Content\"";
-				DEVELOPMENT_TEAM = 9P78Q47KY2;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = "offline-blockchain-wallet-ios/Info.plist";
@@ -463,3 +486,23 @@
 	};
 	rootObject = E11518E52E2E216500A0B401 /* Project object */;
 }
+EOF
+    
+    echo "✅ Created clean project file"
+fi
+
+echo ""
+echo "🧹 Cleaning build artifacts..."
+rm -rf .build
+rm -rf DerivedData
+
+echo ""
+echo "✅ Project corruption fixed!"
+echo ""
+echo "Next steps:"
+echo "1. Open Xcode"
+echo "2. Clean Build Folder (Cmd+Shift+K)"
+echo "3. File → Packages → Reset Package Caches"
+echo "4. Build for your device (Cmd+R)"
+echo ""
+echo "The QRCodeDetector framework issue should now be resolved."

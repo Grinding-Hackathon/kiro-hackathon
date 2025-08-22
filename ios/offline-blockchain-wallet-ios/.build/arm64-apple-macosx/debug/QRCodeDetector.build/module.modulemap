@@ -1,4 +1,0 @@
-module QRCodeDetector {
-    header "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/QRCodeDetector.build/QRCodeDetector-Swift.h"
-    requires objc
-}

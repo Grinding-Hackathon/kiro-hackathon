@@ -1,4 +1,0 @@
-module Web3Core {
-    header "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/Web3Core.build/Web3Core-Swift.h"
-    requires objc
-}

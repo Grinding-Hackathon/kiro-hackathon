@@ -1,4 +1,0 @@
-module BigInt {
-    header "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/BigInt.build/BigInt-Swift.h"
-    requires objc
-}

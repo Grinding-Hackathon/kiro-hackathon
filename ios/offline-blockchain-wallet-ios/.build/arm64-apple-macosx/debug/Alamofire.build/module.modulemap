@@ -1,4 +1,0 @@
-module Alamofire {
-    header "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/Alamofire.build/Alamofire-Swift.h"
-    requires objc
-}
