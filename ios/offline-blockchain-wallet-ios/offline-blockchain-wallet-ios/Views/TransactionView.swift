@@ -14,6 +14,10 @@ struct TransactionView: View {
     @State private var selectedFilter: TransactionFilter = .all
     @State private var showingQRScanner = false
     
+    // Enhanced focus state management
+    @FocusState private var focusedField: TransactionFocusField?
+    private let focusFields: [TransactionFocusField] = [.recipient, .amount, .description]
+    
     init(viewModel: TransactionViewModel) {
         self._transactionViewModel = StateObject(wrappedValue: viewModel)
     }
@@ -72,6 +76,13 @@ struct TransactionView: View {
                     }
                 )
             }
+            .dismissKeyboardOnTap() // Add keyboard dismissal functionality
+            .enhancedFocusState($focusedField, fields: focusFields) { newField in
+                // Optional: Handle focus changes for analytics or validation
+                if newField == nil {
+                    // Keyboard was dismissed, could trigger validation
+                }
+            }
         }
     }
     
@@ -114,9 +125,23 @@ struct TransactionView: View {
                     }
                     
                     HStack(spacing: 12) {
-                        TextField("Enter recipient ID or scan QR", text: $transactionViewModel.recipientId)
+                        TextField(TransactionFocusField.recipient.placeholder, text: $transactionViewModel.recipientId)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
                             .font(.system(.body, design: .monospaced))
+                            #if canImport(UIKit)
+                            .keyboardType(TransactionFocusField.recipient.keyboardType)
+                            #endif
+                            .focused($focusedField, equals: .recipient)
+                            .submitLabel(.next)
+                            .onSubmit {
+                                var currentFocus = focusedField
+                                FocusManager.moveToNext(
+                                    from: currentFocus,
+                                    in: focusFields,
+                                    focusState: &currentFocus
+                                )
+                                focusedField = currentFocus
+                            }
                         
                         Button(action: {
                             // Open QR scanner with enhanced feedback
@@ -133,6 +158,7 @@ struct TransactionView: View {
                             }
                         }
                         .buttonStyle(PlainButtonStyle())
+                        .preventKeyboardDismissal()
                     }
                     
                     // Enhanced recipient validation feedback
@@ -202,11 +228,24 @@ struct TransactionView: View {
                     
                     // Enhanced amount input field
                     VStack(spacing: 8) {
-                        TextField("0.00", text: $transactionViewModel.amount)
+                        TextField(TransactionFocusField.amount.placeholder, text: $transactionViewModel.amount)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
-                            .keyboardType(.decimalPad)
+                            #if canImport(UIKit)
+                            .keyboardType(TransactionFocusField.amount.keyboardType)
+                            #endif
                             .font(.system(size: 24, weight: .semibold, design: .rounded))
                             .multilineTextAlignment(.center)
+                            .focused($focusedField, equals: .amount)
+                            .submitLabel(.next)
+                            .onSubmit {
+                                var currentFocus = focusedField
+                                FocusManager.moveToNext(
+                                    from: currentFocus,
+                                    in: focusFields,
+                                    focusState: &currentFocus
+                                )
+                                focusedField = currentFocus
+                            }
                             .overlay(
                                 RoundedRectangle(cornerRadius: 8)
                                     .stroke(
@@ -234,6 +273,7 @@ struct TransactionView: View {
                                         .foregroundColor(.blue)
                                 }
                                 .buttonStyle(PlainButtonStyle())
+                                .preventKeyboardDismissal()
                             }
                         }
                     }
@@ -316,6 +356,44 @@ struct TransactionView: View {
                         RoundedRectangle(cornerRadius: 12)
                             .fill(Color(.systemGray6))
                     )
+                }
+                
+                // Enhanced Description Input (Optional)
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Text("Description")
+                            .font(.headline)
+                            .fontWeight(.semibold)
+                        
+                        Text("(Optional)")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                        
+                        Spacer()
+                    }
+                    
+                    TextField(TransactionFocusField.description.placeholder, text: $transactionViewModel.transactionDescription)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        #if canImport(UIKit)
+                        .keyboardType(TransactionFocusField.description.keyboardType)
+                        #endif
+                        .focused($focusedField, equals: .description)
+                        .submitLabel(.done)
+                        .onSubmit {
+                            focusedField = nil
+                        }
+                    
+                    if !transactionViewModel.transactionDescription.isEmpty {
+                        HStack(spacing: 8) {
+                            Image(systemName: "text.bubble")
+                                .font(.caption)
+                                .foregroundColor(.blue)
+                            
+                            Text("Description will be included with the transaction")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                    }
                 }
                 
                 // Enhanced Transaction Summary
@@ -481,6 +559,7 @@ struct TransactionView: View {
                         .animation(.easeInOut(duration: 0.1), value: transactionViewModel.isProcessingTransaction)
                     }
                     .disabled(!isValidTransaction || transactionViewModel.isProcessingTransaction)
+                    .preventKeyboardDismissal()
                     
                     // Transaction requirements checklist
                     if !isValidTransaction {
@@ -526,6 +605,7 @@ struct TransactionView: View {
             }
             .padding()
         }
+        .dismissKeyboardOnTapWithScrolling()
     }
     
     private var transactionHistoryView: some View {

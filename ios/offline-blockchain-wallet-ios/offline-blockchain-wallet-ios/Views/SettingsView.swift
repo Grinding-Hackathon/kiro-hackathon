@@ -330,6 +330,7 @@ struct SettingsView: View {
                                 .foregroundColor(.red)
                         }
                     }
+                    .preventKeyboardDismissal()
                 }
                 #endif
             }
@@ -350,6 +351,7 @@ struct SettingsView: View {
             } message: {
                 Text(walletViewModel.errorMessage ?? "")
             }
+            .dismissKeyboardOnTapWithScrolling()
     }
     
     // MARK: - Helper Methods

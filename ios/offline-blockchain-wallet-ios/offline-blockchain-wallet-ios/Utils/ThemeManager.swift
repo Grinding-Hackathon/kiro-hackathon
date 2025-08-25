@@ -7,6 +7,9 @@
 
 import SwiftUI
 import Combine
+#if canImport(UIKit)
+import UIKit
+#endif
 
 enum AppearanceMode: String, CaseIterable {
     case system = "system"
@@ -150,6 +153,7 @@ extension View {
 // MARK: - Color Extensions for Dark Mode Support
 
 extension Color {
+    #if canImport(UIKit)
     // Adaptive background colors
     static let adaptiveBackground = Color(UIColor.systemBackground)
     static let adaptiveSecondaryBackground = Color(UIColor.secondarySystemBackground)
@@ -187,4 +191,23 @@ extension Color {
             return UIColor.systemBackground
         }
     })
+    #else
+    // Fallback colors for non-UIKit platforms
+    static let adaptiveBackground = Color(.systemBackground)
+    static let adaptiveSecondaryBackground = Color(.systemBackground)
+    static let adaptiveTertiaryBackground = Color(.systemBackground)
+    
+    static let adaptiveText = Color.primary
+    static let adaptiveSecondaryText = Color.secondary
+    static let adaptiveTertiaryText = Color.secondary
+    
+    static let adaptiveSurface = Color(.systemBackground)
+    static let adaptiveSecondarySurface = Color(.systemBackground)
+    
+    static let adaptiveBorder = Color.secondary
+    static let adaptiveSeparator = Color.secondary
+    
+    static let adaptiveCardBackground = Color(.systemBackground)
+    static let adaptiveElevatedCardBackground = Color(.systemBackground)
+    #endif
 }

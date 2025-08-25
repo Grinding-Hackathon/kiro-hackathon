@@ -40,6 +40,7 @@ struct WalletView: View {
                         }
                         .padding()
                     }
+                    .dismissKeyboardOnTapWithScrolling()
                     .refreshable {
                         await walletViewModel.refreshBalances()
                     }
@@ -94,6 +95,7 @@ struct WalletView: View {
                 Text(walletViewModel.errorMessage ?? "")
             }
         }
+        .dismissKeyboardOnTap()
         .task {
             await walletViewModel.refreshBalances()
         }
@@ -209,6 +211,7 @@ struct WalletView: View {
                 ) {
                     showingTransactionView = true
                 }
+                .preventKeyboardDismissal()
                 
                 ActionButton(
                     title: "Receive",
@@ -217,6 +220,7 @@ struct WalletView: View {
                 ) {
                     showingReceiveView = true
                 }
+                .preventKeyboardDismissal()
                 
                 ActionButton(
                     title: "Buy Tokens",
@@ -226,6 +230,7 @@ struct WalletView: View {
                 ) {
                     purchaseTokens()
                 }
+                .preventKeyboardDismissal()
                 
                 ActionButton(
                     title: "Scan QR",
@@ -234,6 +239,7 @@ struct WalletView: View {
                 ) {
                     showingQRScanner = true
                 }
+                .preventKeyboardDismissal()
             }
             .padding(.horizontal)
         }
@@ -664,6 +670,11 @@ struct ReceiveView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var showingQRCode = false
     @State private var requestAmount: String = ""
+    @State private var requestDescription: String = ""
+    
+    // Enhanced focus state management
+    @FocusState private var focusedField: ReceiveFocusField?
+    private let focusFields: [ReceiveFocusField] = [.amount, .description]
     
     var body: some View {
         VStack(spacing: 0) {
@@ -696,11 +707,39 @@ struct ReceiveView: View {
                     Text("Enter amount (optional)")
                         .font(.headline)
                     
-                    TextField("0.00", text: $requestAmount)
+                    TextField(ReceiveFocusField.amount.placeholder, text: $requestAmount)
                         .textFieldStyle(RoundedBorderTextFieldStyle())
-                        .keyboardType(.decimalPad)
+                        #if canImport(UIKit)
+                        .keyboardType(ReceiveFocusField.amount.keyboardType)
+                        #endif
                         .font(.title2)
                         .multilineTextAlignment(.center)
+                        .focused($focusedField, equals: .amount)
+                        .submitLabel(.next)
+                        .onSubmit {
+                            var currentFocus = focusedField
+                            FocusManager.moveToNext(
+                                from: currentFocus,
+                                in: focusFields,
+                                focusState: &currentFocus
+                            )
+                            focusedField = currentFocus
+                        }
+                    
+                    Text("Description (optional)")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                    
+                    TextField(ReceiveFocusField.description.placeholder, text: $requestDescription)
+                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        #if canImport(UIKit)
+                        .keyboardType(ReceiveFocusField.description.keyboardType)
+                        #endif
+                        .focused($focusedField, equals: .description)
+                        .submitLabel(.done)
+                        .onSubmit {
+                            focusedField = nil
+                        }
                 }
                 .padding(.horizontal)
                 
@@ -735,6 +774,10 @@ struct ReceiveView: View {
                     }
                 )
             }
+        }
+        .dismissKeyboardOnTap()
+        .enhancedFocusState($focusedField, fields: focusFields) { newField in
+            // Optional: Handle focus changes for better UX
         }
     }
 }

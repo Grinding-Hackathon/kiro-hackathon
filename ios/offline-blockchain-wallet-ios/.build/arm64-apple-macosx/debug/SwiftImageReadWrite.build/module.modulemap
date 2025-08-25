@@ -1,0 +1,4 @@
+module SwiftImageReadWrite {
+    header "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/SwiftImageReadWrite.build/SwiftImageReadWrite-Swift.h"
+    requires objc
+}

@@ -268,6 +268,7 @@ struct ManualQREntryView: View {
             }
             .padding()
         }
+        .dismissKeyboardOnTap()
     }
 }
 

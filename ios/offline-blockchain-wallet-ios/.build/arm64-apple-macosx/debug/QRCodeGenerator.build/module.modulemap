@@ -1,0 +1,4 @@
+module QRCodeGenerator {
+    header "/Users/dannysantoso/Desktop/Kiro-Hackathon/ios/offline-blockchain-wallet-ios/.build/arm64-apple-macosx/debug/QRCodeGenerator.build/QRCodeGenerator-Swift.h"
+    requires objc
+}

@@ -1,0 +1,180 @@
+{
+  "object" : {
+    "artifacts" : [
+
+    ],
+    "dependencies" : [
+      {
+        "basedOn" : null,
+        "packageRef" : {
+          "identity" : "alamofire",
+          "kind" : "remoteSourceControl",
+          "location" : "https://github.com/Alamofire/Alamofire.git",
+          "name" : "Alamofire"
+        },
+        "state" : {
+          "checkoutState" : {
+            "revision" : "513364f870f6bfc468f9d2ff0a95caccc10044c5",
+            "version" : "5.10.2"
+          },
+          "name" : "sourceControlCheckout"
+        },
+        "subpath" : "Alamofire"
+      },
+      {
+        "basedOn" : null,
+        "packageRef" : {
+          "identity" : "bigint",
+          "kind" : "remoteSourceControl",
+          "location" : "https://github.com/attaswift/BigInt.git",
+          "name" : "BigInt"
+        },
+        "state" : {
+          "checkoutState" : {
+            "revision" : "793a7fac0bfc318e85994bf6900652e827aef33e",
+            "version" : "5.4.1"
+          },
+          "name" : "sourceControlCheckout"
+        },
+        "subpath" : "BigInt"
+      },
+      {
+        "basedOn" : null,
+        "packageRef" : {
+          "identity" : "codescanner",
+          "kind" : "remoteSourceControl",
+          "location" : "https://github.com/twostraws/CodeScanner.git",
+          "name" : "CodeScanner"
+        },
+        "state" : {
+          "checkoutState" : {
+            "revision" : "5e886430238944c7200fc9e10dbf2d9550dba865",
+            "version" : "2.5.2"
+          },
+          "name" : "sourceControlCheckout"
+        },
+        "subpath" : "CodeScanner"
+      },
+      {
+        "basedOn" : null,
+        "packageRef" : {
+          "identity" : "cryptoswift",
+          "kind" : "remoteSourceControl",
+          "location" : "https://github.com/krzyzanowskim/CryptoSwift.git",
+          "name" : "CryptoSwift"
+        },
+        "state" : {
+          "checkoutState" : {
+            "revision" : "e45a26384239e028ec87fbcc788f513b67e10d8f",
+            "version" : "1.9.0"
+          },
+          "name" : "sourceControlCheckout"
+        },
+        "subpath" : "CryptoSwift"
+      },
+      {
+        "basedOn" : null,
+        "packageRef" : {
+          "identity" : "keychainaccess",
+          "kind" : "remoteSourceControl",
+          "location" : "https://github.com/kishikawakatsumi/KeychainAccess.git",
+          "name" : "KeychainAccess"
+        },
+        "state" : {
+          "checkoutState" : {
+            "revision" : "84e546727d66f1adc5439debad16270d0fdd04e7",
+            "version" : "4.2.2"
+          },
+          "name" : "sourceControlCheckout"
+        },
+        "subpath" : "KeychainAccess"
+      },
+      {
+        "basedOn" : null,
+        "packageRef" : {
+          "identity" : "qrcode",
+          "kind" : "remoteSourceControl",
+          "location" : "https://github.com/dagronf/QRCode",
+          "name" : "QRCode"
+        },
+        "state" : {
+          "checkoutState" : {
+            "revision" : "6e32d9e56b25ab50af62a902d29d119d407d05e1",
+            "version" : "17.1.0"
+          },
+          "name" : "sourceControlCheckout"
+        },
+        "subpath" : "QRCode"
+      },
+      {
+        "basedOn" : null,
+        "packageRef" : {
+          "identity" : "secp256k1.swift",
+          "kind" : "remoteSourceControl",
+          "location" : "https://github.com/GigaBitcoin/secp256k1.swift",
+          "name" : "secp256k1"
+        },
+        "state" : {
+          "checkoutState" : {
+            "revision" : "48fb20fce4ca3aad89180448a127d5bc16f0e44c",
+            "version" : "0.10.0"
+          },
+          "name" : "sourceControlCheckout"
+        },
+        "subpath" : "secp256k1.swift"
+      },
+      {
+        "basedOn" : null,
+        "packageRef" : {
+          "identity" : "swift-qrcode-generator",
+          "kind" : "remoteSourceControl",
+          "location" : "https://github.com/dagronf/swift-qrcode-generator",
+          "name" : "swift-qrcode-generator"
+        },
+        "state" : {
+          "checkoutState" : {
+            "revision" : "2b1980b825f08a81ccc762b0c4d17fcde9d5e953",
+            "version" : "2.0.2"
+          },
+          "name" : "sourceControlCheckout"
+        },
+        "subpath" : "swift-qrcode-generator"
+      },
+      {
+        "basedOn" : null,
+        "packageRef" : {
+          "identity" : "swiftimagereadwrite",
+          "kind" : "remoteSourceControl",
+          "location" : "https://github.com/dagronf/SwiftImageReadWrite",
+          "name" : "SwiftImageReadWrite"
+        },
+        "state" : {
+          "checkoutState" : {
+            "revision" : "96361ba7f9dce5184d95aba8ea90d9faa4acabb2",
+            "version" : "1.6.1"
+          },
+          "name" : "sourceControlCheckout"
+        },
+        "subpath" : "SwiftImageReadWrite"
+      },
+      {
+        "basedOn" : null,
+        "packageRef" : {
+          "identity" : "web3swift",
+          "kind" : "remoteSourceControl",
+          "location" : "https://github.com/skywinder/web3swift.git",
+          "name" : "Web3swift"
+        },
+        "state" : {
+          "checkoutState" : {
+            "revision" : "8275d1e33b3ed0df3f23961eb641c808e94d7c81",
+            "version" : "3.3.1"
+          },
+          "name" : "sourceControlCheckout"
+        },
+        "subpath" : "web3swift"
+      }
+    ]
+  },
+  "version" : 6
+}

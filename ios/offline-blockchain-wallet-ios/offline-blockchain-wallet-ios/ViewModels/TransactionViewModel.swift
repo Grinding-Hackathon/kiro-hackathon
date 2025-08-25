@@ -21,6 +21,7 @@ class TransactionViewModel: ObservableObject {
     // Transaction creation properties
     @Published var recipientId: String = ""
     @Published var amount: String = ""
+    @Published var transactionDescription: String = ""
     @Published var transactionType: TransactionType = .offlineTransfer
     
     private var cancellables = Set<AnyCancellable>()
@@ -125,6 +126,7 @@ class TransactionViewModel: ObservableObject {
     func clearForm() {
         recipientId = ""
         amount = ""
+        transactionDescription = ""
         transactionType = .offlineTransfer
     }
     
