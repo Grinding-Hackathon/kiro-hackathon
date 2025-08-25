@@ -160,8 +160,29 @@ struct QRCodeDisplayView: View {
                 }
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Settings") {
-                        // TODO: Show QR code generation settings
+                    Menu {
+                        Button(action: {
+                            generateQRCode()
+                        }) {
+                            Label("Regenerate QR Code", systemImage: "arrow.clockwise")
+                        }
+                        
+                        Button(action: shareQRCode) {
+                            Label("Share QR Code", systemImage: "square.and.arrow.up")
+                        }
+                        .disabled(viewModel.qrCodeImageData == nil)
+                        
+                        Button(action: {
+                            // Copy QR data to clipboard
+                            if let qrData = viewModel.qrCodeImageData {
+                                UIPasteboard.general.setData(qrData, forPasteboardType: "public.png")
+                            }
+                        }) {
+                            Label("Copy QR Code", systemImage: "doc.on.doc")
+                        }
+                        .disabled(viewModel.qrCodeImageData == nil)
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
                     }
                 }
             }
@@ -194,8 +215,31 @@ struct QRCodeDisplayView: View {
     }
     
     private func shareQRCode() {
-        // TODO: Implement platform-specific sharing
-        print("Share QR code functionality - to be implemented")
+        guard let qrImageData = viewModel.qrCodeImageData,
+              let qrImage = UIImage(data: qrImageData) else {
+            alertMessage = "No QR code to share"
+            showingAlert = true
+            return
+        }
+        
+        let activityController = UIActivityViewController(
+            activityItems: [qrImage],
+            applicationActivities: nil
+        )
+        
+        if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+           let window = windowScene.windows.first,
+           let rootViewController = window.rootViewController {
+            
+            // For iPad support
+            if let popover = activityController.popoverPresentationController {
+                popover.sourceView = window
+                popover.sourceRect = CGRect(x: window.bounds.midX, y: window.bounds.midY, width: 0, height: 0)
+                popover.permittedArrowDirections = []
+            }
+            
+            rootViewController.present(activityController, animated: true)
+        }
     }
     
     private func refreshQRCode() {

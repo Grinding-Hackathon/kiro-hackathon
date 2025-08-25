@@ -19,5 +19,7 @@
 	</array>
 	<key>NSUserNotificationsUsageDescription</key>
 	<string>This app needs notification permissions to alert you about token expiration, transaction status updates, and automatic token purchases.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>This app needs camera access to scan QR codes for secure wallet connections and transactions.</string>
 </dict>
 </plist>

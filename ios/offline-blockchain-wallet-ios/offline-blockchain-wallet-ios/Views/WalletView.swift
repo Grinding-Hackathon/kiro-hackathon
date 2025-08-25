@@ -67,7 +67,7 @@ struct WalletView: View {
                 }
             }
             .sheet(isPresented: $showingSettings) {
-                SettingsView(walletViewModel: walletViewModel)
+                SettingsSheetView(walletViewModel: walletViewModel)
             }
             .sheet(isPresented: $showingTransactionView) {
                 TransactionView(viewModel: DependencyContainer.shared.createTransactionViewModel())
@@ -224,9 +224,7 @@ struct WalletView: View {
                     color: .blue,
                     isLoading: walletViewModel.isLoading
                 ) {
-                    Task {
-                        await walletViewModel.purchaseOfflineTokens(amount: walletViewModel.autoRechargeAmount)
-                    }
+                    purchaseTokens()
                 }
                 
                 ActionButton(
@@ -277,6 +275,18 @@ struct WalletView: View {
         showingTransactionView = true
         // Note: In a real implementation, we would pass the payment request data
         // to the transaction view to pre-populate the recipient and amount fields
+    }
+    
+    private func purchaseTokens() {
+        Task {
+            do {
+                await walletViewModel.purchaseOfflineTokens(amount: walletViewModel.autoRechargeAmount)
+                // Refresh balances after purchase
+                await walletViewModel.refreshBalances()
+            } catch {
+                walletViewModel.errorMessage = "Failed to purchase tokens: \(error.localizedDescription)"
+            }
+        }
     }
 }
 
@@ -656,7 +666,26 @@ struct ReceiveView: View {
     @State private var requestAmount: String = ""
     
     var body: some View {
-        NavigationView {
+        VStack(spacing: 0) {
+            // Custom header
+            HStack {
+                Spacer()
+                
+                Text("Receive")
+                    .font(.headline)
+                    .fontWeight(.semibold)
+                
+                Spacer()
+                
+                Button("Done") {
+                    dismiss()
+                }
+                .fontWeight(.medium)
+            }
+            .padding()
+            .background(Color(.systemBackground))
+            
+            // Main content
             VStack(spacing: 24) {
                 Text("Receive Payment")
                     .font(.largeTitle)
@@ -693,15 +722,6 @@ struct ReceiveView: View {
                 
                 Spacer()
             }
-            .navigationTitle("Receive")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
-                        dismiss()
-                    }
-                }
-            }
             .sheet(isPresented: $showingQRCode) {
                 QRCodeDisplayView(
                     walletId: "current-wallet-id", // This would come from wallet state
@@ -715,6 +735,38 @@ struct ReceiveView: View {
                     }
                 )
             }
+        }
+    }
+}
+
+// MARK: - Settings Sheet Wrapper
+
+struct SettingsSheetView: View {
+    @ObservedObject var walletViewModel: WalletViewModel
+    @Environment(\.dismiss) private var dismiss
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            // Custom header
+            HStack {
+                Spacer()
+                
+                Text("Settings")
+                    .font(.headline)
+                    .fontWeight(.semibold)
+                
+                Spacer()
+                
+                Button("Done") {
+                    dismiss()
+                }
+                .fontWeight(.medium)
+            }
+            .padding()
+            .background(Color(.systemBackground))
+            
+            // Settings content without NavigationView
+            SettingsView(walletViewModel: walletViewModel, isSheet: true)
         }
     }
 }

@@ -12,9 +12,32 @@ struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var showingResetConfirmation = false
     @StateObject private var localThemeManager = ThemeManager()
+    let isSheet: Bool
+    
+    init(walletViewModel: WalletViewModel, isSheet: Bool = false) {
+        self.walletViewModel = walletViewModel
+        self.isSheet = isSheet
+    }
     
     var body: some View {
-        NavigationView {
+        Group {
+            if isSheet {
+                settingsContent
+            } else {
+                NavigationView {
+                    settingsContent
+                }
+            }
+        }
+        .environmentObject(localThemeManager)
+        .themed()
+        .onAppear {
+            // Ensure the current appearance mode is applied when the view appears
+            applyAppearanceMode(localThemeManager.currentAppearanceMode)
+        }
+    }
+    
+    private var settingsContent: some View {
             Form {
                 // Enhanced Auto-recharge Settings
                 Section {
@@ -198,8 +221,6 @@ struct SettingsView: View {
                         isLoading: walletViewModel.isLoading
                     )
                     
-                    Divider()
-                    
                     EnhancedInfoRow(
                         title: "Total Balance",
                         value: String(format: "%.2f", walletViewModel.offlineBalance + walletViewModel.blockchainBalance),
@@ -259,14 +280,14 @@ struct SettingsView: View {
                         
                         Picker("Appearance", selection: $localThemeManager.currentAppearanceMode) {
                             ForEach(AppearanceMode.allCases, id: \.self) { mode in
-                                HStack {
-                                    Image(systemName: mode.systemImage)
-                                    Text(mode.displayName)
-                                }
-                                .tag(mode)
+                                Text(mode.displayName)
+                                    .tag(mode)
                             }
                         }
                         .pickerStyle(.segmented)
+                        .onChange(of: localThemeManager.currentAppearanceMode) { newValue in
+                            applyAppearanceMode(newValue)
+                        }
                     }
                     .padding(.vertical, 4)
                 } header: {
@@ -292,9 +313,7 @@ struct SettingsView: View {
                         icon: "plus.circle",
                         isLoading: walletViewModel.isLoading
                     ) {
-                        Task {
-                            await walletViewModel.purchaseOfflineTokens(amount: walletViewModel.autoRechargeAmount)
-                        }
+                        purchaseTokens()
                     }
                 }
                 
@@ -315,13 +334,7 @@ struct SettingsView: View {
                 #endif
             }
             .navigationTitle("Settings")
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Done") {
-                        dismiss()
-                    }
-                }
-            }
+            .modifier(ConditionalToolbarModifier(isSheet: isSheet, dismiss: dismiss))
             .alert("Clear All Data", isPresented: $showingResetConfirmation) {
                 Button("Cancel", role: .cancel) { }
                 Button("Clear", role: .destructive) {
@@ -337,9 +350,42 @@ struct SettingsView: View {
             } message: {
                 Text(walletViewModel.errorMessage ?? "")
             }
+    }
+    
+    // MARK: - Helper Methods
+    
+    private func applyAppearanceMode(_ mode: AppearanceMode) {
+        // Update the theme manager first
+        localThemeManager.setAppearanceMode(mode)
+        
+        // Apply to all windows in all scenes
+        DispatchQueue.main.async {
+            for scene in UIApplication.shared.connectedScenes {
+                guard let windowScene = scene as? UIWindowScene else { continue }
+                
+                for window in windowScene.windows {
+                    switch mode {
+                    case .system:
+                        window.overrideUserInterfaceStyle = .unspecified
+                    case .light:
+                        window.overrideUserInterfaceStyle = .light
+                    case .dark:
+                        window.overrideUserInterfaceStyle = .dark
+                    }
+                }
+            }
         }
-        .environmentObject(localThemeManager)
-        .themed()
+    }
+    
+    private func purchaseTokens() {
+        Task {
+            do {
+                await walletViewModel.purchaseOfflineTokens(amount: walletViewModel.autoRechargeAmount)
+                // Show success message or handle result
+            } catch {
+                walletViewModel.errorMessage = "Failed to purchase tokens: \(error.localizedDescription)"
+            }
+        }
     }
 }
 
@@ -385,38 +431,40 @@ struct EnhancedInfoRow: View {
     }
     
     var body: some View {
-        HStack(spacing: 12) {
+        HStack(spacing: 16) {
             // Icon with background
             ZStack {
                 Circle()
                     .fill(color.opacity(0.15))
-                    .frame(width: 32, height: 32)
+                    .frame(width: 36, height: 36)
                 
                 Image(systemName: icon)
-                    .font(.system(size: 14, weight: .medium))
+                    .font(.system(size: 16, weight: .medium))
                     .foregroundColor(color)
             }
             
-            VStack(alignment: .leading, spacing: 2) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text(title)
                     .font(.subheadline)
                     .fontWeight(isTotal ? .semibold : .medium)
-                    .foregroundColor(.primary)
+                    .foregroundColor(.adaptiveText)
                 
                 Text(subtitle)
                     .font(.caption)
-                    .foregroundColor(.secondary)
+                    .foregroundColor(.adaptiveSecondaryText)
+                    .lineLimit(1)
             }
             
             Spacer()
             
-            VStack(alignment: .trailing, spacing: 2) {
+            VStack(alignment: .trailing, spacing: 4) {
                 if isLoading && value == "0.00" {
                     ProgressView()
                         .scaleEffect(0.8)
+                        .progressViewStyle(CircularProgressViewStyle(tint: color))
                 } else {
                     Text(value)
-                        .font(isTotal ? .headline : .subheadline)
+                        .font(isTotal ? .title3 : .subheadline)
                         .fontWeight(isTotal ? .bold : .semibold)
                         .foregroundColor(color)
                         .contentTransition(.numericText())
@@ -425,11 +473,13 @@ struct EnhancedInfoRow: View {
                 if isTotal {
                     Text("Total")
                         .font(.caption2)
-                        .foregroundColor(.secondary)
+                        .fontWeight(.medium)
+                        .foregroundColor(.adaptiveSecondaryText)
                 }
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, 8)
+        .padding(.horizontal, 4)
     }
 }
 
@@ -567,6 +617,28 @@ struct ActionRow: View {
             }
         }
         .disabled(isLoading)
+    }
+}
+
+// MARK: - Conditional Toolbar Modifier
+
+struct ConditionalToolbarModifier: ViewModifier {
+    let isSheet: Bool
+    let dismiss: DismissAction
+    
+    func body(content: Content) -> some View {
+        if isSheet {
+            content
+        } else {
+            content
+                .toolbar {
+                    ToolbarItem(placement: .navigationBarTrailing) {
+                        Button("Done") {
+                            dismiss()
+                        }
+                    }
+                }
+        }
     }
 }
 

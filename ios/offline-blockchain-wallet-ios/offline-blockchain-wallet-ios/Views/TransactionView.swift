@@ -12,6 +12,7 @@ struct TransactionView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var selectedTab = 0
     @State private var selectedFilter: TransactionFilter = .all
+    @State private var showingQRScanner = false
     
     init(viewModel: TransactionViewModel) {
         self._transactionViewModel = StateObject(wrappedValue: viewModel)
@@ -46,7 +47,7 @@ struct TransactionView: View {
             }
             .navigationTitle("Transactions")
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
+                ToolbarItem(placement: .navigationBarLeading) {
                     Button("Close") {
                         dismiss()
                     }
@@ -58,6 +59,18 @@ struct TransactionView: View {
                 }
             } message: {
                 Text(transactionViewModel.errorMessage ?? "")
+            }
+            .sheet(isPresented: $showingQRScanner) {
+                QRScannerView(
+                    onScanComplete: { paymentRequest in
+                        transactionViewModel.recipientId = paymentRequest.walletId
+                        showingQRScanner = false
+                    },
+                    onError: { error in
+                        transactionViewModel.errorMessage = error.localizedDescription
+                        showingQRScanner = false
+                    }
+                )
             }
         }
     }
@@ -414,7 +427,7 @@ struct TransactionView: View {
                         .padding()
                         .background(
                             RoundedRectangle(cornerRadius: 16)
-                                .fill(Color.white)
+                                .fill(Color.adaptiveCardBackground)
                                 .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 4)
                         )
                         .overlay(
@@ -541,7 +554,17 @@ struct TransactionView: View {
             if transactionViewModel.isLoading {
                 EnhancedLoadingView(message: "Loading transactions...")
             } else if transactionViewModel.transactions.isEmpty {
-                EnhancedEmptyTransactionsView()
+                EnhancedEmptyTransactionsView(
+                    onSendPayment: {
+                        selectedTab = 0
+                    },
+                    onScanQR: {
+                        selectedTab = 0
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                            showingQRScanner = true
+                        }
+                    }
+                )
             } else {
                 let filteredTransactions = getFilteredTransactions()
                 
@@ -600,9 +623,7 @@ struct TransactionView: View {
     // MARK: - Helper Methods
     
     private func showQRScanner() {
-        // This would show QR scanner with proper integration
-        // For now, simulate QR scan result
-        transactionViewModel.recipientId = "sample_recipient_id_12345"
+        showingQRScanner = true
     }
 }
 
@@ -1076,6 +1097,9 @@ struct EnhancedLoadingView: View {
 }
 
 struct EnhancedEmptyTransactionsView: View {
+    let onSendPayment: () -> Void
+    let onScanQR: () -> Void
+    
     var body: some View {
         VStack(spacing: 24) {
             // Illustration
@@ -1104,9 +1128,7 @@ struct EnhancedEmptyTransactionsView: View {
             
             // Quick action buttons
             VStack(spacing: 12) {
-                Button(action: {
-                    // Navigate to send transaction
-                }) {
+                Button(action: onSendPayment) {
                     HStack {
                         Image(systemName: "arrow.up.circle.fill")
                         Text("Send Payment")
@@ -1119,12 +1141,10 @@ struct EnhancedEmptyTransactionsView: View {
                     .cornerRadius(12)
                 }
                 
-                Button(action: {
-                    // Navigate to receive transaction
-                }) {
+                Button(action: onScanQR) {
                     HStack {
                         Image(systemName: "qrcode")
-                        Text("Generate QR Code")
+                        Text("Scan QR Code")
                             .fontWeight(.medium)
                     }
                     .frame(maxWidth: .infinity)

@@ -72,6 +72,28 @@ class ThemeManager: ObservableObject, ThemeManagerProtocol {
     func setAppearanceMode(_ mode: AppearanceMode) {
         currentAppearanceMode = mode
         logger.info("Appearance mode changed to: \(mode.displayName)")
+        
+        // Immediately apply the appearance mode to all windows
+        DispatchQueue.main.async { [weak self] in
+            self?.applyAppearanceModeToWindows(mode)
+        }
+    }
+    
+    private func applyAppearanceModeToWindows(_ mode: AppearanceMode) {
+        for scene in UIApplication.shared.connectedScenes {
+            guard let windowScene = scene as? UIWindowScene else { continue }
+            
+            for window in windowScene.windows {
+                switch mode {
+                case .system:
+                    window.overrideUserInterfaceStyle = .unspecified
+                case .light:
+                    window.overrideUserInterfaceStyle = .light
+                case .dark:
+                    window.overrideUserInterfaceStyle = .dark
+                }
+            }
+        }
     }
     
     func observeSystemAppearanceChanges() {

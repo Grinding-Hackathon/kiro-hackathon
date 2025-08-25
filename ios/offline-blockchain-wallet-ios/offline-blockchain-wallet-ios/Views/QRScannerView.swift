@@ -19,36 +19,32 @@ struct QRScannerView: View {
     @State private var showingAlert = false
     @State private var alertMessage = ""
     @State private var isProcessing = false
+    @State private var showingManualEntry = false
+    @State private var manualEntryText = ""
+    @State private var torchIsOn = false
     
     var body: some View {
         NavigationView {
             ZStack {
-                // Camera view - simplified for cross-platform compatibility
-                VStack {
-                    Text("QR Scanner")
-                        .font(.title2)
-                        .padding()
-                    
-                    Text("Camera scanning not available in this build")
-                        .foregroundColor(.secondary)
-                        .padding()
-                    
-                    Button("Simulate QR Scan") {
-                        // For testing purposes - simulate a valid QR code
-                        let mockPaymentRequest = QRCodePaymentRequest(
-                            walletId: "mock-wallet-id",
-                            publicKey: "mock-public-key",
-                            deviceName: "Mock Device",
-                            bluetoothInfo: BluetoothConnectionInfo()
-                        )
-                        onScanComplete(mockPaymentRequest)
-                        dismiss()
+                // Real camera view using CodeScanner
+                CodeScannerView(
+                    codeTypes: [.qr],
+                    scanMode: .continuous,
+                    scanInterval: 1.0,
+                    showViewfinder: true,
+                    simulatedData: "",
+                    shouldVibrateOnSuccess: true,
+                    isTorchOn: torchIsOn,
+                    completion: { result in
+                        switch result {
+                        case .success(let scanResult):
+                            handleScanResult(scanResult.string)
+                        case .failure(let error):
+                            showError("Camera error: \(error.localizedDescription)")
+                        }
                     }
-                    .buttonStyle(.borderedProminent)
-                    .padding()
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Color.adaptiveSecondaryBackground)
+                )
+                .ignoresSafeArea(edges: .all)
                 
                 // Overlay for processing state
                 if isProcessing {
@@ -66,7 +62,7 @@ struct QRScannerView: View {
                     }
                 }
                 
-                // Viewfinder overlay with instructions
+                // Instructions overlay
                 VStack {
                     Spacer()
                     
@@ -80,6 +76,35 @@ struct QRScannerView: View {
                             .font(.caption)
                             .foregroundColor(.white.opacity(0.8))
                             .multilineTextAlignment(.center)
+                        
+                        // Add manual entry option as fallback
+                        Button("Enter Code Manually") {
+                            showManualEntry()
+                        }
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                        .background(Color.blue.opacity(0.8))
+                        .cornerRadius(8)
+                        
+                        #if DEBUG
+                        // Debug option for testing
+                        Button("Simulate QR (Debug)") {
+                            let mockPaymentRequest = QRCodePaymentRequest(
+                                walletId: "mock-wallet-id",
+                                publicKey: "mock-public-key",
+                                deviceName: "Mock Device",
+                                bluetoothInfo: BluetoothConnectionInfo()
+                            )
+                            onScanComplete(mockPaymentRequest)
+                            dismiss()
+                        }
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 8)
+                        .background(Color.orange.opacity(0.8))
+                        .cornerRadius(8)
+                        #endif
                     }
                     .padding()
                     .background(Color.black.opacity(0.7))
@@ -99,9 +124,8 @@ struct QRScannerView: View {
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: toggleFlashlight) {
-                        Image(systemName: viewModel.isFlashlightOn ? "flashlight.on.fill" : "flashlight.off.fill")
+                        Image(systemName: torchIsOn ? "flashlight.on.fill" : "flashlight.off.fill")
                     }
-                    .disabled(!viewModel.isFlashlightAvailable)
                 }
             }
         }
@@ -110,15 +134,24 @@ struct QRScannerView: View {
         } message: {
             Text(alertMessage)
         }
-        .onAppear {
-            viewModel.checkFlashlightAvailability()
-        }
         .onDisappear {
-            viewModel.turnOffFlashlight()
+            torchIsOn = false
+        }
+        .sheet(isPresented: $showingManualEntry) {
+            ManualQREntryView(
+                text: $manualEntryText,
+                onSubmit: { qrText in
+                    handleScanResult(qrText)
+                    showingManualEntry = false
+                },
+                onCancel: {
+                    showingManualEntry = false
+                    manualEntryText = ""
+                }
+            )
         }
     }
     
-    // Simplified for cross-platform compatibility
     private func handleScanResult(_ qrString: String) {
         guard !isProcessing else { return }
         
@@ -154,16 +187,17 @@ struct QRScannerView: View {
     }
     
     private func toggleFlashlight() {
-        viewModel.toggleFlashlight()
+        torchIsOn.toggle()
+    }
+    
+    private func showManualEntry() {
+        showingManualEntry = true
     }
 }
 
 // MARK: - QR Scanner ViewModel
 
 class QRScannerViewModel: ObservableObject {
-    @Published var isFlashlightOn = false
-    @Published var isFlashlightAvailable = false
-    
     private let qrCodeService: QRCodeServiceProtocol
     private let logger: LoggerProtocol
     
@@ -177,49 +211,62 @@ class QRScannerViewModel: ObservableObject {
         logger.log("Validating scanned QR code", level: .info)
         return qrCodeService.validateQRCode(qrString)
     }
+}
+
+// MARK: - Manual QR Entry View
+
+struct ManualQREntryView: View {
+    @Binding var text: String
+    let onSubmit: (String) -> Void
+    let onCancel: () -> Void
     
-    func checkFlashlightAvailability() {
-        guard let device = AVCaptureDevice.default(for: .video) else {
-            isFlashlightAvailable = false
-            return
-        }
-        isFlashlightAvailable = device.hasTorch
-    }
-    
-    func toggleFlashlight() {
-        guard let device = AVCaptureDevice.default(for: .video), device.hasTorch else {
-            return
-        }
-        
-        do {
-            try device.lockForConfiguration()
-            
-            if isFlashlightOn {
-                device.torchMode = .off
-                isFlashlightOn = false
-            } else {
-                try device.setTorchModeOn(level: 1.0)
-                isFlashlightOn = true
+    var body: some View {
+        VStack(spacing: 20) {
+            HStack {
+                Button("Cancel") {
+                    onCancel()
+                }
+                
+                Spacer()
+                
+                Text("Manual Entry")
+                    .font(.headline)
+                
+                Spacer()
+                
+                // Invisible button for balance
+                Button("Cancel") {
+                    onCancel()
+                }
+                .opacity(0)
             }
+            .padding()
             
-            device.unlockForConfiguration()
-        } catch {
-            logger.log("Failed to toggle flashlight: \(error.localizedDescription)", level: .error)
-        }
-    }
-    
-    func turnOffFlashlight() {
-        guard let device = AVCaptureDevice.default(for: .video), device.hasTorch, isFlashlightOn else {
-            return
-        }
-        
-        do {
-            try device.lockForConfiguration()
-            device.torchMode = .off
-            device.unlockForConfiguration()
-            isFlashlightOn = false
-        } catch {
-            logger.log("Failed to turn off flashlight: \(error.localizedDescription)", level: .error)
+            VStack(spacing: 20) {
+                Text("Enter QR Code Data")
+                    .font(.title2)
+                    .padding(.top)
+                
+                Text("Paste or type the QR code content manually")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                    .multilineTextAlignment(.center)
+                
+                TextEditor(text: $text)
+                    .padding(8)
+                    .background(Color(.systemGray6))
+                    .cornerRadius(8)
+                    .frame(minHeight: 120)
+                
+                Button("Process QR Code") {
+                    onSubmit(text)
+                }
+                .buttonStyle(.borderedProminent)
+                .disabled(text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
+                
+                Spacer()
+            }
+            .padding()
         }
     }
 }
