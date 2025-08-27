@@ -47,6 +47,7 @@ class TransactionService: TransactionServiceProtocol {
     private let storageService: StorageServiceProtocol
     private let cryptographyService: CryptographyServiceProtocol
     private let offlineTokenService: OfflineTokenServiceProtocol
+    private let networkService: NetworkServiceProtocol
     private let logger = Logger.shared
     
     // Transaction state tracking
@@ -93,10 +94,12 @@ class TransactionService: TransactionServiceProtocol {
     
     init(storageService: StorageServiceProtocol,
          cryptographyService: CryptographyServiceProtocol,
-         offlineTokenService: OfflineTokenServiceProtocol) {
+         offlineTokenService: OfflineTokenServiceProtocol,
+         networkService: NetworkServiceProtocol) {
         self.storageService = storageService
         self.cryptographyService = cryptographyService
         self.offlineTokenService = offlineTokenService
+        self.networkService = networkService
         
         // Load queued transactions on initialization
         Task {
@@ -176,7 +179,7 @@ class TransactionService: TransactionServiceProtocol {
         
         // Update transaction with signature
         var signedTransaction = transaction
-        if transaction.senderId == getCurrentUserId() {
+        if await transaction.senderId == getCurrentUserId() {
             signedTransaction.senderSignature = signature
         } else {
             signedTransaction.receiverSignature = signature
@@ -584,16 +587,31 @@ extension TransactionService {
         return try JSONEncoder().encode(signingData)
     }
     
-    private func getCurrentUserId() -> String {
-        // This would get the current user ID from wallet state
-        // For now, return a placeholder
-        return "current_user_id"
+    private func getCurrentUserId() async -> String {
+        // Get current user ID from wallet state
+        do {
+            let walletState = try await storageService.loadWalletState()
+            return walletState?.walletId ?? "unknown_user"
+        } catch {
+            logger.error("Failed to get current user ID: \(error)")
+            return "unknown_user"
+        }
     }
     
     private func getPublicKey(for userId: String) async throws -> String {
-        // This would fetch the public key for a user
-        // For now, return a placeholder
-        return "user_public_key"
+        // Fetch public key from storage or network
+        if let walletState = try await storageService.loadWalletState(),
+           walletState.walletId == userId {
+            return walletState.publicKey
+        }
+        
+        // If not found locally, fetch from network
+        let publicKeyDatabase = try await networkService.fetchPublicKeys()
+        if let publicKeyInfo = publicKeyDatabase.publicKeys[userId] {
+            return publicKeyInfo.publicKey
+        }
+        
+        throw TransactionError.invalidParticipants
     }
     
     private func verifyTokenOwnership(_ transaction: Transaction) async throws {
@@ -632,13 +650,29 @@ extension TransactionService {
     }
     
     private func processTokenRedemption(_ transaction: Transaction) async throws {
-        // Process token redemption with backend
         logger.info("Processing token redemption with backend")
+        
+        // Submit transaction to backend for processing
+        let response = try await networkService.submitTransaction(transaction: transaction)
+        logger.info("Token redemption submitted: \(response.transactionId)")
+        
+        // Update transaction status
+        var updatedTransaction = transaction
+        updatedTransaction.status = .pending
+        try await updateTransactionState(updatedTransaction, to: .pending)
     }
     
     private func syncOfflineTransfer(_ transaction: Transaction) async throws {
-        // Sync offline transfer with backend
         logger.info("Syncing offline transfer with backend")
+        
+        // Submit transaction to backend for synchronization
+        let response = try await networkService.submitTransaction(transaction: transaction)
+        logger.info("Offline transfer synced: \(response.transactionId)")
+        
+        // Update transaction status
+        var updatedTransaction = transaction
+        updatedTransaction.status = .pending
+        try await updateTransactionState(updatedTransaction, to: .pending)
     }
 }
 
@@ -656,7 +690,7 @@ struct TransactionSigningData: Codable {
 
 // MARK: - Transaction Errors
 
-enum TransactionError: Error, LocalizedError {
+public enum TransactionError: Error, LocalizedError {
     case invalidAmount
     case invalidRecipient
     case invalidParticipants
@@ -670,7 +704,7 @@ enum TransactionError: Error, LocalizedError {
     case processingFailed
     case syncFailed
     
-    var errorDescription: String? {
+    public var errorDescription: String? {
         switch self {
         case .invalidAmount:
             return "Invalid transaction amount"

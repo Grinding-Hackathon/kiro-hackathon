@@ -932,7 +932,7 @@ struct StorageExportData: Codable {
     let exportTimestamp: Date
 }
 
-enum StorageError: Error, LocalizedError {
+public enum StorageError: Error, LocalizedError {
     case coreDataError(Error)
     case encodingError(Error)
     case decodingError(Error)
@@ -942,7 +942,7 @@ enum StorageError: Error, LocalizedError {
     case corruptedData
     case migrationFailed
     
-    var errorDescription: String? {
+    public var errorDescription: String? {
         switch self {
         case .coreDataError(let error):
             return "Core Data error: \(error.localizedDescription)"

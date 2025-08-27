@@ -1,0 +1,302 @@
+{
+  "dashboard": {
+    "id": null,
+    "title": "API Integration Fixes - Monitoring Dashboard",
+    "tags": ["api", "integration", "wallet", "blockchain"],
+    "timezone": "browser",
+    "panels": [
+      {
+        "id": 1,
+        "title": "API Overview",
+        "type": "stat",
+        "targets": [
+          {
+            "expr": "sum(rate(http_requests_total[5m]))",
+            "legendFormat": "Requests/sec"
+          },
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le))",
+            "legendFormat": "95th Percentile Latency"
+          },
+          {
+            "expr": "sum(rate(http_requests_total{status=~\"5..\"}[5m])) / sum(rate(http_requests_total[5m]))",
+            "legendFormat": "Error Rate"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 0}
+      },
+      {
+        "id": 2,
+        "title": "Transaction Management Metrics",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(transaction_submission_total[5m])",
+            "legendFormat": "Transaction Submissions/sec"
+          },
+          {
+            "expr": "rate(transaction_submission_failures_total[5m])",
+            "legendFormat": "Transaction Failures/sec"
+          },
+          {
+            "expr": "rate(transaction_sync_total[5m])",
+            "legendFormat": "Transaction Syncs/sec"
+          },
+          {
+            "expr": "offline_transaction_queue_size",
+            "legendFormat": "Offline Queue Size"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8}
+      },
+      {
+        "id": 3,
+        "title": "Token Management Metrics",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(token_validation_total[5m])",
+            "legendFormat": "Token Validations/sec"
+          },
+          {
+            "expr": "rate(token_validation_failures_total[5m])",
+            "legendFormat": "Validation Failures/sec"
+          },
+          {
+            "expr": "rate(token_division_total[5m])",
+            "legendFormat": "Token Divisions/sec"
+          },
+          {
+            "expr": "rate(token_division_errors_total[5m])",
+            "legendFormat": "Division Errors/sec"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8}
+      },
+      {
+        "id": 4,
+        "title": "Wallet Operations",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(wallet_balance_requests_total[5m])",
+            "legendFormat": "Balance Requests/sec"
+          },
+          {
+            "expr": "rate(wallet_history_requests_total[5m])",
+            "legendFormat": "History Requests/sec"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(wallet_balance_calculation_duration_seconds_bucket[5m]))",
+            "legendFormat": "Balance Calculation P95"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(wallet_history_query_duration_seconds_bucket[5m]))",
+            "legendFormat": "History Query P95"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16}
+      },
+      {
+        "id": 5,
+        "title": "Security Events",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(security_events_total[5m])",
+            "legendFormat": "Security Events/sec"
+          },
+          {
+            "expr": "rate(security_events_total{type=\"suspicious\"}[5m])",
+            "legendFormat": "Suspicious Events/sec"
+          },
+          {
+            "expr": "rate(security_events_total{type=\"fraud_alert\"}[5m])",
+            "legendFormat": "Fraud Alerts/sec"
+          },
+          {
+            "expr": "rate(auth_failures_total[5m])",
+            "legendFormat": "Auth Failures/sec"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16}
+      },
+      {
+        "id": 6,
+        "title": "Authentication Metrics",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(token_refresh_total[5m])",
+            "legendFormat": "Token Refreshes/sec"
+          },
+          {
+            "expr": "rate(token_refresh_failures_total[5m])",
+            "legendFormat": "Refresh Failures/sec"
+          },
+          {
+            "expr": "rate(session_validation_total[5m])",
+            "legendFormat": "Session Validations/sec"
+          },
+          {
+            "expr": "rate(logout_total[5m])",
+            "legendFormat": "Logouts/sec"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 24}
+      },
+      {
+        "id": 7,
+        "title": "Performance Metrics",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "cache_hit_rate",
+            "legendFormat": "Cache Hit Rate"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(database_query_duration_seconds_bucket[5m]))",
+            "legendFormat": "Database Query P95"
+          },
+          {
+            "expr": "database_connection_pool_active / database_connection_pool_max",
+            "legendFormat": "DB Connection Pool Usage"
+          },
+          {
+            "expr": "redis_memory_used_bytes / redis_memory_max_bytes",
+            "legendFormat": "Redis Memory Usage"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 24}
+      },
+      {
+        "id": 8,
+        "title": "Business Logic Metrics",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(double_spending_attempts_total[5m])",
+            "legendFormat": "Double Spending Attempts/sec"
+          },
+          {
+            "expr": "rate(invalid_signature_errors_total[5m])",
+            "legendFormat": "Invalid Signatures/sec"
+          },
+          {
+            "expr": "rate(token_expiration_events_total[1h])",
+            "legendFormat": "Token Expirations/hour"
+          },
+          {
+            "expr": "rate(blockchain_sync_errors_total[5m])",
+            "legendFormat": "Blockchain Sync Errors/sec"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 32}
+      },
+      {
+        "id": 9,
+        "title": "iOS Integration Health",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "rate(ios_integration_requests_total[5m])",
+            "legendFormat": "iOS Requests/sec"
+          },
+          {
+            "expr": "rate(ios_integration_errors_total[5m])",
+            "legendFormat": "iOS Errors/sec"
+          },
+          {
+            "expr": "histogram_quantile(0.95, rate(ios_request_duration_seconds_bucket[5m]))",
+            "legendFormat": "iOS Request P95"
+          },
+          {
+            "expr": "rate(response_format_errors_total[5m])",
+            "legendFormat": "Response Format Errors/sec"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 32}
+      },
+      {
+        "id": 10,
+        "title": "System Resources",
+        "type": "graph",
+        "targets": [
+          {
+            "expr": "100 - (avg by(instance) (irate(node_cpu_seconds_total{mode=\"idle\"}[5m])) * 100)",
+            "legendFormat": "CPU Usage %"
+          },
+          {
+            "expr": "(1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100",
+            "legendFormat": "Memory Usage %"
+          },
+          {
+            "expr": "(1 - (node_filesystem_avail_bytes / node_filesystem_size_bytes)) * 100",
+            "legendFormat": "Disk Usage %"
+          },
+          {
+            "expr": "rate(node_network_receive_bytes_total[5m])",
+            "legendFormat": "Network In"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 24, "x": 0, "y": 40}
+      },
+      {
+        "id": 11,
+        "title": "Error Rate by Endpoint",
+        "type": "heatmap",
+        "targets": [
+          {
+            "expr": "sum(rate(http_requests_total{status=~\"5..\"}[5m])) by (endpoint) / sum(rate(http_requests_total[5m])) by (endpoint)",
+            "legendFormat": "{{endpoint}}"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 0, "y": 48}
+      },
+      {
+        "id": 12,
+        "title": "Response Time Distribution",
+        "type": "heatmap",
+        "targets": [
+          {
+            "expr": "histogram_quantile(0.50, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, endpoint))",
+            "legendFormat": "P50 - {{endpoint}}"
+          },
+          {
+            "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, endpoint))",
+            "legendFormat": "P95 - {{endpoint}}"
+          },
+          {
+            "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, endpoint))",
+            "legendFormat": "P99 - {{endpoint}}"
+          }
+        ],
+        "gridPos": {"h": 8, "w": 12, "x": 12, "y": 48}
+      }
+    ],
+    "time": {
+      "from": "now-1h",
+      "to": "now"
+    },
+    "refresh": "30s",
+    "schemaVersion": 27,
+    "version": 1,
+    "links": [
+      {
+        "title": "API Documentation",
+        "url": "http://localhost:3000/api-docs",
+        "type": "link"
+      },
+      {
+        "title": "Health Check",
+        "url": "http://localhost:3000/health",
+        "type": "link"
+      },
+      {
+        "title": "Prometheus",
+        "url": "http://localhost:9090",
+        "type": "link"
+      }
+    ]
+  }
+}

@@ -94,6 +94,23 @@ export class OfflineTokenDAO extends BaseDAO<OfflineToken, CreateOfflineTokenDat
     }
   }
 
+  async getUserTokenCount(userId: string): Promise<number> {
+    try {
+      const result = await this.knex(this.tableName)
+        .where({ 
+          user_id: userId, 
+          status: 'active' 
+        })
+        .where('expires_at', '>', new Date())
+        .count('id as count')
+        .first();
+      
+      return parseInt(result?.['count'] as string) || 0;
+    } catch (error) {
+      throw new Error(`Error counting user tokens: ${error}`);
+    }
+  }
+
   async getTokensByIds(tokenIds: string[]): Promise<OfflineToken[]> {
     try {
       return await this.knex(this.tableName)

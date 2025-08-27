@@ -9,6 +9,23 @@ import Foundation
 import SwiftUI
 import Combine
 
+enum WalletViewModelError: Error, LocalizedError {
+    case walletNotInitialized
+    case insufficientBalance
+    case networkError
+    
+    var errorDescription: String? {
+        switch self {
+        case .walletNotInitialized:
+            return "Wallet not initialized"
+        case .insufficientBalance:
+            return "Insufficient balance"
+        case .networkError:
+            return "Network connection error"
+        }
+    }
+}
+
 @MainActor
 class WalletViewModel: ObservableObject {
     @Published var offlineBalance: Double = 0.0
@@ -65,13 +82,30 @@ class WalletViewModel: ObservableObject {
     }
     
     private func loadOfflineBalance() async {
-        // Implementation will be added when storage service is available
-        // For now, placeholder implementation
+        do {
+            offlineBalance = await offlineTokenService.getAvailableBalance()
+        } catch {
+            errorMessage = "Failed to load offline balance: \(error.localizedDescription)"
+        }
     }
     
     private func syncBlockchainBalance() async {
-        // Implementation will be added when network service is available
-        // For now, placeholder implementation
+        do {
+            // Get wallet state to get wallet ID
+            guard let walletState = try await storageService.loadWalletState() else {
+                throw WalletViewModelError.walletNotInitialized
+            }
+            
+            // Fetch balance from backend
+            let balanceResponse = try await networkService.getWalletBalance(walletId: walletState.walletId)
+            blockchainBalance = balanceResponse.blockchainBalance
+            
+        } catch {
+            // Don't show error for network issues during sync
+            if networkService.isOnline() {
+                errorMessage = "Failed to sync blockchain balance: \(error.localizedDescription)"
+            }
+        }
     }
     
     private func checkAutoRecharge(balance: Double) {
@@ -87,9 +121,14 @@ class WalletViewModel: ObservableObject {
         errorMessage = nil
         
         do {
-            // Implementation will be added when offline token service is available
-            // For now, placeholder implementation
-            print("Purchasing offline tokens: \(amount)")
+            let tokens = try await offlineTokenService.purchaseTokens(amount: amount)
+            
+            // Update offline balance
+            await loadOfflineBalance()
+            
+            // Show success message
+            print("Successfully purchased \(tokens.count) offline tokens worth \(amount)")
+            
         } catch {
             errorMessage = error.localizedDescription
         }

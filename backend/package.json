@@ -44,6 +44,7 @@
   "author": "Offline Wallet Team",
   "license": "MIT",
   "dependencies": {
+    "@types/redis": "^4.0.10",
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
     "crypto": "^1.0.1",
@@ -58,6 +59,7 @@
     "morgan": "^1.10.0",
     "pg": "^8.11.3",
     "prom-client": "^15.1.0",
+    "redis": "^5.8.2",
     "secp256k1": "^5.0.0",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1",
@@ -76,7 +78,6 @@
     "@types/morgan": "^1.9.9",
     "@types/node": "^20.9.0",
     "@types/pg": "^8.10.7",
-
     "@types/supertest": "^2.0.16",
     "@types/swagger-jsdoc": "^6.0.4",
     "@types/swagger-ui-express": "^4.1.8",

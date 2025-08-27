@@ -8,7 +8,7 @@ import swaggerUi from 'swagger-ui-express';
 
 import { config } from '@/config/config';
 import { logger, auditLogger } from '@/utils/logger';
-import { errorHandler, fraudDetectionMiddleware } from '@/middleware/errorHandler';
+import { errorHandler, fraudDetectionMiddleware, notFoundHandler } from '@/middleware/errorHandler';
 import { rateLimiter, trackSuspiciousActivity, progressiveDelay, ddosProtection } from '@/middleware/rateLimiter';
 import { metricsMiddleware, metricsHandler } from '@/middleware/metrics';
 import { initializeDatabase, closeDatabase } from '@/database/init';
@@ -85,14 +85,7 @@ app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, swaggerOption
 app.use('/api/v1', apiRoutes);
 
 // Catch-all for undefined API routes
-app.use('/api/*', (_req, res) => {
-  res.status(404).json({
-    success: false,
-    error: 'API endpoint not found',
-    message: 'The requested API endpoint does not exist',
-    timestamp: new Date().toISOString(),
-  });
-});
+app.use('/api/*', notFoundHandler);
 
 // Error handling middleware
 app.use(errorHandler);

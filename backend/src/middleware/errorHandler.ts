@@ -1,6 +1,9 @@
 import { Request, Response, NextFunction } from 'express';
 import { logger, auditLogger } from '@/utils/logger';
 import { fraudDetectionService } from '@/services/fraudDetectionService';
+import { ResponseBuilder } from '../utils/responseBuilder';
+import { ErrorResponseBuilder } from '../utils/errorResponseBuilder';
+import { ErrorCode } from '../types';
 
 export interface AppError extends Error {
   statusCode?: number;
@@ -34,30 +37,176 @@ export const errorHandler = (
 ): void => {
   const { statusCode = 500, message, stack, details } = error;
   
-  // Log error details
-  logger.error(`Error ${statusCode}: ${message}`, {
-    url: req.url,
-    method: req.method,
-    ip: req.ip,
-    userAgent: req.get('User-Agent'),
-    stack: stack,
+  // Map HTTP status codes to error codes with more granular detection
+  let errorCode: ErrorCode;
+  switch (statusCode) {
+    case 400:
+      // Determine specific validation error type
+      if (message.toLowerCase().includes('ethereum') || message.toLowerCase().includes('address')) {
+        errorCode = ErrorCode.INVALID_ETHEREUM_ADDRESS;
+      } else if (message.toLowerCase().includes('signature')) {
+        errorCode = ErrorCode.INVALID_SIGNATURE_FORMAT;
+      } else if (message.toLowerCase().includes('token') && message.toLowerCase().includes('id')) {
+        errorCode = ErrorCode.INVALID_TOKEN_ID;
+      } else if (message.toLowerCase().includes('amount')) {
+        errorCode = ErrorCode.INVALID_AMOUNT;
+      } else if (message.toLowerCase().includes('timestamp')) {
+        errorCode = ErrorCode.INVALID_TIMESTAMP;
+      } else if (message.toLowerCase().includes('pagination')) {
+        errorCode = ErrorCode.INVALID_PAGINATION_PARAMS;
+      } else if (message.toLowerCase().includes('required')) {
+        errorCode = ErrorCode.MISSING_REQUIRED_FIELD;
+      } else {
+        errorCode = ErrorCode.VALIDATION_ERROR;
+      }
+      break;
+    case 401:
+      // Determine specific authentication error type
+      if (message.toLowerCase().includes('expired')) {
+        errorCode = ErrorCode.TOKEN_EXPIRED;
+      } else if (message.toLowerCase().includes('malformed') || message.toLowerCase().includes('invalid')) {
+        errorCode = ErrorCode.TOKEN_MALFORMED;
+      } else if (message.toLowerCase().includes('credentials')) {
+        errorCode = ErrorCode.INVALID_CREDENTIALS;
+      } else if (message.toLowerCase().includes('session')) {
+        errorCode = ErrorCode.SESSION_EXPIRED;
+      } else if (message.toLowerCase().includes('refresh')) {
+        errorCode = ErrorCode.REFRESH_TOKEN_INVALID;
+      } else {
+        errorCode = ErrorCode.AUTHENTICATION_REQUIRED;
+      }
+      break;
+    case 403:
+      // Determine specific authorization error type
+      if (message.toLowerCase().includes('fraud')) {
+        errorCode = ErrorCode.FRAUD_DETECTED;
+      } else if (message.toLowerCase().includes('suspended')) {
+        errorCode = ErrorCode.ACCOUNT_SUSPENDED;
+      } else if (message.toLowerCase().includes('security')) {
+        errorCode = ErrorCode.SECURITY_VIOLATION;
+      } else if (message.toLowerCase().includes('permission')) {
+        errorCode = ErrorCode.INSUFFICIENT_PERMISSIONS;
+      } else {
+        errorCode = ErrorCode.AUTHORIZATION_FAILED;
+      }
+      break;
+    case 404:
+      // Determine specific resource not found error type
+      if (message.toLowerCase().includes('user')) {
+        errorCode = ErrorCode.USER_NOT_FOUND;
+      } else if (message.toLowerCase().includes('wallet')) {
+        errorCode = ErrorCode.WALLET_NOT_FOUND;
+      } else if (message.toLowerCase().includes('transaction')) {
+        errorCode = ErrorCode.TRANSACTION_NOT_FOUND;
+      } else if (message.toLowerCase().includes('token')) {
+        errorCode = ErrorCode.TOKEN_NOT_FOUND;
+      } else if (message.toLowerCase().includes('endpoint') || message.toLowerCase().includes('route')) {
+        errorCode = ErrorCode.ENDPOINT_NOT_FOUND;
+      } else {
+        errorCode = ErrorCode.RESOURCE_NOT_FOUND;
+      }
+      break;
+    case 409:
+      // Determine specific conflict error type
+      if (message.toLowerCase().includes('duplicate')) {
+        errorCode = ErrorCode.DUPLICATE_TRANSACTION;
+      } else if (message.toLowerCase().includes('concurrent') || message.toLowerCase().includes('modification')) {
+        errorCode = ErrorCode.CONCURRENT_MODIFICATION;
+      } else {
+        errorCode = ErrorCode.RESOURCE_CONFLICT;
+      }
+      break;
+    case 422:
+      // Business logic errors - determine specific code from message or details
+      if (message.toLowerCase().includes('token') && message.toLowerCase().includes('expired')) {
+        errorCode = ErrorCode.TOKEN_ALREADY_EXPIRED;
+      } else if (message.toLowerCase().includes('token') && message.toLowerCase().includes('spent')) {
+        errorCode = ErrorCode.TOKEN_ALREADY_SPENT;
+      } else if (message.toLowerCase().includes('balance')) {
+        errorCode = ErrorCode.INSUFFICIENT_BALANCE;
+      } else if (message.toLowerCase().includes('signature') && message.toLowerCase().includes('verification')) {
+        errorCode = ErrorCode.SIGNATURE_VERIFICATION_FAILED;
+      } else if (message.toLowerCase().includes('signature')) {
+        errorCode = ErrorCode.INVALID_SIGNATURE;
+      } else if (message.toLowerCase().includes('double')) {
+        errorCode = ErrorCode.DOUBLE_SPENDING_DETECTED;
+      } else if (message.toLowerCase().includes('token') && message.toLowerCase().includes('state')) {
+        errorCode = ErrorCode.INVALID_TOKEN_STATE;
+      } else if (message.toLowerCase().includes('transaction') && message.toLowerCase().includes('processed')) {
+        errorCode = ErrorCode.TRANSACTION_ALREADY_PROCESSED;
+      } else if (message.toLowerCase().includes('transaction') && message.toLowerCase().includes('state')) {
+        errorCode = ErrorCode.INVALID_TRANSACTION_STATE;
+      } else if (message.toLowerCase().includes('division')) {
+        errorCode = ErrorCode.TOKEN_DIVISION_ERROR;
+      } else if (message.toLowerCase().includes('amount') && message.toLowerCase().includes('mismatch')) {
+        errorCode = ErrorCode.AMOUNT_MISMATCH;
+      } else {
+        errorCode = ErrorCode.BUSINESS_RULE_VIOLATION;
+      }
+      break;
+    case 429:
+      // Determine specific rate limiting error type
+      if (message.toLowerCase().includes('quota')) {
+        errorCode = ErrorCode.QUOTA_EXCEEDED;
+      } else if (message.toLowerCase().includes('many')) {
+        errorCode = ErrorCode.TOO_MANY_REQUESTS;
+      } else {
+        errorCode = ErrorCode.RATE_LIMIT_EXCEEDED;
+      }
+      break;
+    case 502:
+      // External service errors
+      if (message.toLowerCase().includes('blockchain')) {
+        errorCode = ErrorCode.BLOCKCHAIN_ERROR;
+      } else if (message.toLowerCase().includes('database')) {
+        errorCode = ErrorCode.DATABASE_ERROR;
+      } else if (message.toLowerCase().includes('network')) {
+        errorCode = ErrorCode.NETWORK_ERROR;
+      } else {
+        errorCode = ErrorCode.EXTERNAL_SERVICE_ERROR;
+      }
+      break;
+    case 503:
+      // Service unavailable errors
+      if (message.toLowerCase().includes('blockchain')) {
+        errorCode = ErrorCode.BLOCKCHAIN_UNAVAILABLE;
+      } else if (message.toLowerCase().includes('database')) {
+        errorCode = ErrorCode.DATABASE_UNAVAILABLE;
+      } else if (message.toLowerCase().includes('maintenance')) {
+        errorCode = ErrorCode.MAINTENANCE_MODE;
+      } else {
+        errorCode = ErrorCode.SERVICE_UNAVAILABLE;
+      }
+      break;
+    case 504:
+      // Timeout errors
+      if (message.toLowerCase().includes('blockchain')) {
+        errorCode = ErrorCode.BLOCKCHAIN_TIMEOUT;
+      } else {
+        errorCode = ErrorCode.NETWORK_ERROR;
+      }
+      break;
+    default:
+      // Server errors
+      if (message.toLowerCase().includes('configuration')) {
+        errorCode = ErrorCode.CONFIGURATION_ERROR;
+      } else if (message.toLowerCase().includes('unexpected')) {
+        errorCode = ErrorCode.UNEXPECTED_ERROR;
+      } else {
+        errorCode = ErrorCode.INTERNAL_SERVER_ERROR;
+      }
+  }
+
+  // Use enhanced error response builder
+  const { response, statusCode: finalStatusCode } = ErrorResponseBuilder.buildErrorResponse(
+    errorCode,
+    message,
+    req,
     details,
-  });
+    stack
+  );
 
-  // Format API response
-  const response = {
-    success: false,
-    error: message,
-    ...(details && { details }),
-    timestamp: new Date().toISOString(),
-    ...(process.env['NODE_ENV'] === 'development' && { 
-      stack,
-      path: req.url,
-      method: req.method,
-    }),
-  };
-
-  res.status(statusCode).json(response);
+  res.status(finalStatusCode).json(response);
 };
 
 export const asyncHandler = (
@@ -114,11 +263,11 @@ export const fraudDetectionMiddleware = async (
           },
         });
 
-        res.status(403).json({
-          success: false,
-          error: 'Transaction blocked due to suspicious activity',
-          message: 'Your transaction has been blocked for security reasons. Please contact support.',
-        });
+        const response = ResponseBuilder.authorizationError(
+          'Your transaction has been blocked for security reasons. Please contact support.',
+          ResponseBuilder.getRequestId(req)
+        );
+        res.status(403).json(response);
         return;
       }
 
@@ -141,7 +290,11 @@ export const fraudDetectionMiddleware = async (
   }
 };
 
-export const notFoundHandler = (req: Request, _res: Response, next: NextFunction): void => {
-  const error = new CustomError(`Route ${req.originalUrl} not found`, 404);
-  next(error);
+export const notFoundHandler = (req: Request, res: Response, _next: NextFunction): void => {
+  const { response, statusCode } = ErrorResponseBuilder.buildErrorResponse(
+    ErrorCode.RESOURCE_NOT_FOUND,
+    `Route ${req.originalUrl} not found`,
+    req
+  );
+  res.status(statusCode).json(response);
 };

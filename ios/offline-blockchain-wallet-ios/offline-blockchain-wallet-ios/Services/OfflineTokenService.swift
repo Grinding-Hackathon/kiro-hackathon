@@ -419,7 +419,7 @@ class OfflineTokenService: OfflineTokenServiceProtocol {
 
 // MARK: - Supporting Types
 
-enum OfflineTokenError: Error, LocalizedError {
+public enum OfflineTokenError: Error, LocalizedError {
     case invalidToken
     case insufficientBalance
     case tokenExpired
@@ -433,7 +433,7 @@ enum OfflineTokenError: Error, LocalizedError {
     case invalidData
     case networkNotImplemented
     
-    var errorDescription: String? {
+    public var errorDescription: String? {
         switch self {
         case .invalidToken:
             return "Invalid token"

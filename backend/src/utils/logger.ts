@@ -168,7 +168,7 @@ export class AuditLogger {
    */
   async logSecurity(event: {
     userId?: string;
-    action: 'RATE_LIMIT_EXCEEDED' | 'SUSPICIOUS_ACTIVITY' | 'FRAUD_DETECTED' | 'UNAUTHORIZED_ACCESS' | 'DATA_BREACH_ATTEMPT' | 'SYSTEM_HEALTH_ALERT' | 'SECURITY_SCAN_TRIGGERED';
+    action: 'RATE_LIMIT_EXCEEDED' | 'SUSPICIOUS_ACTIVITY' | 'FRAUD_DETECTED' | 'UNAUTHORIZED_ACCESS' | 'DATA_BREACH_ATTEMPT' | 'SYSTEM_HEALTH_ALERT' | 'SECURITY_SCAN_TRIGGERED' | string;
     severity: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
     ip?: string | undefined;
     userAgent?: string | undefined;
@@ -204,7 +204,7 @@ export class AuditLogger {
    * Log system events
    */
   async logSystem(event: {
-    action: 'SYSTEM_START' | 'SYSTEM_SHUTDOWN' | 'DATABASE_CONNECTION' | 'BLOCKCHAIN_CONNECTION' | 'BACKUP_CREATED' | 'BACKUP_RESTORED' | 'MANUAL_BACKUP_CREATED' | 'DISASTER_RECOVERY_PLAN_CREATED' | 'RECOVERY_PROCEDURES_TESTED';
+    action: 'SYSTEM_START' | 'SYSTEM_SHUTDOWN' | 'DATABASE_CONNECTION' | 'BLOCKCHAIN_CONNECTION' | 'BACKUP_CREATED' | 'BACKUP_RESTORED' | 'MANUAL_BACKUP_CREATED' | 'DISASTER_RECOVERY_PLAN_CREATED' | 'RECOVERY_PROCEDURES_TESTED' | string;
     details?: any;
   }): Promise<void> {
     try {

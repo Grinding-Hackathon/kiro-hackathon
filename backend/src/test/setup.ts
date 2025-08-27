@@ -49,31 +49,138 @@ jest.mock('../database/connection', () => ({
 jest.mock('../middleware/auth', () => ({
   authMiddleware: jest.fn((req: any, res: any, next: any) => {
     const authHeader = req.get('Authorization');
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      const token = authHeader.substring(7);
+    
+    if (!authHeader) {
+      return res.status(401).json({
+        success: false,
+        error: {
+          code: 'AUTHENTICATION_REQUIRED',
+          message: 'Authorization header is required. Please provide a valid Bearer token.',
+          details: {
+            method: req.method,
+            path: req.path,
+            correlationId: 'test-correlation-id',
+            timestamp: new Date().toISOString(),
+            category: 'AUTHENTICATION',
+            severity: 'MEDIUM'
+          }
+        },
+        timestamp: new Date().toISOString(),
+        requestId: 'test-request-id'
+      });
+    }
+
+    // Check for proper Bearer format
+    const parts = authHeader.split(' ');
+    if (parts.length !== 2 || parts[0] !== 'Bearer') {
+      return res.status(401).json({
+        success: false,
+        error: {
+          code: 'TOKEN_MALFORMED',
+          message: 'Authorization header must be in format: Bearer <token>',
+          details: {
+            method: req.method,
+            path: req.path,
+            correlationId: 'test-correlation-id',
+            timestamp: new Date().toISOString(),
+            category: 'AUTHENTICATION',
+            severity: 'MEDIUM'
+          }
+        },
+        timestamp: new Date().toISOString(),
+        requestId: 'test-request-id'
+      });
+    }
+
+    const token = parts[1];
+    
+    if (!token || token.trim() === '') {
+      return res.status(401).json({
+        success: false,
+        error: {
+          code: 'INVALID_TOKEN',
+          message: 'Token cannot be empty',
+          details: {
+            method: req.method,
+            path: req.path,
+            correlationId: 'test-correlation-id',
+            timestamp: new Date().toISOString(),
+            category: 'AUTHENTICATION',
+            severity: 'MEDIUM'
+          }
+        },
+        timestamp: new Date().toISOString(),
+        requestId: 'test-request-id'
+      });
+    }
       
-      // Reject obviously invalid tokens
-      if (token === 'invalid-token' || 
-          token === 'invalid.jwt.token' || 
-          token.includes('tampered') ||
-          token.includes('invalid')) {
-        return res.status(401).json({ success: false, error: 'Invalid or expired token' });
+    // Reject obviously invalid tokens
+    if (token === 'invalid-token' || 
+        token === 'invalid.jwt.token' || 
+        token.includes('tampered') ||
+        token.includes('invalid')) {
+      return res.status(401).json({
+        success: false,
+        error: {
+          code: 'TOKEN_MALFORMED',
+          message: 'Invalid token format or signature',
+          details: {
+            method: req.method,
+            path: req.path,
+            correlationId: 'test-correlation-id',
+            timestamp: new Date().toISOString(),
+            category: 'AUTHENTICATION',
+            severity: 'MEDIUM'
+          }
+        },
+        timestamp: new Date().toISOString(),
+        requestId: 'test-request-id'
+      });
+    }
+    
+    // Try to decode JWT to check expiration
+    try {
+      const jwt = require('jsonwebtoken');
+      jwt.verify(token, process.env['JWT_SECRET'] || 'test-secret');
+      req.user = { id: 'user-123', walletAddress: '0x' + '3'.repeat(40), publicKey: '0x04' + '2'.repeat(128) };
+      next();
+    } catch (error: any) {
+      if (error.name === 'TokenExpiredError') {
+        return res.status(401).json({
+          success: false,
+          error: {
+            code: 'TOKEN_EXPIRED',
+            message: 'Token has expired. Please refresh your token or login again.',
+            details: {
+              method: req.method,
+              path: req.path,
+              correlationId: 'test-correlation-id',
+              timestamp: new Date().toISOString(),
+              category: 'AUTHENTICATION',
+              severity: 'MEDIUM'
+            }
+          },
+          timestamp: new Date().toISOString(),
+          requestId: 'test-request-id'
+        });
       }
-      
-      // Try to decode JWT to check expiration
-      try {
-        const jwt = require('jsonwebtoken');
-        jwt.verify(token, process.env['JWT_SECRET'] || 'test-secret');
-        req.user = { id: 'user-123', walletAddress: '0x' + '3'.repeat(40), publicKey: '0x04' + '2'.repeat(128) };
-        next();
-      } catch (error: any) {
-        if (error.name === 'TokenExpiredError') {
-          return res.status(401).json({ success: false, error: 'Token expired' });
-        }
-        return res.status(401).json({ success: false, error: 'Invalid token' });
-      }
-    } else {
-      res.status(401).json({ success: false, error: 'Authorization header is required' });
+      return res.status(401).json({
+        success: false,
+        error: {
+          code: 'TOKEN_MALFORMED',
+          message: 'Invalid token format or signature',
+          details: {
+            method: req.method,
+            path: req.path,
+            correlationId: 'test-correlation-id',
+            timestamp: new Date().toISOString(),
+            category: 'AUTHENTICATION',
+            severity: 'MEDIUM'
+          }
+        },
+        timestamp: new Date().toISOString(),
+        requestId: 'test-request-id'
+      });
     }
   }),
   optionalAuthMiddleware: jest.fn((req: any, _res: any, next: any) => {

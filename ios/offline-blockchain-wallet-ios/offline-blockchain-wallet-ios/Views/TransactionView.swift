@@ -56,6 +56,15 @@ struct TransactionView: View {
                         dismiss()
                     }
                 }
+                
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Sync") {
+                        Task {
+                            await transactionViewModel.syncQueuedTransactions()
+                        }
+                    }
+                    .disabled(transactionViewModel.isLoading || transactionViewModel.queuedTransactions.isEmpty)
+                }
             }
             .alert("Error", isPresented: .constant(transactionViewModel.errorMessage != nil)) {
                 Button("OK") {

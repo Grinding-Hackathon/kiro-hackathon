@@ -339,7 +339,18 @@ struct SettingsView: View {
             .alert("Clear All Data", isPresented: $showingResetConfirmation) {
                 Button("Cancel", role: .cancel) { }
                 Button("Clear", role: .destructive) {
-                    // Implementation will be added later
+                    Task {
+                        do {
+                            // Clear all stored data
+                            try await DependencyContainer.shared.getStorageService().clearAllData()
+                            
+                            // Reset wallet view model state
+                            await walletViewModel.refreshBalances()
+                            
+                        } catch {
+                            walletViewModel.errorMessage = "Failed to clear data: \(error.localizedDescription)"
+                        }
+                    }
                 }
             } message: {
                 Text("This will permanently delete all wallet data including transactions and tokens. This action cannot be undone.")

@@ -87,30 +87,292 @@ const options: swaggerJsdoc.Options = {
               example: false,
             },
             error: {
-              type: 'string',
-              description: 'Error message',
-            },
-            details: {
-              type: 'array',
-              items: {
-                type: 'object',
-                properties: {
-                  field: {
-                    type: 'string',
-                  },
-                  message: {
-                    type: 'string',
-                  },
+              type: 'object',
+              properties: {
+                code: {
+                  type: 'string',
+                  description: 'Error code',
+                  enum: [
+                    'VALIDATION_ERROR',
+                    'AUTHENTICATION_REQUIRED',
+                    'AUTHORIZATION_FAILED',
+                    'RESOURCE_NOT_FOUND',
+                    'RATE_LIMIT_EXCEEDED',
+                    'BLOCKCHAIN_ERROR',
+                    'INSUFFICIENT_BALANCE',
+                    'TOKEN_EXPIRED',
+                    'TOKEN_ALREADY_SPENT',
+                    'DOUBLE_SPENDING_DETECTED',
+                    'INVALID_SIGNATURE',
+                    'NETWORK_ERROR',
+                    'TRANSACTION_FAILED',
+                    'SYNC_ERROR',
+                    'SECURITY_VIOLATION',
+                    'INTERNAL_SERVER_ERROR'
+                  ]
+                },
+                message: {
+                  type: 'string',
+                  description: 'Human-readable error message',
+                },
+                details: {
+                  type: 'object',
+                  description: 'Additional error details',
                 },
               },
-              description: 'Validation error details (if applicable)',
+              required: ['code', 'message'],
             },
             timestamp: {
               type: 'string',
               format: 'date-time',
             },
+            requestId: {
+              type: 'string',
+              description: 'Unique request identifier for debugging',
+            },
           },
           required: ['success', 'error', 'timestamp'],
+        },
+        WalletBalance: {
+          type: 'object',
+          properties: {
+            walletId: {
+              type: 'string',
+              format: 'uuid',
+              description: 'Unique wallet identifier',
+            },
+            walletAddress: {
+              type: 'string',
+              pattern: '^0x[a-fA-F0-9]{40}$',
+              description: 'Ethereum wallet address',
+            },
+            balances: {
+              type: 'object',
+              properties: {
+                blockchain: {
+                  type: 'object',
+                  properties: {
+                    amount: {
+                      type: 'number',
+                      minimum: 0,
+                      description: 'Blockchain balance amount',
+                    },
+                    currency: {
+                      type: 'string',
+                      description: 'Currency type',
+                    },
+                    lastUpdated: {
+                      type: 'string',
+                      format: 'date-time',
+                    },
+                  },
+                },
+                offline: {
+                  type: 'object',
+                  properties: {
+                    amount: {
+                      type: 'number',
+                      minimum: 0,
+                      description: 'Offline token balance amount',
+                    },
+                    tokenCount: {
+                      type: 'integer',
+                      minimum: 0,
+                      description: 'Number of offline tokens',
+                    },
+                    lastUpdated: {
+                      type: 'string',
+                      format: 'date-time',
+                    },
+                  },
+                },
+                pending: {
+                  type: 'object',
+                  properties: {
+                    amount: {
+                      type: 'number',
+                      minimum: 0,
+                      description: 'Pending transaction amount',
+                    },
+                    transactionCount: {
+                      type: 'integer',
+                      minimum: 0,
+                      description: 'Number of pending transactions',
+                    },
+                  },
+                },
+              },
+            },
+            totalBalance: {
+              type: 'number',
+              minimum: 0,
+              description: 'Total balance across all sources',
+            },
+          },
+        },
+        Transaction: {
+          type: 'object',
+          properties: {
+            id: {
+              type: 'string',
+              format: 'uuid',
+              description: 'Unique transaction identifier',
+            },
+            type: {
+              type: 'string',
+              enum: ['token_purchase', 'token_redemption', 'offline_transfer', 'blockchain_transfer'],
+              description: 'Transaction type',
+            },
+            senderId: {
+              type: 'string',
+              format: 'uuid',
+              description: 'Sender user ID',
+            },
+            receiverId: {
+              type: 'string',
+              format: 'uuid',
+              description: 'Receiver user ID',
+            },
+            amount: {
+              type: 'number',
+              minimum: 0,
+              description: 'Transaction amount',
+            },
+            status: {
+              type: 'string',
+              enum: ['pending', 'processing', 'completed', 'failed', 'cancelled'],
+              description: 'Transaction status',
+            },
+            blockchainTxHash: {
+              type: 'string',
+              pattern: '^0x[a-fA-F0-9]{64}$',
+              description: 'Blockchain transaction hash',
+            },
+            timestamp: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Transaction creation timestamp',
+            },
+            completedAt: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Transaction completion timestamp',
+            },
+            metadata: {
+              type: 'object',
+              description: 'Additional transaction metadata',
+            },
+          },
+        },
+        OfflineToken: {
+          type: 'object',
+          properties: {
+            id: {
+              type: 'string',
+              format: 'uuid',
+              description: 'Unique token identifier',
+            },
+            amount: {
+              type: 'number',
+              minimum: 0,
+              description: 'Token amount',
+            },
+            signature: {
+              type: 'string',
+              description: 'Cryptographic signature',
+            },
+            ownerId: {
+              type: 'string',
+              format: 'uuid',
+              description: 'Token owner user ID',
+            },
+            isSpent: {
+              type: 'boolean',
+              description: 'Whether token has been spent',
+            },
+            expiresAt: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Token expiration timestamp',
+            },
+            createdAt: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Token creation timestamp',
+            },
+          },
+        },
+        SecurityStatus: {
+          type: 'object',
+          properties: {
+            overallStatus: {
+              type: 'string',
+              enum: ['healthy', 'warning', 'critical'],
+              description: 'Overall security status',
+            },
+            securityScore: {
+              type: 'integer',
+              minimum: 0,
+              maximum: 100,
+              description: 'Security score out of 100',
+            },
+            alerts: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  id: {
+                    type: 'string',
+                    description: 'Alert identifier',
+                  },
+                  type: {
+                    type: 'string',
+                    enum: ['info', 'warning', 'error'],
+                    description: 'Alert severity type',
+                  },
+                  message: {
+                    type: 'string',
+                    description: 'Alert message',
+                  },
+                  timestamp: {
+                    type: 'string',
+                    format: 'date-time',
+                    description: 'Alert timestamp',
+                  },
+                },
+              },
+            },
+            recommendations: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  id: {
+                    type: 'string',
+                    description: 'Recommendation identifier',
+                  },
+                  priority: {
+                    type: 'string',
+                    enum: ['low', 'medium', 'high'],
+                    description: 'Recommendation priority',
+                  },
+                  title: {
+                    type: 'string',
+                    description: 'Recommendation title',
+                  },
+                  description: {
+                    type: 'string',
+                    description: 'Recommendation description',
+                  },
+                },
+              },
+            },
+            lastSecurityScan: {
+              type: 'string',
+              format: 'date-time',
+              description: 'Last security scan timestamp',
+            },
+          },
         },
       },
       responses: {
@@ -170,11 +432,27 @@ const options: swaggerJsdoc.Options = {
     tags: [
       {
         name: 'Authentication',
-        description: 'User authentication using wallet signatures',
+        description: 'User authentication using wallet signatures and session management',
       },
       {
         name: 'Wallet',
-        description: 'Wallet operations and token management',
+        description: 'Wallet operations, balance queries, and transaction history',
+      },
+      {
+        name: 'Tokens',
+        description: 'Token validation, division, and lifecycle management',
+      },
+      {
+        name: 'Transactions',
+        description: 'Transaction submission, synchronization, and status tracking',
+      },
+      {
+        name: 'Security',
+        description: 'Security monitoring, event reporting, and recommendations',
+      },
+      {
+        name: 'Monitoring',
+        description: 'System health checks and performance metrics',
       },
     ],
   },

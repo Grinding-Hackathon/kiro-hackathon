@@ -135,4 +135,82 @@ export class TransactionDAO extends BaseDAO<Transaction, CreateTransactionData, 
       throw new Error(`Error getting transaction stats: ${error}`);
     }
   }
+
+  async getUserTransactionHistory(
+    userId: string, 
+    pagination: { page: number; limit: number; sortBy: string; sortOrder: 'asc' | 'desc' },
+    filters: any = {}
+  ): Promise<Transaction[]> {
+    try {
+      let query = this.knex(this.tableName)
+        .where('sender_id', userId)
+        .orWhere('receiver_id', userId);
+
+      // Apply filters
+      if (filters.type) {
+        query = query.where('type', filters.type);
+      }
+      if (filters.status) {
+        query = query.where('status', filters.status);
+      }
+      if (filters.dateFrom) {
+        query = query.where('created_at', '>=', filters.dateFrom);
+      }
+      if (filters.dateTo) {
+        query = query.where('created_at', '<=', filters.dateTo);
+      }
+
+      // Apply sorting
+      const sortColumn = pagination.sortBy === 'timestamp' ? 'created_at' : pagination.sortBy;
+      query = query.orderBy(sortColumn, pagination.sortOrder);
+
+      // Apply pagination
+      const offset = (pagination.page - 1) * pagination.limit;
+      query = query.limit(pagination.limit).offset(offset);
+
+      return await query;
+    } catch (error) {
+      throw new Error(`Error getting user transaction history: ${error}`);
+    }
+  }
+
+  async getUserTransactionCount(userId: string, filters: any = {}): Promise<number> {
+    try {
+      let query = this.knex(this.tableName)
+        .where('sender_id', userId)
+        .orWhere('receiver_id', userId);
+
+      // Apply filters
+      if (filters.type) {
+        query = query.where('type', filters.type);
+      }
+      if (filters.status) {
+        query = query.where('status', filters.status);
+      }
+      if (filters.dateFrom) {
+        query = query.where('created_at', '>=', filters.dateFrom);
+      }
+      if (filters.dateTo) {
+        query = query.where('created_at', '<=', filters.dateTo);
+      }
+
+      const result = await query.count('id as count').first();
+      return parseInt(result?.['count'] as string) || 0;
+    } catch (error) {
+      throw new Error(`Error counting user transactions: ${error}`);
+    }
+  }
+
+  async getUserPendingTransactions(userId: string): Promise<Transaction[]> {
+    try {
+      return await this.knex(this.tableName)
+        .where(function() {
+          this.where('sender_id', userId).orWhere('receiver_id', userId);
+        })
+        .where('status', 'pending')
+        .orderBy('created_at', 'desc');
+    } catch (error) {
+      throw new Error(`Error getting user pending transactions: ${error}`);
+    }
+  }
 }

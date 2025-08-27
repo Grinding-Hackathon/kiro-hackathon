@@ -127,7 +127,8 @@ class DependencyContainer {
         return TransactionService(
             storageService: storageService,
             cryptographyService: cryptographyService,
-            offlineTokenService: offlineTokenService
+            offlineTokenService: offlineTokenService,
+            networkService: networkService
         )
     }
 }

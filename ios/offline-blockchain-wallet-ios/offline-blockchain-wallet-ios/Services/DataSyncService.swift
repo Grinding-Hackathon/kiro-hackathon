@@ -214,32 +214,29 @@ class DataSyncService: DataSyncServiceProtocol {
     // MARK: - Private Sync Methods
     
     private func syncTokenRedemption(_ transaction: Transaction) async throws {
-        // This would interact with the backend to redeem offline tokens
-        // For now, we'll simulate the process
         logger.info("Syncing token redemption: \(transaction.id)")
         
-        // In a real implementation, this would:
-        // 1. Send the transaction to the backend
-        // 2. Backend validates the offline tokens
-        // 3. Backend converts tokens to blockchain balance
-        // 4. Update local transaction status
+        // Submit transaction to backend for processing
+        let response = try await networkService.submitTransaction(transaction: transaction)
+        logger.info("Token redemption submitted: \(response.transactionId)")
         
-        // Simulated success for now
+        // Update local transaction status
         var updatedTransaction = transaction
-        updatedTransaction.status = .completed
+        updatedTransaction.status = .pending
         try await storageService.updateTransaction(updatedTransaction)
     }
     
     private func syncOfflineTransfer(_ transaction: Transaction) async throws {
-        // This would report offline transfers to the backend for audit purposes
         logger.info("Syncing offline transfer: \(transaction.id)")
         
-        // In a real implementation, this would:
-        // 1. Send transaction details to backend for logging
-        // 2. Backend records the offline transaction for audit
-        // 3. No balance changes needed as tokens were already transferred
+        // Submit transaction to backend for audit logging
+        let response = try await networkService.submitTransaction(transaction: transaction)
+        logger.info("Offline transfer synced: \(response.transactionId)")
         
-        // Simulated success for now
+        // Update local transaction status
+        var updatedTransaction = transaction
+        updatedTransaction.status = .completed
+        try await storageService.updateTransaction(updatedTransaction)
     }
     
     private func updateLastSyncTimestamp() async throws {
@@ -257,9 +254,16 @@ class DataSyncService: DataSyncServiceProtocol {
         if currentOfflineBalance < walletState.autoRechargeThreshold {
             logger.info("Auto-recharge triggered - Current balance: \(currentOfflineBalance), Threshold: \(walletState.autoRechargeThreshold)")
             
-            // This would trigger token purchase from the backend
-            // For now, we'll just log the intent
-            logger.info("Would purchase \(walletState.autoRechargeAmount) worth of offline tokens")
+            // Create token purchase request
+            let purchaseRequest = TokenPurchaseRequest(
+                amount: walletState.autoRechargeAmount,
+                walletId: walletState.walletId,
+                timestamp: Date()
+            )
+            
+            // Purchase tokens from backend
+            let response = try await networkService.purchaseOfflineTokens(request: purchaseRequest)
+            logger.info("Auto-recharge completed: purchased \(response.tokens.count) tokens")
         }
     }
 }
@@ -273,13 +277,13 @@ enum SyncStatus {
     case failed(Error)
 }
 
-enum DataSyncError: Error, LocalizedError {
+public enum DataSyncError: Error, LocalizedError {
     case offline
     case walletStateNotFound
     case syncFailed(String)
     case networkError(Error)
     
-    var errorDescription: String? {
+    public var errorDescription: String? {
         switch self {
         case .offline:
             return "Device is offline"

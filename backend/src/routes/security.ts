@@ -13,6 +13,9 @@ import {
   getDisasterRecoveryStatus,
   testRecoveryProcedures,
   createDisasterRecoveryPlan,
+  getMobileSecurityStatus,
+  reportSecurityEvent,
+  getSecurityRecommendations,
   triggerSecurityScan,
 } from '@/controllers/securityController';
 
@@ -249,6 +252,272 @@ router.post('/disaster-recovery/test', testRecoveryProcedures);
  *         description: Failed to create disaster recovery plan
  */
 router.post('/disaster-recovery/plan', createDisasterRecoveryPlan);
+
+/**
+ * @swagger
+ * /api/security/mobile/status:
+ *   get:
+ *     summary: Get mobile security status
+ *     description: Get security status information tailored for mobile app display
+ *     tags: [Security]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Mobile security status
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     overallStatus:
+ *                       type: string
+ *                       enum: [secure, warning, critical]
+ *                     securityScore:
+ *                       type: number
+ *                       minimum: 0
+ *                       maximum: 100
+ *                     lastUpdated:
+ *                       type: string
+ *                       format: date-time
+ *                     systemHealth:
+ *                       type: object
+ *                       properties:
+ *                         status:
+ *                           type: string
+ *                         uptime:
+ *                           type: number
+ *                         servicesOnline:
+ *                           type: number
+ *                         totalServices:
+ *                           type: number
+ *                     alerts:
+ *                       type: object
+ *                       properties:
+ *                         critical:
+ *                           type: number
+ *                         userSpecific:
+ *                           type: number
+ *                         total:
+ *                           type: number
+ *                     backup:
+ *                       type: object
+ *                       properties:
+ *                         lastBackup:
+ *                           type: object
+ *                           nullable: true
+ *                         recommendBackup:
+ *                           type: boolean
+ *                     security:
+ *                       type: object
+ *                       properties:
+ *                         blockedThreats:
+ *                           type: number
+ *                         suspiciousActivity:
+ *                           type: number
+ *                         ddosProtection:
+ *                           type: object
+ *                     recommendations:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: string
+ *                           title:
+ *                             type: string
+ *                           description:
+ *                             type: string
+ *                           priority:
+ *                             type: string
+ *                             enum: [high, medium, low]
+ *                           actionable:
+ *                             type: boolean
+ */
+router.get('/mobile/status', getMobileSecurityStatus);
+
+/**
+ * @swagger
+ * /api/security/events:
+ *   post:
+ *     summary: Report security event from mobile app
+ *     description: Allow mobile app to report security events for monitoring and fraud detection
+ *     tags: [Security]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - eventType
+ *               - severity
+ *               - description
+ *             properties:
+ *               eventType:
+ *                 type: string
+ *                 enum: [
+ *                   SUSPICIOUS_ACTIVITY,
+ *                   UNAUTHORIZED_ACCESS_ATTEMPT,
+ *                   DEVICE_COMPROMISE,
+ *                   UNUSUAL_BEHAVIOR,
+ *                   SECURITY_BREACH,
+ *                   MALWARE_DETECTED,
+ *                   PHISHING_ATTEMPT,
+ *                   SOCIAL_ENGINEERING,
+ *                   DATA_LEAK,
+ *                   AUTHENTICATION_FAILURE,
+ *                   BIOMETRIC_FAILURE,
+ *                   JAILBREAK_DETECTED,
+ *                   DEBUG_MODE_DETECTED,
+ *                   SCREEN_RECORDING_DETECTED,
+ *                   SCREENSHOT_DETECTED,
+ *                   NETWORK_ANOMALY,
+ *                   BLUETOOTH_SECURITY_ISSUE,
+ *                   QR_CODE_SECURITY_ISSUE,
+ *                   TOKEN_MANIPULATION,
+ *                   TRANSACTION_ANOMALY,
+ *                   WALLET_TAMPERING,
+ *                   BACKUP_SECURITY_ISSUE,
+ *                   OTHER
+ *                 ]
+ *                 description: Type of security event
+ *               severity:
+ *                 type: string
+ *                 enum: [LOW, MEDIUM, HIGH, CRITICAL]
+ *                 description: Severity level of the event
+ *               description:
+ *                 type: string
+ *                 description: Detailed description of the security event
+ *               metadata:
+ *                 type: object
+ *                 description: Additional metadata about the event
+ *               deviceInfo:
+ *                 type: object
+ *                 description: Device information for context
+ *     responses:
+ *       200:
+ *         description: Security event reported successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     eventId:
+ *                       type: string
+ *                     status:
+ *                       type: string
+ *                     severity:
+ *                       type: string
+ *                     timestamp:
+ *                       type: string
+ *                       format: date-time
+ *                     recommendations:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                 message:
+ *                   type: string
+ *       400:
+ *         description: Invalid request data
+ *       500:
+ *         description: Failed to process security event
+ */
+router.post('/events', reportSecurityEvent);
+
+/**
+ * @swagger
+ * /api/security/recommendations:
+ *   get:
+ *     summary: Get security recommendations for mobile users
+ *     description: Get personalized security recommendations based on user behavior and current threat landscape
+ *     tags: [Security]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Security recommendations
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     securityScore:
+ *                       type: number
+ *                       minimum: 0
+ *                       maximum: 100
+ *                     lastUpdated:
+ *                       type: string
+ *                       format: date-time
+ *                     totalRecommendations:
+ *                       type: number
+ *                     priorityBreakdown:
+ *                       type: object
+ *                       properties:
+ *                         high:
+ *                           type: number
+ *                         medium:
+ *                           type: number
+ *                         low:
+ *                           type: number
+ *                     recommendations:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           id:
+ *                             type: string
+ *                           category:
+ *                             type: string
+ *                             enum: [authentication, device_security, transaction_safety, backup, monitoring, general]
+ *                           title:
+ *                             type: string
+ *                           description:
+ *                             type: string
+ *                           priority:
+ *                             type: string
+ *                             enum: [high, medium, low]
+ *                           actionable:
+ *                             type: boolean
+ *                           action:
+ *                             type: object
+ *                             nullable: true
+ *                           completed:
+ *                             type: boolean
+ *                             nullable: true
+ *                     systemStatus:
+ *                       type: object
+ *                       properties:
+ *                         overallHealth:
+ *                           type: string
+ *                         activeThreats:
+ *                           type: number
+ *                         userSpecificAlerts:
+ *                           type: number
+ *                         lastBackup:
+ *                           type: object
+ *                           nullable: true
+ *       500:
+ *         description: Failed to generate security recommendations
+ */
+router.get('/recommendations', getSecurityRecommendations);
 
 /**
  * @swagger

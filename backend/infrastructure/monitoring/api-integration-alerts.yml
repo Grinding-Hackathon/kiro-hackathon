@@ -1,0 +1,352 @@
+groups:
+  - name: api-integration-fixes-alerts
+    rules:
+      # Transaction Management Alerts
+      - alert: TransactionSubmissionFailureRate
+        expr: rate(transaction_submission_failures_total[5m]) > 0.05
+        for: 2m
+        labels:
+          severity: warning
+          component: transactions
+        annotations:
+          summary: "High transaction submission failure rate"
+          description: "Transaction submission failure rate is {{ $value | humanizePercentage }} per second on {{ $labels.instance }}"
+          runbook_url: "https://wiki.company.com/runbooks/transaction-failures"
+
+      - alert: TransactionSyncDelay
+        expr: transaction_sync_delay_seconds > 30
+        for: 5m
+        labels:
+          severity: warning
+          component: transactions
+        annotations:
+          summary: "Transaction synchronization delays"
+          description: "Transaction sync delay is {{ $value }} seconds on {{ $labels.instance }}"
+          runbook_url: "https://wiki.company.com/runbooks/sync-delays"
+
+      - alert: OfflineTransactionQueueBacklog
+        expr: offline_transaction_queue_size > 100
+        for: 10m
+        labels:
+          severity: warning
+          component: transactions
+        annotations:
+          summary: "Large offline transaction queue backlog"
+          description: "Offline transaction queue has {{ $value }} pending transactions on {{ $labels.instance }}"
+
+      - alert: TransactionProcessingTimeout
+        expr: histogram_quantile(0.95, rate(transaction_processing_duration_seconds_bucket[5m])) > 10
+        for: 5m
+        labels:
+          severity: warning
+          component: transactions
+        annotations:
+          summary: "Transaction processing timeouts"
+          description: "95th percentile transaction processing time is {{ $value }}s on {{ $labels.instance }}"
+
+      # Token Management Alerts
+      - alert: TokenValidationFailureRate
+        expr: rate(token_validation_failures_total[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: warning
+          component: tokens
+        annotations:
+          summary: "High token validation failure rate"
+          description: "Token validation failure rate is {{ $value | humanizePercentage }} per second on {{ $labels.instance }}"
+          runbook_url: "https://wiki.company.com/runbooks/token-validation"
+
+      - alert: TokenDivisionErrors
+        expr: rate(token_division_errors_total[5m]) > 0.02
+        for: 3m
+        labels:
+          severity: warning
+          component: tokens
+        annotations:
+          summary: "Token division errors detected"
+          description: "Token division error rate is {{ $value | humanizePercentage }} per second on {{ $labels.instance }}"
+
+      - alert: ExpiredTokenUsageAttempts
+        expr: rate(expired_token_usage_attempts_total[5m]) > 0.5
+        for: 2m
+        labels:
+          severity: warning
+          component: tokens
+        annotations:
+          summary: "High expired token usage attempts"
+          description: "{{ $value | humanizePercentage }} expired token usage attempts per second on {{ $labels.instance }}"
+
+      - alert: PublicKeyDatabaseSyncFailure
+        expr: public_key_database_sync_failures_total > 0
+        for: 1m
+        labels:
+          severity: critical
+          component: tokens
+        annotations:
+          summary: "Public key database sync failure"
+          description: "Public key database sync has failed on {{ $labels.instance }}"
+
+      # Wallet Management Alerts
+      - alert: WalletBalanceCalculationErrors
+        expr: rate(wallet_balance_calculation_errors_total[5m]) > 0.01
+        for: 3m
+        labels:
+          severity: warning
+          component: wallet
+        annotations:
+          summary: "Wallet balance calculation errors"
+          description: "Wallet balance calculation error rate is {{ $value | humanizePercentage }} per second on {{ $labels.instance }}"
+
+      - alert: WalletHistoryQueryTimeout
+        expr: histogram_quantile(0.95, rate(wallet_history_query_duration_seconds_bucket[5m])) > 5
+        for: 5m
+        labels:
+          severity: warning
+          component: wallet
+        annotations:
+          summary: "Wallet history query timeouts"
+          description: "95th percentile wallet history query time is {{ $value }}s on {{ $labels.instance }}"
+
+      - alert: WalletBalanceInconsistency
+        expr: wallet_balance_inconsistency_detected > 0
+        for: 1m
+        labels:
+          severity: critical
+          component: wallet
+        annotations:
+          summary: "Wallet balance inconsistency detected"
+          description: "Wallet balance inconsistency detected on {{ $labels.instance }}"
+          runbook_url: "https://wiki.company.com/runbooks/balance-inconsistency"
+
+      # Security Integration Alerts
+      - alert: SecurityEventSpike
+        expr: rate(security_events_total[5m]) > 1
+        for: 1m
+        labels:
+          severity: critical
+          component: security
+        annotations:
+          summary: "Security event spike detected"
+          description: "{{ $value | humanizePercentage }} security events per second on {{ $labels.instance }}"
+          runbook_url: "https://wiki.company.com/runbooks/security-incidents"
+
+      - alert: SuspiciousActivityDetected
+        expr: rate(security_events_total{type="suspicious"}[5m]) > 0.1
+        for: 30s
+        labels:
+          severity: critical
+          component: security
+        annotations:
+          summary: "Suspicious activity detected"
+          description: "{{ $value | humanizePercentage }} suspicious security events per second on {{ $labels.instance }}"
+
+      - alert: SecurityRecommendationSystemDown
+        expr: security_recommendation_system_up == 0
+        for: 2m
+        labels:
+          severity: warning
+          component: security
+        annotations:
+          summary: "Security recommendation system is down"
+          description: "Security recommendation system is not responding on {{ $labels.instance }}"
+
+      - alert: MobileSecurityStatusErrors
+        expr: rate(mobile_security_status_errors_total[5m]) > 0.05
+        for: 3m
+        labels:
+          severity: warning
+          component: security
+        annotations:
+          summary: "Mobile security status errors"
+          description: "Mobile security status error rate is {{ $value | humanizePercentage }} per second on {{ $labels.instance }}"
+
+      # Authentication Enhancement Alerts
+      - alert: TokenRefreshFailureRate
+        expr: rate(token_refresh_failures_total[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: warning
+          component: auth
+        annotations:
+          summary: "High token refresh failure rate"
+          description: "Token refresh failure rate is {{ $value | humanizePercentage }} per second on {{ $labels.instance }}"
+
+      - alert: SessionValidationErrors
+        expr: rate(session_validation_errors_total[5m]) > 0.05
+        for: 3m
+        labels:
+          severity: warning
+          component: auth
+        annotations:
+          summary: "Session validation errors"
+          description: "Session validation error rate is {{ $value | humanizePercentage }} per second on {{ $labels.instance }}"
+
+      - alert: LogoutProcessingFailures
+        expr: rate(logout_processing_failures_total[5m]) > 0.02
+        for: 2m
+        labels:
+          severity: warning
+          component: auth
+        annotations:
+          summary: "Logout processing failures"
+          description: "Logout processing failure rate is {{ $value | humanizePercentage }} per second on {{ $labels.instance }}"
+
+      # Performance and Caching Alerts
+      - alert: CacheHitRateLow
+        expr: cache_hit_rate < 0.8
+        for: 10m
+        labels:
+          severity: warning
+          component: performance
+        annotations:
+          summary: "Low cache hit rate"
+          description: "Cache hit rate is {{ $value | humanizePercentage }} on {{ $labels.instance }}"
+
+      - alert: DatabaseQueryOptimizationNeeded
+        expr: histogram_quantile(0.95, rate(database_query_duration_seconds_bucket[5m])) > 2
+        for: 10m
+        labels:
+          severity: warning
+          component: performance
+        annotations:
+          summary: "Slow database queries detected"
+          description: "95th percentile database query time is {{ $value }}s on {{ $labels.instance }}"
+
+      - alert: APIResponseTimeRegression
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket{endpoint=~"/api/v1/.*"}[5m])) > 2
+        for: 5m
+        labels:
+          severity: warning
+          component: performance
+        annotations:
+          summary: "API response time regression"
+          description: "95th percentile API response time is {{ $value }}s on {{ $labels.instance }}"
+
+      # Business Logic Alerts
+      - alert: DoubleSpendingAttempts
+        expr: rate(double_spending_attempts_total[5m]) > 0
+        for: 30s
+        labels:
+          severity: critical
+          component: business
+        annotations:
+          summary: "Double spending attempts detected"
+          description: "{{ $value | humanizePercentage }} double spending attempts per second on {{ $labels.instance }}"
+          runbook_url: "https://wiki.company.com/runbooks/double-spending"
+
+      - alert: InvalidSignatureRate
+        expr: rate(invalid_signature_errors_total[5m]) > 0.1
+        for: 2m
+        labels:
+          severity: warning
+          component: business
+        annotations:
+          summary: "High invalid signature rate"
+          description: "Invalid signature error rate is {{ $value | humanizePercentage }} per second on {{ $labels.instance }}"
+
+      - alert: TokenExpirationRateHigh
+        expr: rate(token_expiration_events_total[1h]) > 50
+        for: 10m
+        labels:
+          severity: warning
+          component: business
+        annotations:
+          summary: "High token expiration rate"
+          description: "{{ $value }} tokens are expiring per hour on {{ $labels.instance }}"
+
+      # Integration Health Alerts
+      - alert: iOSIntegrationErrors
+        expr: rate(ios_integration_errors_total[5m]) > 0.05
+        for: 3m
+        labels:
+          severity: warning
+          component: integration
+        annotations:
+          summary: "iOS integration errors detected"
+          description: "iOS integration error rate is {{ $value | humanizePercentage }} per second on {{ $labels.instance }}"
+
+      - alert: APIVersionMismatch
+        expr: api_version_mismatch_errors_total > 0
+        for: 1m
+        labels:
+          severity: warning
+          component: integration
+        annotations:
+          summary: "API version mismatch detected"
+          description: "API version mismatch errors detected on {{ $labels.instance }}"
+
+      - alert: ResponseFormatErrors
+        expr: rate(response_format_errors_total[5m]) > 0.01
+        for: 2m
+        labels:
+          severity: warning
+          component: integration
+        annotations:
+          summary: "Response format errors"
+          description: "Response format error rate is {{ $value | humanizePercentage }} per second on {{ $labels.instance }}"
+
+  - name: api-integration-sla-alerts
+    rules:
+      # SLA-based alerts
+      - alert: APIAvailabilitySLABreach
+        expr: (1 - rate(http_requests_total{status=~"5.."}[5m]) / rate(http_requests_total[5m])) < 0.999
+        for: 5m
+        labels:
+          severity: critical
+          sla: availability
+        annotations:
+          summary: "API availability SLA breach"
+          description: "API availability is {{ $value | humanizePercentage }}, below 99.9% SLA"
+
+      - alert: APILatencySLABreach
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 2
+        for: 10m
+        labels:
+          severity: warning
+          sla: latency
+        annotations:
+          summary: "API latency SLA breach"
+          description: "95th percentile API latency is {{ $value }}s, above 2s SLA"
+
+      - alert: TransactionProcessingSLABreach
+        expr: histogram_quantile(0.95, rate(transaction_processing_duration_seconds_bucket[5m])) > 30
+        for: 5m
+        labels:
+          severity: warning
+          sla: transaction_processing
+        annotations:
+          summary: "Transaction processing SLA breach"
+          description: "95th percentile transaction processing time is {{ $value }}s, above 30s SLA"
+
+  - name: api-integration-capacity-alerts
+    rules:
+      # Capacity planning alerts
+      - alert: HighRequestVolume
+        expr: rate(http_requests_total[5m]) > 1000
+        for: 10m
+        labels:
+          severity: warning
+          component: capacity
+        annotations:
+          summary: "High request volume detected"
+          description: "Request rate is {{ $value }} requests per second on {{ $labels.instance }}"
+
+      - alert: DatabaseConnectionPoolExhaustion
+        expr: database_connection_pool_active / database_connection_pool_max > 0.9
+        for: 5m
+        labels:
+          severity: critical
+          component: capacity
+        annotations:
+          summary: "Database connection pool near exhaustion"
+          description: "Database connection pool usage is {{ $value | humanizePercentage }} on {{ $labels.instance }}"
+
+      - alert: RedisMemoryUsageHigh
+        expr: redis_memory_used_bytes / redis_memory_max_bytes > 0.85
+        for: 10m
+        labels:
+          severity: warning
+          component: capacity
+        annotations:
+          summary: "Redis memory usage high"
+          description: "Redis memory usage is {{ $value | humanizePercentage }} on {{ $labels.instance }}"

@@ -55,11 +55,23 @@ describe('Error Handler Middleware', () => {
       errorHandler(customError, mockRequest as Request, mockResponse as Response, mockNext);
 
       expect(mockResponse.status).toHaveBeenCalledWith(400);
-      expect(mockResponse.json).toHaveBeenCalledWith({
-        success: false,
-        error: 'Custom error message',
-        timestamp: expect.any(String),
-      });
+      expect(mockResponse.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          success: false,
+          error: expect.objectContaining({
+            code: 'VALIDATION_ERROR',
+            message: 'Custom error message',
+            details: expect.objectContaining({
+              method: 'GET',
+              userAgent: 'test-user-agent',
+              category: 'VALIDATION',
+              severity: 'LOW'
+            })
+          }),
+          timestamp: expect.any(String),
+          requestId: expect.any(String)
+        })
+      );
     });
 
     it('should handle validation errors (500)', () => {
@@ -69,11 +81,23 @@ describe('Error Handler Middleware', () => {
       errorHandler(validationError, mockRequest as Request, mockResponse as Response, mockNext);
 
       expect(mockResponse.status).toHaveBeenCalledWith(500);
-      expect(mockResponse.json).toHaveBeenCalledWith({
-        success: false,
-        error: 'Validation failed',
-        timestamp: expect.any(String),
-      });
+      expect(mockResponse.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          success: false,
+          error: expect.objectContaining({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'Validation failed',
+            details: expect.objectContaining({
+              method: 'GET',
+              userAgent: 'test-user-agent',
+              category: 'SYSTEM',
+              severity: 'CRITICAL'
+            })
+          }),
+          timestamp: expect.any(String),
+          requestId: expect.any(String)
+        })
+      );
     });
 
     it('should handle JWT errors (500)', () => {
@@ -83,11 +107,23 @@ describe('Error Handler Middleware', () => {
       errorHandler(jwtError, mockRequest as Request, mockResponse as Response, mockNext);
 
       expect(mockResponse.status).toHaveBeenCalledWith(500);
-      expect(mockResponse.json).toHaveBeenCalledWith({
-        success: false,
-        error: 'Invalid token',
-        timestamp: expect.any(String),
-      });
+      expect(mockResponse.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          success: false,
+          error: expect.objectContaining({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'Invalid token',
+            details: expect.objectContaining({
+              method: 'GET',
+              userAgent: 'test-user-agent',
+              category: 'SYSTEM',
+              severity: 'CRITICAL'
+            })
+          }),
+          timestamp: expect.any(String),
+          requestId: expect.any(String)
+        })
+      );
     });
 
     it('should handle generic errors (500)', () => {
@@ -96,11 +132,23 @@ describe('Error Handler Middleware', () => {
       errorHandler(genericError, mockRequest as Request, mockResponse as Response, mockNext);
 
       expect(mockResponse.status).toHaveBeenCalledWith(500);
-      expect(mockResponse.json).toHaveBeenCalledWith({
-        success: false,
-        error: 'Something went wrong',
-        timestamp: expect.any(String),
-      });
+      expect(mockResponse.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          success: false,
+          error: expect.objectContaining({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'Something went wrong',
+            details: expect.objectContaining({
+              method: 'GET',
+              userAgent: 'test-user-agent',
+              category: 'SYSTEM',
+              severity: 'CRITICAL'
+            })
+          }),
+          timestamp: expect.any(String),
+          requestId: expect.any(String)
+        })
+      );
     });
 
     it('should handle errors without message', () => {
@@ -109,11 +157,23 @@ describe('Error Handler Middleware', () => {
       errorHandler(errorWithoutMessage, mockRequest as Request, mockResponse as Response, mockNext);
 
       expect(mockResponse.status).toHaveBeenCalledWith(500);
-      expect(mockResponse.json).toHaveBeenCalledWith({
-        success: false,
-        error: '',
-        timestamp: expect.any(String),
-      });
+      expect(mockResponse.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          success: false,
+          error: expect.objectContaining({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: '',
+            details: expect.objectContaining({
+              method: 'GET',
+              userAgent: 'test-user-agent',
+              category: 'SYSTEM',
+              severity: 'CRITICAL'
+            })
+          }),
+          timestamp: expect.any(String),
+          requestId: expect.any(String)
+        })
+      );
     });
 
     it('should include stack trace in development mode', () => {
@@ -125,14 +185,24 @@ describe('Error Handler Middleware', () => {
       
       errorHandler(error, mockRequest as Request, mockResponse as Response, mockNext);
 
-      expect(mockResponse.json).toHaveBeenCalledWith({
-        success: false,
-        error: 'Development error',
-        timestamp: expect.any(String),
-        stack: 'Error stack trace',
-        path: '/api/test',
-        method: 'GET',
-      });
+      expect(mockResponse.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          success: false,
+          error: expect.objectContaining({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'Development error',
+            details: expect.objectContaining({
+              method: 'GET',
+              userAgent: 'test-user-agent',
+              category: 'SYSTEM',
+              severity: 'CRITICAL',
+              stack: 'Error stack trace'
+            })
+          }),
+          timestamp: expect.any(String),
+          requestId: expect.any(String)
+        })
+      );
       
       process.env['NODE_ENV'] = originalEnv;
     });
@@ -146,11 +216,23 @@ describe('Error Handler Middleware', () => {
       
       errorHandler(error, mockRequest as Request, mockResponse as Response, mockNext);
 
-      expect(mockResponse.json).toHaveBeenCalledWith({
-        success: false,
-        error: 'Production error',
-        timestamp: expect.any(String),
-      });
+      expect(mockResponse.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          success: false,
+          error: expect.objectContaining({
+            code: 'INTERNAL_SERVER_ERROR',
+            message: 'Production error',
+            details: expect.objectContaining({
+              method: 'GET',
+              userAgent: 'test-user-agent',
+              category: 'SYSTEM',
+              severity: 'CRITICAL'
+            })
+          }),
+          timestamp: expect.any(String),
+          requestId: expect.any(String)
+        })
+      );
       
       process.env['NODE_ENV'] = originalEnv;
     });
